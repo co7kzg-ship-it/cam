@@ -32,7 +32,7 @@ select{border:1px solid var(--line);background:var(--well);padding:8px}
 .desk{display:grid;grid-template-columns:280px 1fr;gap:12px}
 @media(max-width:800px){.desk{grid-template-columns:1fr}}
 .side,.stage{border:1px solid var(--line);background:var(--panel);padding:12px}
-.k{font:700 .72rem var(--mono);color:var(--mute);letter-spacing:.04em;margin:0 0 6px}
+.k{font:700 .72rem var(--mono);color:var(--mute);margin:0 0 6px}
 .lcd{font:700 3.1rem/1 var(--mono);letter-spacing:.18em;text-align:center;background:var(--well);border:1px solid var(--line);padding:16px 6px;margin:8px 0}
 .link{font:700 .85rem var(--mono);word-break:break-all;color:var(--mute);margin:0 0 10px}
 .g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -47,13 +47,11 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
 #evWrap{display:none}
 .gridon video{outline:1px dashed var(--line);outline-offset:-40px}
 </style>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div class="w">
-  <div class="head">
-    <h1>Field cam</h1>
-    <small id="clock"></small>
-  </div>
+  <div class="head"><h1>Field cam</h1><small id="clock"></small></div>
   <div class="pick">
     <button class="go" id="bPc" type="button">PC receive</button>
     <button class="hot" id="bPh" type="button">Phone send</button>
@@ -139,157 +137,68 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
 </div>
 <script>
 (function () {
-  var ICE = { iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" }
-  ]};
-  var PFX = "c7n";
+  var PFX = "c7cam";
+  var peer = null, media = null, call = null, tick = 0, liveClock = 0, liveAt = 0;
+  var frozen = false, torchOn = false, micOn = false, wake = null, preferBack = true;
+  var rec = null, recBits = [], lastBytes = 0, lastTs = 0, waitAns = 0;
+
   function $(id) { return document.getElementById(id); }
+  function log(id, t) {
+    if (!t) return;
+    var el = $(id);
+    if (!el) return;
+    el.textContent = (new Date().toLocaleTimeString() + "  " + t + "\n" + el.textContent).slice(0, 1400);
+  }
   function say(id, t, k) {
     $(id).textContent = t || "";
     $(id).className = "st" + (k ? " " + k : "");
     log(id === "pcSt" ? "pcLog" : "phLog", t);
   }
-  function log(id, t) {
-    if (!t) return;
-    var el = $(id);
-    if (!el) return;
-    var line = new Date().toLocaleTimeString() + "  " + t + "\n";
-    el.textContent = (line + el.textContent).slice(0, 1200);
-  }
-  function rid(n) { return Math.random().toString(36).slice(2, 2 + (n || 8)); }
   function joinUrl(code) {
     var u = new URL(location.href);
     u.hash = "";
     u.search = "?c=" + code;
     return u.href;
   }
-  function clock() {
-    var d = new Date();
-    $("clock").textContent = d.toLocaleTimeString();
+  function show(which) {
+    $("pc").classList.toggle("show", which === "pc");
+    $("ph").classList.toggle("show", which === "ph");
   }
-  clock();
-  setInterval(clock, 1000);
-
-  function Signal(id) {
-    this.id = id;
-    this.fn = [];
-    this.ws = null;
-    this.hb = 0;
-    var u = "wss://0.peerjs.com:443/peerjs?key=peerjs&id=" + encodeURIComponent(id) +
-      "&token=" + rid(12) + Date.now().toString(36) + "&version=1.5.4";
-    var self = this;
-    this.ready = new Promise(function (res, rej) {
-      var done = false;
-      var ws = new WebSocket(u);
-      self.ws = ws;
-      var to = setTimeout(function () {
-        if (!done) { done = true; try { ws.close(); } catch (e) {} rej(new Error("signal timeout")); }
-      }, 8000);
-      ws.onmessage = function (ev) {
-        var m;
-        try { m = JSON.parse(ev.data); } catch (e) { return; }
-        if (m.type === "OPEN") { if (!done) { done = true; clearTimeout(to); res(id); } }
-        else if (m.type === "ID-TAKEN" || m.type === "INVALID-KEY" || m.type === "ERROR") {
-          if (!done) { done = true; clearTimeout(to); rej(new Error(m.type)); }
-        } else self.fn.forEach(function (f) { f(m); });
-      };
-      ws.onerror = function () { if (!done) { done = true; clearTimeout(to); rej(new Error("socket")); } };
-      ws.onclose = function () { clearInterval(self.hb); };
-      ws.onopen = function () {
-        self.hb = setInterval(function () {
-          if (ws.readyState === 1) ws.send(JSON.stringify({ type: "HEARTBEAT" }));
-        }, 18000);
-      };
-    });
+  function vt() { return media && media.getVideoTracks()[0]; }
+  function copyText(t) {
+    if (navigator.clipboard) return navigator.clipboard.writeText(t);
+    var i = document.createElement("textarea");
+    i.value = t; document.body.appendChild(i); i.select(); document.execCommand("copy"); i.remove();
   }
-  Signal.prototype.on = function (f) { this.fn.push(f); };
-  Signal.prototype.send = function (o) {
-    if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(o));
-  };
-  Signal.prototype.close = function () {
-    clearInterval(this.hb);
-    try { if (this.ws) this.ws.close(); } catch (e) {}
-  };
-
-  var rtc = null, sig = null, media = null, conn = null, tick = 0, pending = [];
-  var remoteOk = false, frozen = false, torchOn = false, micOn = false, wake = null;
-  var lastBytes = 0, lastTs = 0, rec = null, recBits = [];
-  var preferBack = true, waitAns = 0, liveAt = 0, liveClock = 0;
-
-  function stopRtc() {
-    if (tick) clearInterval(tick);
-    tick = 0;
-    if (liveClock) clearInterval(liveClock);
-    liveClock = 0;
-    pending = [];
-    remoteOk = false;
+  function killPeer() {
+    if (tick) { clearInterval(tick); tick = 0; }
+    if (liveClock) { clearInterval(liveClock); liveClock = 0; }
     if (waitAns) { clearTimeout(waitAns); waitAns = 0; }
     if (rec && rec.state !== "inactive") try { rec.stop(); } catch (e) {}
     rec = null;
-    if (rtc) { try { rtc.close(); } catch (e) {} rtc = null; }
-    if (sig) { sig.close(); sig = null; }
+    if (call) { try { call.close(); } catch (e) {} call = null; }
+    if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
   }
   function stopMedia() {
     if (media) media.getTracks().forEach(function (t) { t.stop(); });
     media = null;
   }
-  function vt() { return media && media.getVideoTracks()[0]; }
-  function markLive(el) {
+  function markLive() {
     liveAt = Date.now();
     if (liveClock) clearInterval(liveClock);
     liveClock = setInterval(function () {
       var s = Math.floor((Date.now() - liveAt) / 1000);
-      var m = String(Math.floor(s / 60)).padStart(2, "0");
-      var sec = String(s % 60).padStart(2, "0");
-      if ($("pcTime")) $("pcTime").textContent = m + ":" + sec;
+      $("pcTime").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
     }, 500);
-    say(el, "Live", "ok");
   }
-
-  function hookIce(peer, dst) {
-    peer.onicecandidate = function (ev) {
-      if (!ev.candidate || !sig) return;
-      sig.send({
-        type: "CANDIDATE", dst: dst,
-        payload: {
-          candidate: ev.candidate.toJSON ? ev.candidate.toJSON() : {
-            candidate: ev.candidate.candidate,
-            sdpMid: ev.candidate.sdpMid,
-            sdpMLineIndex: ev.candidate.sdpMLineIndex
-          },
-          type: "media", connectionId: conn
-        }
-      });
-    };
-    peer.onconnectionstatechange = function () {
-      var s = peer.connectionState;
-      var el = $("pc").classList.contains("show") ? "pcSt" : "phSt";
-      if (s === "connected") markLive(el);
-      if (s === "failed") say(el, "Link failed — Send again", "err");
-      if (s === "disconnected") say(el, "Dropped", "err");
-    };
-  }
-  async function addIce(peer, p) {
-    var c = p && p.candidate;
-    if (!c) return;
-    if (!remoteOk) { pending.push(c); return; }
-    try { await peer.addIceCandidate(c); } catch (e) {}
-  }
-  async function flushIce(peer) {
-    remoteOk = true;
-    while (pending.length) {
-      try { await peer.addIceCandidate(pending.shift()); } catch (e) {}
-    }
-  }
-  function meter(el, peer, inbound) {
+  function meter(el, mediaConn, inbound) {
     if (tick) clearInterval(tick);
     lastBytes = 0; lastTs = 0;
-    tick = setInterval(async function () {
-      if (!peer) return;
-      try {
+    tick = setInterval(function () {
+      var pc = mediaConn && mediaConn.peerConnection;
+      if (!pc) return;
+      pc.getStats().then(function (st) {
         var rtt = 0, fps = 0, kbps = 0;
-        var st = await peer.getStats();
         st.forEach(function (r) {
           if (r.type === "candidate-pair" && r.nominated && r.currentRoundTripTime != null)
             rtt = Math.round(r.currentRoundTripTime * 1000);
@@ -308,16 +217,23 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
         if (kbps) o.push(kbps + " kb/s");
         if (rtt) o.push(rtt + " ms");
         el.textContent = o.join(" · ") || "—";
-      } catch (e) {}
+      }).catch(function () {});
     }, 1000);
+  }
+
+  function clock() { $("clock").textContent = new Date().toLocaleTimeString(); }
+  clock();
+  setInterval(clock, 1000);
+
+  if (typeof Peer !== "function") {
+    document.body.insertAdjacentHTML("afterbegin", "<p class=\"err\">PeerJS failed to load. Need network.</p>");
   }
 
   async function listCams(keep) {
     var sel = $("cam"), cur = keep || sel.value;
     sel.innerHTML = "";
     try {
-      var all = await navigator.mediaDevices.enumerateDevices();
-      var vids = all.filter(function (d) { return d.kind === "videoinput"; });
+      var vids = (await navigator.mediaDevices.enumerateDevices()).filter(function (d) { return d.kind === "videoinput"; });
       if (!vids.length) {
         sel.innerHTML = "<option value=\"env\">Back</option><option value=\"user\">Front</option>";
         return;
@@ -340,8 +256,7 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
     if (!t || !t.getCapabilities) return;
     var c = t.getCapabilities();
     if (c.zoom) {
-      $("zoom").min = c.zoom.min;
-      $("zoom").max = c.zoom.max;
+      $("zoom").min = c.zoom.min; $("zoom").max = c.zoom.max;
       $("zoom").step = c.zoom.step || 0.1;
       var s = t.getSettings && t.getSettings();
       if (s && s.zoom != null) { $("zoom").value = s.zoom; $("zv").textContent = String(s.zoom); }
@@ -356,11 +271,7 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
 
   async function openCam() {
     var wh = $("res").value.split("x");
-    var video = {
-      width: { ideal: +wh[0] },
-      height: { ideal: +wh[1] },
-      frameRate: { ideal: +$("fps").value }
-    };
+    var video = { width: { ideal: +wh[0] }, height: { ideal: +wh[1] }, frameRate: { ideal: +$("fps").value } };
     var id = $("cam").value;
     if (id === "user") video.facingMode = { ideal: "user" };
     else if (id === "env" || !id) video.facingMode = { ideal: preferBack ? "environment" : "user" };
@@ -371,95 +282,62 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
     var keep = (id && id !== "env" && id !== "user") ? id : "";
     await listCams(keep);
     applyCaps();
-    if (rtc) {
-      var vs = rtc.getSenders().find(function (x) { return x.track && x.track.kind === "video"; });
-      var as = rtc.getSenders().find(function (x) { return x.track && x.track.kind === "audio"; });
-      if (vs && vt()) await vs.replaceTrack(vt());
-      if (as) await as.replaceTrack(media.getAudioTracks()[0] || null);
+    if (call && call.peerConnection) {
+      var vs = call.peerConnection.getSenders().find(function (x) { return x.track && x.track.kind === "video"; });
+      var as = call.peerConnection.getSenders().find(function (x) { return x.track && x.track.kind === "audio"; });
+      if (vs && vt()) vs.replaceTrack(vt());
+      if (as) as.replaceTrack(media.getAudioTracks()[0] || null);
     }
   }
 
-  function show(which) {
-    $("pc").classList.toggle("show", which === "pc");
-    $("ph").classList.toggle("show", which === "ph");
-  }
-
-  function bindPcTracks(peer) {
-    peer.ontrack = function (ev) {
-      var s = ev.streams[0] || new MediaStream([ev.track]);
-      $("remote").srcObject = s;
-      $("remote").muted = $("muteIn").classList.contains("lit");
-      $("remote").play && $("remote").play();
-      meter($("pcMet"), peer, true);
-    };
-  }
-
-  async function startPc() {
+  function startPc() {
+    if (typeof Peer !== "function") { say("pcSt", "PeerJS not loaded", "err"); return; }
     show("pc");
-    stopRtc();
+    killPeer();
     $("remote").srcObject = null;
     $("pcTime").textContent = "00:00";
-    var n = null, tries = 0;
-    while (tries++ < 6) {
-      n = String(1000 + Math.floor(Math.random() * 9000));
-      $("pin").textContent = n;
-      $("join").textContent = joinUrl(n);
-      try {
-        sig = new Signal(PFX + n);
-        await sig.ready;
-        break;
-      } catch (e) {
-        if (sig) sig.close();
-        sig = null;
-        n = null;
-      }
-    }
-    if (!n) { say("pcSt", "No free code. Try again.", "err"); return; }
-    try { sessionStorage.setItem("camPin", n); } catch (e) {}
-    rtc = new RTCPeerConnection(ICE);
-    bindPcTracks(rtc);
-    sig.on(async function (msg) {
-      if (msg.type === "OFFER" && msg.payload && msg.payload.sdp) {
-        if (rtc) { try { rtc.close(); } catch (e) {} }
-        rtc = new RTCPeerConnection(ICE);
-        bindPcTracks(rtc);
-        conn = msg.payload.connectionId || ("mc_" + rid());
-        hookIce(rtc, msg.src);
-        pending = [];
-        remoteOk = false;
-        await rtc.setRemoteDescription(msg.payload.sdp);
-        await flushIce(rtc);
-        var a = await rtc.createAnswer();
-        await rtc.setLocalDescription(a);
-        sig.send({
-          type: "ANSWER", dst: msg.src,
-          payload: { sdp: { type: rtc.localDescription.type, sdp: rtc.localDescription.sdp }, type: "media", connectionId: conn }
-        });
-        log("pcLog", "answer → phone");
-      } else if (msg.type === "CANDIDATE") addIce(rtc, msg.payload);
+    var n = String(1000 + Math.floor(Math.random() * 9000));
+    $("pin").textContent = n;
+    $("join").textContent = joinUrl(n);
+    say("pcSt", "Connecting…");
+    peer = new Peer(PFX + n, { debug: 0 });
+    peer.on("error", function (e) {
+      if (e.type === "unavailable-id") startPc();
+      else say("pcSt", e.type || String(e), "err");
     });
-    say("pcSt", "Ready · " + n, "ok");
+    peer.on("open", function () {
+      say("pcSt", "Ready · " + n, "ok");
+    });
+    peer.on("call", function (incoming) {
+      call = incoming;
+      incoming.answer();
+      incoming.on("stream", function (s) {
+        $("remote").srcObject = s;
+        $("remote").muted = $("muteIn").classList.contains("lit");
+        $("remote").play && $("remote").play();
+        markLive();
+        say("pcSt", "Live", "ok");
+        meter($("pcMet"), incoming, true);
+      });
+      incoming.on("close", function () { say("pcSt", "Phone left"); });
+      incoming.on("error", function (e) { say("pcSt", String(e), "err"); });
+    });
   }
 
   $("bPc").onclick = startPc;
+  $("newCode").onclick = startPc;
   $("bPh").onclick = async function () {
     show("ph");
-    try { await openCam(); say("phSt", "Preview on. Send when PC shows a code.", "ok"); }
+    try { await openCam(); say("phSt", "Preview on. Send when PC is ready.", "ok"); }
     catch (e) { say("phSt", String(e.message || e), "err"); }
   };
-  $("newCode").onclick = startPc;
-  function copyText(t) {
-    if (navigator.clipboard) return navigator.clipboard.writeText(t);
-    var i = document.createElement("textarea");
-    i.value = t; document.body.appendChild(i); i.select(); document.execCommand("copy"); i.remove();
-    return Promise.resolve();
-  }
   $("copyLink").onclick = function () { copyText($("join").textContent); say("pcSt", "Link copied", "ok"); };
   $("copyPin").onclick = function () { copyText($("pin").textContent); say("pcSt", "Number copied", "ok"); };
 
   $("send").onclick = async function () {
     var n = ($("pinIn").value || "").replace(/\D/g, "");
     if (n.length !== 4) { say("phSt", "Need 4 digits", "err"); return; }
+    if (typeof Peer !== "function") { say("phSt", "PeerJS not loaded", "err"); return; }
     if (!/^https:$/.test(location.protocol) && location.hostname !== "localhost") {
       say("phSt", "Camera needs https", "err"); return;
     }
@@ -467,51 +345,46 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
     try {
       try { sessionStorage.setItem("camLast", n); } catch (e) {}
       if (!media) await openCam();
-      stopRtc();
-      sig = new Signal(PFX + "p" + rid(8));
-      await sig.ready;
-      conn = "mc_" + rid();
-      rtc = new RTCPeerConnection(ICE);
-      media.getTracks().forEach(function (t) { rtc.addTrack(t, media); });
-      var dst = PFX + n;
-      hookIce(rtc, dst);
-      pending = [];
-      remoteOk = false;
+      killPeer();
+      peer = new Peer(undefined, { debug: 0 });
+      peer.on("error", function (e) { say("phSt", e.type || String(e), "err"); });
+      await new Promise(function (res, rej) {
+        peer.on("open", res);
+        setTimeout(function () { rej(new Error("signal timeout")); }, 9000);
+      });
       if (waitAns) clearTimeout(waitAns);
       waitAns = setTimeout(function () {
         say("phSt", "No PC — wrong number or tab not waiting", "err");
-      }, 10000);
-      sig.on(async function (msg) {
-        if (msg.type === "ANSWER" && msg.payload && msg.payload.sdp) {
-          if (waitAns) { clearTimeout(waitAns); waitAns = 0; }
-          await rtc.setRemoteDescription(msg.payload.sdp);
-          await flushIce(rtc);
-          say("phSt", "On air", "ok");
-          meter($("phMet"), rtc, false);
-        } else if (msg.type === "CANDIDATE") addIce(rtc, msg.payload);
+      }, 12000);
+      call = peer.call(PFX + n, media);
+      if (!call) throw new Error("Could not call");
+      call.on("stream", function () {
+        if (waitAns) { clearTimeout(waitAns); waitAns = 0; }
       });
-      var o = await rtc.createOffer();
-      await rtc.setLocalDescription(o);
-      sig.send({
-        type: "OFFER", dst: dst,
-        payload: { sdp: { type: rtc.localDescription.type, sdp: rtc.localDescription.sdp }, type: "media", connectionId: conn }
-      });
+      call.on("error", function (e) { say("phSt", String(e), "err"); });
       say("phSt", "Calling " + n, "ok");
+      meter($("phMet"), call, false);
+      setTimeout(function () {
+        if (call && call.open) {
+          if (waitAns) { clearTimeout(waitAns); waitAns = 0; }
+          say("phSt", "On air", "ok");
+        }
+      }, 2000);
     } catch (e) { say("phSt", String(e.message || e), "err"); }
     $("send").disabled = false;
   };
 
   $("hang").onclick = function () {
-    stopRtc(); stopMedia();
+    killPeer(); stopMedia();
     $("local").srcObject = null;
     say("phSt", "Stopped");
   };
   $("flip").onclick = async function () {
     preferBack = !preferBack;
     var opts = $("cam").options;
-    if (opts.length > 1 && $("cam").value !== "env" && $("cam").value !== "user") {
+    if (opts.length > 1 && $("cam").value !== "env" && $("cam").value !== "user")
       $("cam").selectedIndex = ($("cam").selectedIndex + 1) % opts.length;
-    } else $("cam").value = preferBack ? "env" : "user";
+    else $("cam").value = preferBack ? "env" : "user";
     if (media) await openCam();
   };
   $("cam").onchange = $("res").onchange = $("fps").onchange = function () {
@@ -527,10 +400,8 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   };
   $("torch").onclick = async function () {
     torchOn = !torchOn;
-    try {
-      await vt().applyConstraints({ advanced: [{ torch: torchOn }] });
-      $("torch").classList.toggle("lit", torchOn);
-    } catch (e) { torchOn = false; $("torch").classList.remove("lit"); }
+    try { await vt().applyConstraints({ advanced: [{ torch: torchOn }] }); $("torch").classList.toggle("lit", torchOn); }
+    catch (e) { torchOn = false; $("torch").classList.remove("lit"); }
   };
   $("freeze").onclick = function () {
     frozen = !frozen;
@@ -550,13 +421,8 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   };
   $("awake").onclick = async function () {
     try {
-      if (!wake) {
-        wake = await navigator.wakeLock.request("screen");
-        $("awake").classList.add("lit");
-      } else {
-        await wake.release(); wake = null;
-        $("awake").classList.remove("lit");
-      }
+      if (!wake) { wake = await navigator.wakeLock.request("screen"); $("awake").classList.add("lit"); }
+      else { await wake.release(); wake = null; $("awake").classList.remove("lit"); }
     } catch (e) { say("phSt", "No wake lock", "err"); }
   };
   document.addEventListener("visibilitychange", async function () {
@@ -569,9 +435,7 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
     var c = document.createElement("canvas");
     c.width = v.videoWidth; c.height = v.videoHeight;
     c.getContext("2d").drawImage(v, 0, 0);
-    var a = document.createElement("a");
-    a.href = c.toDataURL("image/jpeg", 0.92);
-    a.download = "snap.jpg"; a.click();
+    var a = document.createElement("a"); a.href = c.toDataURL("image/jpeg", 0.92); a.download = "snap.jpg"; a.click();
   };
   $("full").onclick = function () {
     var v = $("remote");
@@ -586,11 +450,7 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   $("clip").onclick = function () {
     var s = $("remote").srcObject;
     if (!s) { say("pcSt", "Nothing to save", "err"); return; }
-    if (rec && rec.state === "recording") {
-      rec.stop();
-      $("clip").textContent = "Clip";
-      return;
-    }
+    if (rec && rec.state === "recording") { rec.stop(); $("clip").textContent = "Clip"; return; }
     recBits = [];
     try { rec = new MediaRecorder(s, { mimeType: "video/webm" }); }
     catch (e) {
@@ -598,9 +458,8 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
     }
     rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) recBits.push(ev.data); };
     rec.onstop = function () {
-      var blob = new Blob(recBits, { type: "video/webm" });
       var a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
+      a.href = URL.createObjectURL(new Blob(recBits, { type: "video/webm" }));
       a.download = "clip.webm"; a.click();
     };
     rec.start(500);
@@ -612,7 +471,7 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   if (q && /^\d{4}$/.test(q)) {
     show("ph");
     $("pinIn").value = q;
-    say("phSt", "Code " + q + " — Phone for preview, then Send", "ok");
+    say("phSt", "Code " + q + " — tap Phone send, then Send", "ok");
   } else {
     try {
       var last = sessionStorage.getItem("camLast");
