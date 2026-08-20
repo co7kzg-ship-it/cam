@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="only light">
 <meta name="theme-color" content="#e6eaed">
 <title>Fieldcam — phone camera on your desktop</title>
 <style>
@@ -13,6 +13,7 @@
    labels, hairline rules, one green accent for anything live.
    ============================================================ */
 :root{
+  color-scheme:only light;
   --page:#e4e7ea;
   --paper:#f8f9fa;
   --paper-2:#eef1f3;
@@ -37,7 +38,7 @@
   --r:3px;
 }
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{height:100%;color-scheme:only light;forced-color-adjust:none}
 body{
   margin:0;background:var(--page);color:var(--ink);
   font:400 14px/1.45 var(--ui);
@@ -636,8 +637,9 @@ body.streaming span.sep.hideidle{display:block}
       <ul>
         <li>Both devices on the <b>same Wi-Fi</b> is the easy case; mobile data usually needs a relay server.</li>
         <li>The camera side must be on <b>https</b> — browsers block cameras otherwise.</li>
-        <li>Corporate/ISP filtering can block the rendezvous server. Add a TURN relay in <b>Settings</b>, or use
-          <b>Offline pairing</b>, which needs no server at all — you copy two blocks of text between the devices.</li>
+        <li>Pairing is tried over three unrelated rendezvous routes at once (PeerJS cloud, EMQX, HiveMQ);
+          if your network blocks all of them, <b>Settings → Run connection check</b> will say so.</li>
+        <li><b>Offline pairing</b> always remains: no server at all, you copy two blocks of text between the devices.</li>
       </ul>
       <p class="note">Video and audio travel directly between the two devices. The rendezvous server only helps them
         find each other; it never sees the picture.</p>
@@ -665,14 +667,25 @@ body.streaming span.sep.hideidle{display:block}
           </div>
         </div>
         <div class="full" style="grid-column:1/-1">
-          <label class="lab" for="optBroker">Rendezvous host</label>
+          <label class="lab" for="optLink">Signalling route</label>
+          <select class="field" id="optLink" style="width:100%">
+            <option value="auto">Automatic — try all three at once (recommended)</option>
+            <option value="peerjs">PeerJS cloud only</option>
+            <option value="emqx">EMQX relay only</option>
+            <option value="hivemq">HiveMQ relay only</option>
+          </select>
+        </div>
+        <div class="full" style="grid-column:1/-1">
+          <label class="lab" for="optBroker">PeerJS host</label>
           <input class="field mono" id="optBroker" placeholder="0.peerjs.com" style="width:100%;font-size:12px">
           <p class="note">Any PeerJS-compatible server works. Leave as it is unless yours is blocked.</p>
         </div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:12px">
+      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
         <button class="btn go" id="optSave">Save</button>
         <button class="btn" id="optReset">Restore defaults</button>
+        <span class="spacer"></span>
+        <button class="btn" id="optDiag">Run connection check</button>
       </div>
     </div>
   </div>
@@ -699,6 +712,18 @@ body.streaming span.sep.hideidle{display:block}
         <div style="display:flex;gap:6px"><button class="btn sm" id="manCopy2">Copy</button></div>
       </div>
       <p class="note" id="manNote"></p>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheetDiag" style="display:none">
+    <header>Connection check<span class="spacer"></span><button class="btn sm" id="diagCopy">Copy report</button><button class="btn sm veilclose">Close</button></header>
+    <div class="body">
+      <p>Runs the same checks the app relies on and prints what your network allows.
+         Copy the result if you need to show someone why pairing fails.</p>
+      <div class="logbody" id="diagBody">not run yet</div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn go" id="diagRun">Run again</button>
+      </div>
     </div>
   </div>
 
@@ -996,7 +1021,8 @@ var cfg = {
   turnUrl: store.get("turnUrl", ""),
   turnUser: store.get("turnUser", ""),
   turnPass: store.get("turnPass", ""),
-  broker: store.get("broker", "0.peerjs.com")
+  broker: store.get("broker", "0.peerjs.com"),
+  link: store.get("link", "auto")
 };
 
 function rtcConfig() {
@@ -1012,8 +1038,9 @@ function rtcConfig() {
   return { iceServers: list, iceCandidatePoolSize: 2, bundlePolicy: "max-bundle" };
 }
 
-/* The public rendezvous server validates the message envelope, so the
-   payloads below keep the exact shape its clients normally send. */
+/* The PeerJS cloud validates the message envelope, so signalling payloads
+   keep the exact shape its own clients send. The MQTT links below carry the
+   very same objects, so both paths share one code path further up. */
 function sigDesc(desc, connId) {
   return { sdp: { type: desc.type, sdp: desc.sdp }, type: "media", connectionId: connId, browser: "web", metadata: null };
 }
@@ -1022,19 +1049,34 @@ function sigCand(cand, connId) {
 }
 
 /* ------------------------------------------------------------------ */
-/* rendezvous client (PeerJS-compatible wire format, no library)       */
+/* signalling links                                                    */
+/*                                                                     */
+/* Three independent rendezvous routes, on three unrelated networks.   */
+/* The monitor listens on every one of them at the same time and       */
+/* answers on whichever the phone reached it through, so one blocked   */
+/* host cannot stop a pairing. None of them ever sees the video.       */
 /* ------------------------------------------------------------------ */
-function Rendezvous(id, cb) {
+function linkSpecs() {
+  var all = [
+    { kind: "peerjs", host: cfg.broker || "0.peerjs.com", label: "PeerJS cloud" },
+    { kind: "mqtt", url: "wss://broker.emqx.io:8084/mqtt", label: "EMQX relay" },
+    { kind: "mqtt", url: "wss://broker.hivemq.com:8884/mqtt", label: "HiveMQ relay" }
+  ];
+  if (cfg.link === "peerjs") return [all[0]];
+  if (cfg.link === "emqx") return [all[1]];
+  if (cfg.link === "hivemq") return [all[2]];
+  return all;
+}
+
+/* --- PeerJS-cloud websocket link --- */
+function PeerLink(spec, id, cb) {
   var ws = null, hb = 0, tries = 0, dead = false, ready = false;
-  function url() {
-    var tok = Math.random().toString(36).slice(2, 12);
-    return "wss://" + cfg.broker + ":443/peerjs?key=peerjs&id=" + encodeURIComponent(id) +
-           "&token=" + tok + "&version=1.5.4";
-  }
   function open() {
     if (dead) return;
-    try { ws = new WebSocket(url()); }
-    catch (e) { retry(); return; }
+    var tok = Math.random().toString(36).slice(2, 12);
+    var url = "wss://" + spec.host + ":443/peerjs?key=peerjs&id=" + encodeURIComponent(id) +
+              "&token=" + tok + "&version=1.5.4";
+    try { ws = new WebSocket(url); } catch (e) { retry(); return; }
     ws.onmessage = function (ev) {
       var m;
       try { m = JSON.parse(ev.data); } catch (e) { return; }
@@ -1042,7 +1084,6 @@ function Rendezvous(id, cb) {
         ready = true; tries = 0;
         clearInterval(hb);
         hb = setInterval(function () { try { ws.send('{"type":"HEARTBEAT"}'); } catch (e) {} }, 10000);
-        log("rendezvous online as " + id);
         if (cb.up) cb.up();
         return;
       }
@@ -1061,13 +1102,11 @@ function Rendezvous(id, cb) {
   function retry() {
     if (dead) return;
     tries++;
-    var wait = Math.min(1200 * Math.pow(1.7, tries), 12000);
-    log("rendezvous retry in " + Math.round(wait / 100) / 10 + "s");
-    setTimeout(open, wait);
+    setTimeout(open, Math.min(1200 * Math.pow(1.7, tries), 15000));
   }
   open();
   return {
-    id: id,
+    label: spec.label,
     send: function (type, payload, dst) {
       if (ws && ws.readyState === 1) {
         try { ws.send(JSON.stringify({ type: type, payload: payload, dst: dst })); return true; } catch (e) {}
@@ -1079,12 +1118,135 @@ function Rendezvous(id, cb) {
   };
 }
 
+/* --- MQTT 3.1.1 over websocket, written out by hand --- */
+function mqttSocket(url, clientId, cb) {
+  var ws;
+  try { ws = new WebSocket(url, "mqtt"); } catch (e) { if (cb.err) cb.err(); return null; }
+  try { ws.binaryType = "arraybuffer"; } catch (e) {}
+  var pid = 1, ping = 0, live = false;
+  function enc(s) {
+    var b = [], i, c;
+    for (i = 0; i < s.length; i++) {
+      c = s.charCodeAt(i);
+      if (c < 128) b.push(c);
+      else if (c < 2048) b.push(192 | (c >> 6), 128 | (c & 63));
+      else b.push(224 | (c >> 12), 128 | ((c >> 6) & 63), 128 | (c & 63));
+    }
+    return b;
+  }
+  function dec(a) {
+    var s = "", i, c;
+    for (i = 0; i < a.length; i++) {
+      c = a[i];
+      if (c < 128) s += String.fromCharCode(c);
+      else if (c > 191 && c < 224) s += String.fromCharCode(((c & 31) << 6) | (a[++i] & 63));
+      else s += String.fromCharCode(((c & 15) << 12) | ((a[++i] & 63) << 6) | (a[++i] & 63));
+    }
+    return s;
+  }
+  function str(s) { var b = enc(s); return [b.length >> 8, b.length & 255].concat(b); }
+  function pkt(type, flags, body) {
+    var out = [(type << 4) | flags], len = body.length, d;
+    do { d = len % 128; len = Math.floor(len / 128); out.push(len > 0 ? d | 128 : d); } while (len > 0);
+    return new Uint8Array(out.concat(body));
+  }
+  function raw(u8) { try { ws.send(u8); } catch (e) {} }
+  ws.onopen = function () { raw(pkt(1, 0, str("MQTT").concat([4, 2, 0, 60], str(clientId)))); };
+  ws.onmessage = function (ev) {
+    var arr = new Uint8Array(ev.data), i = 0;
+    while (i < arr.length) {
+      var type = arr[i] >> 4, mult = 1, len = 0, j = i + 1, b;
+      do { b = arr[j++]; len += (b & 127) * mult; mult *= 128; } while (b & 128);
+      var body = arr.subarray(j, j + len);
+      i = j + len;
+      if (type === 2) {
+        live = body[1] === 0;
+        if (live && !ping) ping = setInterval(function () { raw(pkt(12, 0, [])); }, 25000);
+        if (cb.connack) cb.connack(live, body[1]);
+      } else if (type === 3) {
+        var tl = (body[0] << 8) | body[1];
+        if (cb.msg) cb.msg(dec(body.subarray(2, 2 + tl)), dec(body.subarray(2 + tl)));
+      } else if (type === 9 && cb.suback) cb.suback();
+    }
+  };
+  ws.onclose = function () { clearInterval(ping); ping = 0; live = false; if (cb.down) cb.down(); };
+  ws.onerror = function () { if (cb.err) cb.err(); };
+  return {
+    sub: function (t) { raw(pkt(8, 2, [pid >> 8, pid & 255].concat(str(t), [0]))); pid++; },
+    pub: function (t, m) { raw(pkt(3, 0, str(t).concat(enc(m)))); },
+    close: function () { clearInterval(ping); try { ws.close(); } catch (e) {} },
+    isUp: function () { return live; }
+  };
+}
+
+function MqttLink(spec, id, cb) {
+  var mq = null, dead = false, ready = false, tries = 0;
+  var topic = "fieldcam/v1/" + id;
+  function open() {
+    if (dead) return;
+    mq = mqttSocket(spec.url, "fc" + Math.random().toString(36).slice(2, 12), {
+      connack: function (ok) { if (ok) mq.sub(topic); else retry(); },
+      suback: function () { ready = true; tries = 0; if (cb.up) cb.up(); },
+      msg: function (tp, payload) {
+        var m;
+        try { m = JSON.parse(payload); } catch (e) { return; }
+        if (m && m.src !== id && cb.msg) cb.msg(m);
+      },
+      down: function () { ready = false; if (!dead) { if (cb.down) cb.down(); retry(); } },
+      err: function () { ready = false; }
+    });
+  }
+  function retry() {
+    if (dead) return;
+    tries++;
+    setTimeout(open, Math.min(1500 * Math.pow(1.6, tries), 15000));
+  }
+  open();
+  return {
+    label: spec.label,
+    send: function (type, payload, dst) {
+      if (!mq || !mq.isUp()) return false;
+      try { mq.pub("fieldcam/v1/" + dst, JSON.stringify({ type: type, payload: payload, src: id })); return true; }
+      catch (e) { return false; }
+    },
+    isReady: function () { return ready; },
+    close: function () { dead = true; if (mq) mq.close(); }
+  };
+}
+
+/* --- the bus: every link at once, tagged so replies go the same way --- */
+function Bus(id, cb) {
+  var links = linkSpecs().map(function (spec) {
+    var L;
+    var hooks = {
+      up: function () { log("link up: " + spec.label); if (cb.up) cb.up(L); },
+      down: function () { log("link down: " + spec.label); if (cb.down) cb.down(L); },
+      taken: function () { if (cb.taken) cb.taken(L); },
+      error: function (m) { log("link error (" + spec.label + "): " + m); if (cb.error) cb.error(m, L); },
+      msg: function (m) { if (cb.msg) cb.msg(m, L); }
+    };
+    L = spec.kind === "mqtt" ? MqttLink(spec, id, hooks) : PeerLink(spec, id, hooks);
+    return L;
+  });
+  return {
+    id: id,
+    links: links,
+    ready: function () { return links.filter(function (l) { return l.isReady(); }); },
+    names: function () {
+      var r = links.filter(function (l) { return l.isReady(); }).map(function (l) { return l.label; });
+      return r.length ? r.join(", ") : "none yet";
+    },
+    close: function () { links.forEach(function (l) { l.close(); }); }
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /* stats sampler                                                       */
 /* ------------------------------------------------------------------ */
 function sampler(getConn, inbound, paint) {
   var lastBytes = 0, lastTs = 0;
   return setInterval(function () {
+    if (document.hidden) return;
     var c = getConn();
     if (!c || !c.getStats) return;
     c.getStats(null).then(function (rep) {
@@ -1109,7 +1271,7 @@ function sampler(getConn, inbound, paint) {
       });
       paint(out);
     }).catch(function () {});
-  }, 1000);
+  }, 2000);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1123,7 +1285,7 @@ function show(which) {
 }
 
 function openSheet(which) {
-  ["sheetInfo", "sheetSet", "sheetManual", "sheetLog"].forEach(function (id) { $(id).style.display = "none"; });
+  ["sheetInfo", "sheetSet", "sheetManual", "sheetLog", "sheetDiag"].forEach(function (id) { $(id).style.display = "none"; });
   $(which).style.display = "block";
   $("veil").classList.add("show");
   if (which === "sheetManual") manualPrep();
@@ -1135,16 +1297,16 @@ on(document, "keydown", function (e) { if (e.key === "Escape") closeSheet(); });
 
 /* clocks */
 setInterval(function () {
+  if (document.hidden) return;
   var t = new Date().toLocaleTimeString();
-  $("clockPc").textContent = t;
-  $("clockCam").textContent = t;
+  $(current === "cam" ? "clockCam" : "clockPc").textContent = t;
 }, 1000);
 
 /* ==================================================================== */
 /* MONITOR SIDE                                                         */
 /* ==================================================================== */
 var PC = {
-  code: null, rv: null, conn: null, dc: null, peer: null, pend: [], stream: null, connId: "", dropT: 0,
+  code: null, bus: null, link: null, conn: null, dc: null, peer: null, pend: [], stream: null, connId: "", dropT: 0, lastOffer: "",
   live: 0, stats: 0, uptime: 0, rec: null, recBits: [], recStart: 0,
   rot: 0, mirror: false, viewZoom: 100, camState: {}, gotVideo: false
 };
@@ -1180,22 +1342,29 @@ function pcStart(code) {
   $("pairStrip").classList.remove("hide");
   $("pairHint").textContent = "Waiting for a camera to join…";
   setTimeout(pcFitVideo, 30);
-  pcStatus("wait", "Contacting the rendezvous server…");
-  PC.rv = Rendezvous("fieldcam-" + code, {
-    up: function () { pcStatus("wait", "Ready — waiting for the camera on code " + code); pcWarn(""); },
-    down: function () { pcStatus("bad", "Rendezvous offline — retrying"); },
-    taken: function () { log("code busy, picking another"); pcNewCode(); },
-    error: function (m) {
-      pcStatus("bad", m);
-      pcWarn("Rendezvous problem: " + m + " — you can still use Offline pairing, or set another host in Settings.");
+  pcStatus("wait", "Opening signalling routes…");
+  PC.bus = Bus("fieldcam-" + code, {
+    up: function () {
+      pcWarn("");
+      if (PC.gotVideo) return;          /* a late route must not overwrite "Live" */
+      pcStatus("wait", "Ready on code " + code + " — listening via " + PC.bus.names());
+      $("pairHint").textContent = "Waiting for a camera to join. Routes up: " + PC.bus.names() + ".";
     },
+    down: function () {
+      if (PC.bus && !PC.bus.ready().length) {
+        pcStatus("bad", "No signalling route is reachable");
+        pcWarn("None of the three rendezvous routes answered. Your network may block them — use Offline pairing, which needs no server at all.");
+      }
+    },
+    taken: function () { log("code busy, picking another"); pcNewCode(); },
+    error: function (m) { log("[monitor] " + m); },
     msg: pcSignal
   });
   show("pc");
 }
 
-function pcSignal(m) {
-  if (m.type === "OFFER") { pcAccept(m.src, m.payload); return; }
+function pcSignal(m, link) {
+  if (m.type === "OFFER") { pcAccept(m.src, m.payload, link); return; }
   if (m.type === "CANDIDATE") {
     var c = m.payload && m.payload.candidate;
     if (!c) return;
@@ -1208,22 +1377,47 @@ function pcSignal(m) {
   }
 }
 
-function pcAccept(src, payload) {
-  var renegotiate = PC.conn && PC.peer === src && PC.conn.signalingState !== "closed";
+function pcAccept(src, payload, link) {
+  if (link) PC.link = link;
+  var sdpText = (payload && payload.sdp && payload.sdp.sdp) || "";
+  var connId = (payload && payload.connectionId) || "";
+  /* Same connection id  = the call we are already on: either the phone
+     repeating its offer over another route, or a genuine renegotiation.
+     Different id = a brand new call, which always wins.                   */
+  var sameCall = PC.conn && PC.conn.signalingState !== "closed" && PC.connId === connId;
+  if (sameCall && sdpText === PC.lastOffer) {
+    if (link && PC.conn.localDescription) link.send("ANSWER", sigDesc(PC.conn.localDescription, PC.connId), src);
+    return;                                   /* duplicate: just answer again */
+  }
+  if (sameCall && PC.conn.signalingState !== "stable") {
+    log("[monitor] renegotiation skipped, one is already running");
+    return;
+  }
+  var renegotiate = sameCall;
   if (!renegotiate) { pcCloseConn(); PC.peer = src; }
-  PC.connId = (payload && payload.connectionId) || PC.connId || "mc_pc";
+  PC.connId = connId || PC.connId || "mc_pc";
+  PC.lastOffer = sdpText;
   var c = renegotiate ? PC.conn : new RTCPeerConnection(rtcConfig());
   if (!renegotiate) {
     PC.conn = c;
     c.onicecandidate = function (e) {
-      if (e.candidate) PC.rv && PC.rv.send("CANDIDATE", sigCand(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, PC.connId), src);
+      if (e.candidate && PC.link) PC.link.send("CANDIDATE", sigCand(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, PC.connId), src);
     };
     c.ontrack = function (e) {
       var v = $("remote");
-      var s = e.streams && e.streams[0];
-      if (s && v.srcObject !== s) { v.srcObject = s; PC.stream = s; }
+      /* tracks added later (the microphone) arrive tagged with a different
+         MediaStream, so keep one stream of our own and collect tracks in it */
+      if (!PC.stream || !(PC.stream instanceof MediaStream)) {
+        PC.stream = new MediaStream();
+        v.srcObject = PC.stream;
+      }
+      if (PC.stream.getTracks().indexOf(e.track) < 0) PC.stream.addTrack(e.track);
+      if (v.srcObject !== PC.stream) v.srcObject = PC.stream;
+      e.track.onended = function () {
+        try { PC.stream.removeTrack(e.track); } catch (err) {}
+      };
       v.play().catch(function () {});
-      pcOnVideo();
+      if (e.track.kind === "video") pcOnVideo();
     };
     c.ondatachannel = function (e) { pcWireDC(e.channel); };
     c.oniceconnectionstatechange = function () {
@@ -1252,7 +1446,7 @@ function pcAccept(src, payload) {
   }).then(function (ans) {
     return c.setLocalDescription(ans);
   }).then(function () {
-    PC.rv && PC.rv.send("ANSWER", sigDesc(c.localDescription, PC.connId), src);
+    if (PC.link) PC.link.send("ANSWER", sigDesc(c.localDescription, PC.connId), src);
     if (renegotiate && PC.gotVideo) pcStatus("live", "Live");
     else pcStatus("wait", renegotiate ? "Updating stream…" : "Camera found — negotiating…");
   }).catch(function (e) {
@@ -1267,6 +1461,7 @@ function pcOnVideo() {
   $("frame").classList.add("hasvideo");
   $("pairStrip").classList.add("hide");
   PC.live = Date.now();
+  PC.lastBeat = PC.lastMedia = Date.now();
   pcStatus("live", "Live");
   clearInterval(PC.uptime);
   PC.uptime = setInterval(function () { $("pcUp").textContent = fmtDur(Date.now() - PC.live); }, 500);
@@ -1276,13 +1471,28 @@ function pcOnVideo() {
     $("roRate").innerHTML = (o.fps ? "<b>" + Math.round(o.fps) + "</b> fps" : "— fps") +
       (o.kbps ? " · " + (o.kbps > 1200 ? (o.kbps / 1000).toFixed(1) + " Mb/s" : o.kbps + " kb/s") : "");
     $("roRtt").innerHTML = o.rtt ? "<b>" + o.rtt + "</b> ms" : "— ms";
-    pcFitVideo();
+    if (o.kbps > 0) PC.lastMedia = Date.now();
   });
   pcFitVideo();
 }
 
+var pcBadSince = 0;
+setInterval(function () {
+  if (!PC.gotVideo || !PC.conn) { pcBadSince = 0; return; }
+  var now = Date.now();
+  var ice = PC.conn.iceConnectionState;
+  var iceOk = ice === "connected" || ice === "completed" || ice === "checking" || ice === "new";
+  /* silence on the control channel AND in the media stream means the phone is
+     really gone — far quicker than waiting for ICE to give up */
+  var silent = (now - (PC.lastBeat || 0) > 5500) && (now - (PC.lastMedia || 0) > 5500);
+  if (iceOk && !silent) { pcBadSince = 0; return; }
+  if (!pcBadSince) pcBadSince = now;
+  else if (now - pcBadSince > 2500) { pcBadSince = 0; pcDropped(); }
+}, 1500);
+
 function pcDropped() {
   clearTimeout(PC.dropT);
+  pcBadSince = 0;
   if (!PC.gotVideo) return;
   PC.gotVideo = false;
   document.body.classList.remove("streaming");
@@ -1297,7 +1507,7 @@ function pcCloseConn() {
   clearInterval(PC.stats); clearInterval(PC.uptime);
   if (PC.dc) { try { PC.dc.close(); } catch (e) {} PC.dc = null; }
   if (PC.conn) { try { PC.conn.close(); } catch (e) {} PC.conn = null; }
-  PC.pend = []; PC.gotVideo = false;
+  PC.pend = []; PC.gotVideo = false; PC.lastOffer = ""; PC.stream = null;
   document.body.classList.remove("streaming");
   $("frame").classList.remove("hasvideo", "frozen");
   $("remote").srcObject = null;
@@ -1305,8 +1515,8 @@ function pcCloseConn() {
 
 function pcTeardown() {
   pcCloseConn();
-  if (PC.rv) { PC.rv.close(); PC.rv = null; }
-  PC.peer = null;
+  if (PC.bus) { PC.bus.close(); PC.bus = null; }
+  PC.link = null; PC.peer = null;
 }
 
 /* --- control channel (monitor end) --- */
@@ -1321,7 +1531,9 @@ function pcWireDC(ch) {
   };
   ch.onmessage = function (e) {
     var m;
+    PC.lastBeat = Date.now();
     try { m = JSON.parse(e.data); } catch (err) { return; }
+    if (m.t === "ping") return;
     if (m.t === "bye") { pcCloseConn(); pcDropped(); pcStatus("wait", "Camera stopped — waiting on code " + PC.code); return; }
     if (m.t === "state") pcApplyState(m);
     else if (m.t === "batt") {
@@ -1391,6 +1603,7 @@ window.addEventListener("resize", function () { if (current === "pc") pcFitVideo
 
 /* --- OSD --- */
 setInterval(function () {
+  if (document.hidden) return;
   var txt = stamp("Fieldcam" + (PC.code ? " " + PC.code : ""));
   $("osd").textContent = txt;
   $("osd").classList.toggle("off", !cfg.stamp);
@@ -1502,6 +1715,7 @@ on($("tbFull"), "click", function () {
 });
 on($("remote"), "dblclick", function () { $("tbFull").click(); });
 on($("remote"), "loadedmetadata", pcFitVideo);
+on($("remote"), "resize", pcFitVideo);
 
 on(document, "keydown", function (e) {
   if (current !== "pc") return;
@@ -1529,8 +1743,8 @@ on(document, "keydown", function (e) {
 var CAM = {
   code: null, rv: null, conn: null, dc: null, stream: null, want: false,
   facing: store.get("facing", "environment"), devId: store.get("devId", ""),
-  torch: false, mic: false, paused: false, zoom: 1, caps: {}, connId: "",
-  answerT: 0, tries: 0, stats: 0, recon: 0, wake: null, negoT: 0, connected: false
+  torch: false, mic: false, paused: false, zoom: 1, caps: {}, connId: "", bus: null, link: null, linkIdx: 0,
+  answerT: 0, shoutT: 0, renegT: 0, beatT: 0, negoPending: false, tries: 0, stats: 0, recon: 0, wake: null, negoT: 0, connected: false
 };
 
 function camStatus(kind, text) {
@@ -1608,6 +1822,26 @@ async function openCamera() {
     } else { camFail(e); return; }
   }
   CAM.stream = s;
+  try { var vt0 = s.getVideoTracks()[0]; if (vt0 && "contentHint" in vt0) vt0.contentHint = "motion"; } catch (e) {}
+
+  /* hand the new track to the live connection BEFORE the old one is stopped,
+     otherwise the far end sees the track end and the picture drops out */
+  if (CAM.conn) {
+    var senders = CAM.conn.getSenders();
+    var vs = senders.filter(function (x) { return x.track && x.track.kind === "video"; })[0];
+    var as = senders.filter(function (x) { return x.track && x.track.kind === "audio"; })[0];
+    try {
+      if (vs && s.getVideoTracks()[0]) await vs.replaceTrack(s.getVideoTracks()[0]);
+      else if (s.getVideoTracks()[0]) CAM.conn.addTrack(s.getVideoTracks()[0], s);
+    } catch (e) { log("[camera] track swap failed: " + e.message); }
+    try {
+      if (as && s.getAudioTracks()[0]) await as.replaceTrack(s.getAudioTracks()[0]);
+      else if (s.getAudioTracks()[0]) CAM.conn.addTrack(s.getAudioTracks()[0], s);
+      else if (as && !s.getAudioTracks().length) await as.replaceTrack(null);
+    } catch (e) {}
+    applyBitrate();
+  }
+
   $("local").srcObject = s;
   $("local").play().catch(function () {});
   $("camStage").classList.toggle("mirror", CAM.facing === "user" && !CAM.devId);
@@ -1615,16 +1849,6 @@ async function openCamera() {
 
   await listCameras();
   readCaps();
-  if (CAM.conn) {
-    var senders = CAM.conn.getSenders();
-    var vs = senders.filter(function (x) { return x.track && x.track.kind === "video"; })[0];
-    var as = senders.filter(function (x) { return x.track && x.track.kind === "audio"; })[0];
-    if (vs && videoTrack()) vs.replaceTrack(videoTrack());
-    else if (videoTrack()) CAM.conn.addTrack(videoTrack(), s);
-    if (as && audioTrack()) as.replaceTrack(audioTrack());
-    else if (audioTrack()) CAM.conn.addTrack(audioTrack(), s);
-    applyBitrate();
-  }
   camPushState();
   camStatus(CAM.connected ? "live" : "wait", CAM.connected ? "Streaming" : "Camera ready");
 }
@@ -1666,6 +1890,29 @@ function readCaps() {
     if (st.exposureCompensation != null) { $("camEv").value = st.exposureCompensation; $("camEvV").textContent = Number(st.exposureCompensation).toFixed(1); }
   }
   $("cbTorch").disabled = !CAM.caps.torch;
+}
+
+async function setFps(v) {
+  $("camFps").value = String(v);
+  var t = videoTrack();
+  if (t) {
+    try { await t.applyConstraints({ frameRate: { ideal: +v, max: +v } }); camPushState(); return; }
+    catch (e) { log("[camera] live fps change refused, reopening"); }
+  }
+  await openCamera();
+}
+async function setRes(v) {
+  $("camRes").value = v;
+  var wh = v.split("x"), t = videoTrack();
+  if (t) {
+    try {
+      await t.applyConstraints({ width: { ideal: +wh[0] }, height: { ideal: +wh[1] } });
+      var st = t.getSettings ? t.getSettings() : {};
+      if (st.width && Math.abs(st.width - +wh[0]) < 2) { camPushState(); return; }
+    } catch (e) {}
+    log("[camera] live size change refused, reopening");
+  }
+  await openCamera();
 }
 
 async function applyTrack(obj) {
@@ -1712,26 +1959,40 @@ async function camConnect(code) {
   $("cbStop").disabled = false;
   if (!CAM.stream) await openCamera();
   if (!CAM.stream) return;
-  if (!CAM.rv) {
+  if (!CAM.bus) {
     var myId = "fieldcam-cam-" + Math.random().toString(36).slice(2, 9);
-    CAM.rv = Rendezvous(myId, {
-      up: function () { camOffer(); },
-      down: function () { camStatus("wait", "Rendezvous offline — retrying"); },
-      taken: function () { CAM.rv = null; camConnect(code); },
-      error: function (m) {
-        camStatus("bad", m);
-        if (/not.*open|Could not connect|peer/i.test(m)) {
-          camWarn("No monitor is listening on code " + CAM.code + ". Check the number, or press ↻ on the monitor for a fresh one.");
+    CAM.bus = Bus(myId, {
+      up: function () {
+        if (CAM.connected) return;
+        /* an offer already in flight is re-broadcast by its own repeat timer,
+           so a route coming up late must not start a second call */
+        if (CAM.conn && CAM.conn.signalingState === "have-local-offer") return;
+        camOffer();
+      },
+      down: function () {
+        if (CAM.bus && !CAM.bus.ready().length) {
+          camStatus("bad", "No signalling route is reachable");
+          camWarn("None of the rendezvous routes answered on this network. Try Offline pairing — it needs no server.");
         }
       },
+      taken: function () { CAM.bus.close(); CAM.bus = null; camConnect(code); },
+      error: function (m) { log("[camera] " + m); },
       msg: camSignal
     });
-    camStatus("wait", "Contacting the rendezvous server…");
-  } else if (CAM.rv.isReady()) camOffer();
+    camStatus("wait", "Opening signalling routes…");
+  } else if (CAM.bus.ready().length) camOffer();
+}
+
+function camEachLink(fn) {
+  var up = CAM.bus ? CAM.bus.ready() : [];
+  up.forEach(fn);
+  return up.length;
 }
 
 async function camOffer() {
   if (!CAM.want || !CAM.stream) return;
+  if (!camEachLink(function () {})) { camStatus("wait", "Waiting for a signalling route…"); return; }
+  CAM.link = null;
   camCloseConn();
   CAM.connId = "mc_" + Math.random().toString(36).slice(2, 10);
   var c = new RTCPeerConnection(rtcConfig());
@@ -1741,7 +2002,11 @@ async function camOffer() {
   CAM.stream.getTracks().forEach(function (t) { c.addTrack(t, CAM.stream); });
   applyBitrate();
   c.onicecandidate = function (e) {
-    if (e.candidate && CAM.rv) CAM.rv.send("CANDIDATE", sigCand(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, CAM.connId), "fieldcam-" + CAM.code);
+    if (!e.candidate) return;
+    var cand = sigCand(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, CAM.connId);
+    var dst = "fieldcam-" + CAM.code;
+    if (CAM.link) CAM.link.send("CANDIDATE", cand, dst);
+    else camEachLink(function (l) { l.send("CANDIDATE", cand, dst); });
   };
   c.oniceconnectionstatechange = function () {
     var st = c.iceConnectionState;
@@ -1749,7 +2014,7 @@ async function camOffer() {
     if (st === "connected" || st === "completed") {
       CAM.connected = true; CAM.tries = 0;
       clearTimeout(CAM.answerT);
-      camStatus("live", "Streaming to the monitor");
+      camStatus("live", "Streaming to the monitor via " + (CAM.link ? CAM.link.label : "direct"));
       camWarn("");
       $("camPanel").classList.remove("show");
       camPushState();
@@ -1767,30 +2032,62 @@ async function camOffer() {
   c.onnegotiationneeded = function () {
     if (!CAM.conn || CAM.conn !== c) return;
     clearTimeout(CAM.negoT);
-    CAM.negoT = setTimeout(function () { if (CAM.connected) sendOffer(c, true); }, 250);
+    CAM.negoT = setTimeout(function () { camRenegotiate(c); }, 300);
+  };
+  c.onsignalingstatechange = function () {
+    if (c.signalingState === "stable" && CAM.negoPending) {
+      CAM.negoPending = false;
+      setTimeout(function () { camRenegotiate(c); }, 120);
+    }
   };
   applyBitrate();
   sendOffer(c, false);
-  camStatus("wait", "Calling the monitor on code " + CAM.code + "…");
+  camStatus("wait", "Calling code " + CAM.code + "…");
+}
+
+function camRenegotiate(c) {
+  if (!CAM.conn || CAM.conn !== c || !CAM.connected) return;
+  if (c.signalingState !== "stable") { CAM.negoPending = true; return; }
+  sendOffer(c, true);
+  /* a renegotiation offer can be lost on a relay too — repeat while it hangs */
+  var left = 3;
+  clearInterval(CAM.renegT);
+  CAM.renegT = setInterval(function () {
+    if (!CAM.conn || CAM.conn !== c || c.signalingState === "stable" || left-- <= 0) {
+      clearInterval(CAM.renegT); CAM.renegT = 0; return;
+    }
+    sendOffer(c, true);
+  }, 2500);
 }
 
 function sendOffer(c, renego) {
   c.createOffer().then(function (o) { return c.setLocalDescription(o); }).then(function () {
-    if (!CAM.rv) return;
-    CAM.rv.send("OFFER", sigDesc(c.localDescription, CAM.connId), "fieldcam-" + CAM.code);
-    if (!renego) {
-      clearTimeout(CAM.answerT);
-      CAM.answerT = setTimeout(function () {
-        if (!CAM.connected) {
-          CAM.tries++;
-          if (CAM.tries <= 4) { camStatus("wait", "No answer — retry " + CAM.tries + "/4"); camOffer(); }
-          else {
-            camStatus("bad", "The monitor never answered");
-            camWarn("Nobody answered on code " + CAM.code + ". Make sure the monitor page is open with that exact code.");
-          }
-        }
-      }, 9000);
-    }
+    var dst = "fieldcam-" + CAM.code;
+    var body = sigDesc(c.localDescription, CAM.connId);
+    var shout = function () {
+      if (CAM.link) CAM.link.send("OFFER", body, dst);
+      else camEachLink(function (l) { l.send("OFFER", body, dst); });
+    };
+    shout();
+    if (renego) return;
+    /* the relays store nothing, so a call placed a moment before the monitor
+       finished subscribing would simply vanish — repeat until answered */
+    clearInterval(CAM.shoutT);
+    var beats = 0;
+    CAM.shoutT = setInterval(function () {
+      beats++;
+      if (CAM.connected || !CAM.want || CAM.conn !== c || c.signalingState !== "have-local-offer") {
+        clearInterval(CAM.shoutT); CAM.shoutT = 0; return;
+      }
+      if (beats > 8) {
+        clearInterval(CAM.shoutT); CAM.shoutT = 0;
+        camStatus("bad", "The monitor never answered");
+        camWarn("Nobody answered on code " + CAM.code + " over any route. Check the digits on the monitor, press ↻ there for a fresh code, or use Offline pairing.");
+        return;
+      }
+      if (beats === 2) camStatus("wait", "Still calling code " + CAM.code + "…");
+      shout();
+    }, 1800);
   }).catch(function (e) { camStatus("bad", "Offer failed: " + e.message); });
 }
 
@@ -1802,9 +2099,11 @@ function scheduleRetry(ms) {
   }, ms);
 }
 
-function camSignal(m) {
+function camSignal(m, link) {
   if (m.type === "ANSWER") {
-    if (!CAM.conn) return;
+    if (!CAM.conn || CAM.conn.signalingState !== "have-local-offer") return;
+    if (link) CAM.link = link;
+    clearInterval(CAM.shoutT); CAM.shoutT = 0;
     CAM.conn.setRemoteDescription(m.payload.sdp).then(function () {
       if (!CAM.connected) camStatus("wait", "Answer received — opening media…");
     }).catch(function (e) { log("[camera] answer error " + e.message); });
@@ -1827,7 +2126,16 @@ function camSignal(m) {
 
 function camWireDC(ch) {
   CAM.dc = ch;
-  ch.onopen = function () { log("[camera] control channel open"); camPushState(); pushBattery(); };
+  ch.onopen = function () {
+    log("[camera] control channel open");
+    camPushState(); pushBattery();
+    clearInterval(CAM.beatT);
+    CAM.beatT = setInterval(function () {
+      if (ch.readyState !== "open") { clearInterval(CAM.beatT); CAM.beatT = 0; return; }
+      try { ch.send('{"t":"ping"}'); } catch (e) {}
+    }, 2000);
+  };
+  ch.onclose = function () { clearInterval(CAM.beatT); CAM.beatT = 0; };
   ch.onmessage = function (e) {
     var m;
     try { m = JSON.parse(e.data); } catch (err) { return; }
@@ -1844,8 +2152,8 @@ async function handleCmd(k, v) {
   else if (k === "af") { await doFocus(); camToast("Autofocus triggered"); }
   else if (k === "zoomStep") { await stepZoom(v); }
   else if (k === "zoomSet") { await setZoom(v); }
-  else if (k === "fps") { $("camFps").value = String(v); await openCamera(); camToast("Frame rate " + v + " fps"); }
-  else if (k === "res") { $("camRes").value = v; await openCamera(); }
+  else if (k === "fps") { await setFps(v); camToast("Frame rate " + v + " fps"); }
+  else if (k === "res") { await setRes(v); }
   else if (k === "pause") { setPause(!!v); }
   else if (k === "snap") { snapVideo($("local"), "fieldcam-phone"); camToast("Photo saved on the phone"); }
   else if (k === "mic") { await setMic(!!v); }
@@ -1919,6 +2227,9 @@ function pushBattery() {
 
 function camCloseConn() {
   clearTimeout(CAM.answerT);
+  clearInterval(CAM.shoutT); CAM.shoutT = 0;
+  clearInterval(CAM.renegT); CAM.renegT = 0;
+  clearTimeout(CAM.negoT); CAM.negoPending = false;
   if (CAM.dc) { try { CAM.dc.close(); } catch (e) {} CAM.dc = null; }
   if (CAM.conn) { try { CAM.conn.close(); } catch (e) {} CAM.conn = null; }
   CAM.connected = false;
@@ -1931,7 +2242,8 @@ function camStop() {
   CAM.want = false;
   clearTimeout(CAM.recon);
   camCloseConn();
-  if (CAM.rv) { CAM.rv.close(); CAM.rv = null; }
+  if (CAM.bus) { CAM.bus.close(); CAM.bus = null; }
+  CAM.link = null;
   if (CAM.stream) { CAM.stream.getTracks().forEach(function (t) { t.stop(); }); CAM.stream = null; }
   $("local").srcObject = null;
   $("cbStop").disabled = true;
@@ -1941,7 +2253,7 @@ function camStop() {
 
 /* camera stats readout */
 setInterval(function () {
-  if (current !== "cam" || !CAM.conn) return;
+  if (current !== "cam" || !CAM.conn || document.hidden) return;
   if (!CAM.stats) {
     CAM.stats = sampler(function () { return CAM.conn; }, false, function (o) {
       $("camMetrics").style.display = o.w ? "flex" : "none";
@@ -1994,8 +2306,8 @@ document.addEventListener("visibilitychange", async function () {
   }
 });
 on($("camPick"), "change", function () { if (CAM.stream) openCamera(); });
-on($("camRes"), "change", function () { if (CAM.stream) openCamera(); });
-on($("camFps"), "change", function () { if (CAM.stream) openCamera(); });
+on($("camRes"), "change", function () { if (CAM.stream) setRes($("camRes").value); });
+on($("camFps"), "change", function () { if (CAM.stream) setFps($("camFps").value); });
 on($("camQual"), "change", applyBitrate);
 on($("camZoom"), "input", function () { setZoom(+$("camZoom").value); });
 on($("camEv"), "input", function () {
@@ -2107,6 +2419,94 @@ on($("manAnswer"), "click", async function () {
 on($("manCopy2"), "click", function () { copyText($("manPcOut").value); });
 
 /* ==================================================================== */
+/* CONNECTION CHECK                                                     */
+/* ==================================================================== */
+function diagLine(t) { var el = $("diagBody"); el.textContent += t + "\n"; }
+
+function probeLink(spec) {
+  return new Promise(function (res) {
+    var t0 = Date.now(), done = false, L = null;
+    var id = "fieldcam-probe-" + Math.random().toString(36).slice(2, 9);
+    var finish = function (txt) {
+      if (done) return;
+      done = true;
+      try { if (L) L.close(); } catch (e) {}
+      res(txt);
+    };
+    var to = setTimeout(function () { finish("unreachable (8 s timeout)"); }, 8000);
+    var hooks = {
+      up: function () { clearTimeout(to); finish("reachable in " + (Date.now() - t0) + " ms"); },
+      down: function () {},
+      error: function (m) { clearTimeout(to); finish("refused: " + m); },
+      taken: function () { clearTimeout(to); finish("reachable (id clash)"); },
+      msg: function () {}
+    };
+    try { L = spec.kind === "mqtt" ? MqttLink(spec, id, hooks) : PeerLink(spec, id, hooks); }
+    catch (e) { clearTimeout(to); finish("failed: " + e.message); }
+  });
+}
+
+function probeIce() {
+  return new Promise(function (res) {
+    var kinds = { host: 0, srflx: 0, relay: 0, prflx: 0 };
+    var c;
+    try { c = new RTCPeerConnection(rtcConfig()); }
+    catch (e) { res("could not start: " + e.message); return; }
+    try { c.createDataChannel("probe"); } catch (e) {}
+    c.onicecandidate = function (e) {
+      if (!e.candidate) return;
+      var t = e.candidate.type || (String(e.candidate.candidate).split(" ")[7]);
+      if (kinds[t] != null) kinds[t]++;
+    };
+    c.createOffer().then(function (o) { return c.setLocalDescription(o); }).catch(function () {});
+    setTimeout(function () {
+      try { c.close(); } catch (e) {}
+      res("local " + kinds.host + " · public (STUN) " + kinds.srflx + " · relay (TURN) " + kinds.relay +
+        (kinds.srflx ? "" : "  ← STUN blocked: only same-network pairing will work"));
+    }, 5000);
+  });
+}
+
+async function runDiag() {
+  openSheet("sheetDiag");
+  $("diagBody").textContent = "";
+  $("diagRun").disabled = true;
+  diagLine("Fieldcam connection check · " + new Date().toLocaleString());
+  diagLine("page          : " + location.href);
+  diagLine("browser       : " + navigator.userAgent);
+  diagLine("secure context: " + (window.isSecureContext ? "yes" : "NO — the camera will be blocked, serve over https"));
+  diagLine("embedded frame: " + (window.top !== window.self ? "YES — open in its own tab, frames block the camera" : "no"));
+  diagLine("WebRTC        : " + (window.RTCPeerConnection ? "supported" : "MISSING in this browser"));
+  try {
+    var devs = await navigator.mediaDevices.enumerateDevices();
+    var cams = devs.filter(function (d) { return d.kind === "videoinput"; });
+    diagLine("cameras       : " + cams.length + (cams.length && cams[0].label
+      ? " — " + cams.map(function (d) { return d.label; }).join(" / ")
+      : " (names appear once permission is granted)"));
+  } catch (e) { diagLine("cameras       : " + e.message); }
+  diagLine("");
+  diagLine("signalling routes");
+  var specs = linkSpecs();
+  for (var i = 0; i < specs.length; i++) {
+    diagLine("  " + specs[i].label.padEnd(14) + ": …testing");
+    var r = await probeLink(specs[i]);
+    var lines = $("diagBody").textContent.split("\n");
+    lines[lines.length - 2] = "  " + specs[i].label.padEnd(14) + ": " + r;
+    $("diagBody").textContent = lines.join("\n");
+  }
+  diagLine("");
+  diagLine("ice candidates (5 s sample)");
+  diagLine("  " + (await probeIce()));
+  diagLine("");
+  diagLine("If every route says unreachable, pairing by code cannot work on this");
+  diagLine("network — use Offline pairing, which needs no server at all.");
+  $("diagRun").disabled = false;
+}
+on($("diagRun"), "click", runDiag);
+on($("optDiag"), "click", runDiag);
+on($("diagCopy"), "click", function () { copyText($("diagBody").textContent); });
+
+/* ==================================================================== */
 /* SETTINGS                                                             */
 /* ==================================================================== */
 function settingsToForm() {
@@ -2117,6 +2517,7 @@ function settingsToForm() {
   $("optTurnUser").value = cfg.turnUser;
   $("optTurnPass").value = cfg.turnPass;
   $("optBroker").value = cfg.broker;
+  $("optLink").value = cfg.link;
 }
 on($("optSave"), "click", function () {
   cfg.stamp = $("optStamp").checked;
@@ -2126,6 +2527,7 @@ on($("optSave"), "click", function () {
   cfg.turnUser = $("optTurnUser").value.trim();
   cfg.turnPass = $("optTurnPass").value.trim();
   cfg.broker = ($("optBroker").value.trim() || "0.peerjs.com").replace(/^wss?:\/\//, "").replace(/\/.*$/, "");
+  cfg.link = $("optLink").value;
   Object.keys(cfg).forEach(function (k) { store.set(k, cfg[k]); });
   pcFitVideo();
   closeSheet();
@@ -2133,7 +2535,7 @@ on($("optSave"), "click", function () {
   log("settings saved (relay=" + cfg.relay + ", broker=" + cfg.broker + ")");
 });
 on($("optReset"), "click", function () {
-  cfg = { stamp: true, aspect: true, relay: false, turnUrl: "", turnUser: "", turnPass: "", broker: "0.peerjs.com" };
+  cfg = { stamp: true, aspect: true, relay: false, turnUrl: "", turnUser: "", turnPass: "", broker: "0.peerjs.com", link: "auto" };
   Object.keys(cfg).forEach(function (k) { store.set(k, cfg[k]); });
   settingsToForm();
   toast("Defaults restored");
@@ -2164,6 +2566,13 @@ if (!window.RTCPeerConnection) {
     '<div class="warnbar show">This browser does not support WebRTC. Try a recent Chrome, Edge, Firefox or Safari.</div>');
 }
 
+if (window.top !== window.self) {
+  pcWarn("This page is running inside an embedded frame, where browsers block camera access. Open it in its own browser tab.");
+  camWarn("This page is running inside an embedded frame, where browsers block camera access. Open it in its own browser tab.");
+  document.body.insertAdjacentHTML("afterbegin",
+    '<div class="warnbar show">Open this page in its own browser tab — inside an embedded preview the browser blocks the camera and the network.</div>');
+}
+
 (function route() {
   var q = new URLSearchParams(location.search);
   var c = (q.get("c") || "").replace(/\D/g, "");
@@ -2184,5 +2593,5 @@ log("Fieldcam ready · " + location.href);
 
 })();
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e11859acbee4b2',t:'MTc4NzIyNTczMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
