@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cam link — same Wi-Fi test</title>
+<style>
+:root{
+  --bg:#d5d8dd;--panel:#e4e6ea;--ink:#2c3238;--mute:#5c646c;--line:#b8bec6;
+  --go:#2d6b4f;--on:#f4f1ec;--bad:#9a3f3a;
+  --ui:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:18px;line-height:1.45}
+body{padding:20px}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin:0 0 8px}
+p{margin:0 0 12px;color:var(--mute)}
+.roles{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+button,textarea{
+  font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+}
+button{padding:12px 16px;font-weight:700;cursor:pointer}
+button.primary{background:var(--go);color:var(--on);border-color:var(--go)}
+button:disabled{opacity:.45;cursor:default}
+.panel{display:none;background:var(--panel);border:1px solid var(--line);padding:16px;margin-top:12px}
+.panel.on{display:block}
+label{display:block;font-size:.9rem;color:var(--mute);margin:12px 0 6px}
+textarea{width:100%;min-height:120px;padding:10px;font-family:var(--mono);font-size:.85rem}
+video{width:100%;max-height:360px;background:#2c3238;margin-top:10px;display:block}
+.status{margin-top:10px;min-height:1.4em}
+.status.bad{color:var(--bad)}
+.status.ok{color:var(--go)}
+.hint{font-size:.95rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Phone camera → PC</h1>
+  <p class="hint">No room code. No open port. You carry the handshake yourself (copy/paste). Video can stay on the same Wi‑Fi.</p>
+  <p class="hint"><b>Why a room code exists:</b> two browsers cannot see each other. A room is just a named box on a server so they can drop a hello there. Here <i>you</i> are that box.</p>
+
+  <div class="roles">
+    <button class="primary" id="btnPhone" type="button">1. I am the phone</button>
+    <button id="btnPc" type="button">2. I am the PC</button>
+  </div>
+
+  <div class="panel" id="phone">
+    <p>Use this page on the <b>phone</b> (https, not file://, or the camera is blocked).</p>
+    <button class="primary" id="startCam" type="button">Start camera + make offer</button>
+    <video id="local" playsinline muted autoplay></video>
+    <label>Offer — copy this, paste on the PC</label>
+    <textarea id="offerOut" readonly></textarea>
+    <button type="button" id="copyOffer">Copy offer</button>
+    <label>Answer — paste what the PC gives you, then Apply</label>
+    <textarea id="answerIn" placeholder="Paste answer here"></textarea>
+    <button class="primary" type="button" id="applyAnswer">Apply answer</button>
+    <div class="status" id="phoneStatus"></div>
+  </div>
+
+  <div class="panel" id="pc">
+    <p>Use this page on the <b>computer</b>.</p>
+    <label>Offer — paste from the phone</label>
+    <textarea id="offerIn" placeholder="Paste offer here"></textarea>
+    <button class="primary" type="button" id="makeAnswer">Make answer</button>
+    <label>Answer — copy this, paste back on the phone</label>
+    <textarea id="answerOut" readonly></textarea>
+    <button type="button" id="copyAnswer">Copy answer</button>
+    <video id="remote" playsinline autoplay controls></video>
+    <div class="status" id="pcStatus"></div>
+  </div>
+</div>
+<script>
+(function () {
+  const ice = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+  function $(id) { return document.getElementById(id); }
+  function say(el, msg, kind) {
+    el.textContent = msg;
+    el.className = "status" + (kind ? " " + kind : "");
+  }
+  function waitIce(pc) {
+    if (pc.iceGatheringState === "complete") return Promise.resolve();
+    return new Promise(function (res) {
+      pc.addEventListener("icegatheringstatechange", function fn() {
+        if (pc.iceGatheringState === "complete") {
+          pc.removeEventListener("icegatheringstatechange", fn);
+          res();
+        }
+      });
+      setTimeout(res, 2500);
+    });
+  }
+  function pack(desc) { return JSON.stringify({ type: desc.type, sdp: desc.sdp }); }
+  function unpack(text) {
+    const o = JSON.parse(text.trim());
+    if (!o || !o.sdp || !o.type) throw new Error("Not a valid offer/answer");
+    return o;
+  }
+
+  let phonePc = null;
+  let pcPc = null;
+
+  $("btnPhone").onclick = function () {
+    $("phone").classList.add("on");
+    $("pc").classList.remove("on");
+  };
+  $("btnPc").onclick = function () {
+    $("pc").classList.add("on");
+    $("phone").classList.remove("on");
+  };
+
+  $("startCam").onclick = async function () {
+    const st = $("phoneStatus");
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        say(st, "No camera API. Open this file over https (GitHub Pages), not file://.", "bad");
+        return;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false
+      });
+      $("local").srcObject = stream;
+      phonePc = new RTCPeerConnection(ice);
+      stream.getTracks().forEach(function (t) { phonePc.addTrack(t, stream); });
+      const offer = await phonePc.createOffer();
+      await phonePc.setLocalDescription(offer);
+      await waitIce(phonePc);
+      $("offerOut").value = pack(phonePc.localDescription);
+      say(st, "Offer ready. Copy it → PC → paste the answer back here.", "ok");
+    } catch (e) {
+      say(st, String(e.message || e), "bad");
+    }
+  };
+
+  $("copyOffer").onclick = function () {
+    $("offerOut").select();
+    navigator.clipboard && navigator.clipboard.writeText($("offerOut").value);
+    document.execCommand("copy");
+  };
+
+  $("applyAnswer").onclick = async function () {
+    const st = $("phoneStatus");
+    try {
+      if (!phonePc) throw new Error("Start the camera first.");
+      await phonePc.setRemoteDescription(unpack($("answerIn").value));
+      say(st, "Linked. Keep this tab open. Watch on the PC.", "ok");
+    } catch (e) {
+      say(st, String(e.message || e), "bad");
+    }
+  };
+
+  $("makeAnswer").onclick = async function () {
+    const st = $("pcStatus");
+    try {
+      pcPc = new RTCPeerConnection(ice);
+      pcPc.ontrack = function (ev) {
+        $("remote").srcObject = ev.streams[0] || new MediaStream([ev.track]);
+      };
+      await pcPc.setRemoteDescription(unpack($("offerIn").value));
+      const answer = await pcPc.createAnswer();
+      await pcPc.setLocalDescription(answer);
+      await waitIce(pcPc);
+      $("answerOut").value = pack(pcPc.localDescription);
+      say(st, "Answer ready. Copy it back to the phone and tap Apply.", "ok");
+    } catch (e) {
+      say(st, String(e.message || e), "bad");
+    }
+  };
+
+  $("copyAnswer").onclick = function () {
+    $("answerOut").select();
+    navigator.clipboard && navigator.clipboard.writeText($("answerOut").value);
+    document.execCommand("copy");
+  };
+})();
+</script>
+</body>
+</html>
