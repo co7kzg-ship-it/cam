@@ -1045,8 +1045,15 @@ function stageName(n) { return n === 0 ? "local network" : n === 1 ? "internet (
    a permission (the track is stopped again immediately) puts the real
    192.168.x.x address in the offer, which is what makes LAN pairing work. */
 var localIpUnlocked = false;
-async function unlockLocalIp() {
+async function unlockLocalIp(force) {
   if (localIpUnlocked) return true;
+  if (!force && navigator.permissions && navigator.permissions.query) {
+    /* only reuse an existing grant — never pop a prompt unasked */
+    try {
+      var st = await navigator.permissions.query({ name: "microphone" });
+      if (st.state !== "granted") return false;
+    } catch (e) { return false; }
+  } else if (!force) return false;
   try {
     var s = await navigator.mediaDevices.getUserMedia({ audio: true });
     s.getTracks().forEach(function (t) { t.stop(); });
@@ -1354,14 +1361,16 @@ function joinURL(code) {
 function lanCheck() {
   return unlockLocalIp().then(function (ok) {
     $("lanNote").textContent = ok ? "" :
-      "A phone on this Wi-Fi cannot find this screen yet. Allow the microphone prompt — nothing is recorded, it only reveals the local address.";
+      "For pairing over Wi-Fi with a VPN on, this screen needs to publish its local address.";
     $("lanNote").style.display = ok ? "none" : "block";
     $("btnLanFix").style.display = ok ? "none" : "inline-flex";
     return ok;
   });
 }
 on($("btnLanFix"), "click", function () {
-  lanCheck().then(function (ok) { toast(ok ? "LAN pairing enabled" : "Still blocked — check the site permissions"); });
+  unlockLocalIp(true).then(function () {
+    lanCheck().then(function (ok) { toast(ok ? "LAN pairing enabled" : "Still blocked — check the site permissions"); });
+  });
 });
 
 function pcNewCode() {
@@ -1468,7 +1477,12 @@ function pcAccept(src, payload, link) {
       log("[monitor] ice " + st);
       clearTimeout(PC.dropT);
       if (st === "failed") {
-        pcStatus("bad", "Direct route failed — enable a relay in Settings");
+        if (!localIpUnlocked) {
+          pcWarn("This screen never published its local address — press “Enable LAN pairing” above, then have the phone try again.");
+          $("btnLanFix").style.display = "inline-flex";
+          $("pairStrip").classList.remove("hide");
+        }
+        pcStatus("bad", "No path — see the note above");
         pcWarn("No network path between the devices. Add a TURN relay in Settings, or use one Wi-Fi.");
         pcDropped();
       } else if (st === "disconnected") {
@@ -1825,6 +1839,14 @@ function secureOK() {
   return window.isSecureContext || location.hostname === "localhost" || location.protocol === "file:";
 }
 
+function seedCamList() {
+  var sel = $("camPick");
+  if (!sel.options.length) {
+    sel.innerHTML = '<option value="environment">Rear camera</option><option value="user">Front camera</option>';
+    sel.value = CAM.devId || CAM.facing || "environment";
+  }
+}
+
 async function listCameras() {
   var sel = $("camPick"), keep = sel.value;
   try {
@@ -1860,9 +1882,12 @@ async function openCamera() {
     camStatus("bad", "Insecure page — camera blocked");
     return;
   }
+  seedCamList();
   var wh = $("camRes").value.split("x");
   var fps = +$("camFps").value;
-  var pick = $("camPick").value;
+  /* the picker is only filled after the first grant, so fall back to the
+     remembered choice and finally to the rear camera — never to deviceId "" */
+  var pick = $("camPick").value || CAM.devId || CAM.facing || "environment";
   var video = {
     width: { ideal: +wh[0] }, height: { ideal: +wh[1] },
     frameRate: { ideal: fps, max: fps }
@@ -1872,16 +1897,22 @@ async function openCamera() {
   store.set("facing", CAM.facing); store.set("devId", CAM.devId);
 
   var older = CAM.stream;
-  var s;
-  try {
-    s = await navigator.mediaDevices.getUserMedia({ video: video, audio: CAM.mic ? { echoCancellation: true, noiseSuppression: true } : false });
-  } catch (e) {
-    if (e && (e.name === "OverconstrainedError" || e.name === "NotFoundError")) {
-      log("[camera] falling back to a looser request (" + e.name + ")");
-      try { s = await navigator.mediaDevices.getUserMedia({ video: true, audio: CAM.mic }); }
-      catch (e2) { camFail(e2); return; }
-    } else { camFail(e); return; }
+  var s = null;
+  var audio = CAM.mic ? { echoCancellation: true, noiseSuppression: true } : false;
+  var tries = [
+    { video: video, audio: audio },
+    { video: { facingMode: { ideal: CAM.facing || "environment" } }, audio: audio },
+    { video: true, audio: audio }
+  ];
+  for (var i = 0; i < tries.length && !s; i++) {
+    try { s = await navigator.mediaDevices.getUserMedia(tries[i]); }
+    catch (e) {
+      var fatal = e && (e.name === "NotAllowedError" || e.name === "SecurityError");
+      if (fatal || i === tries.length - 1) { camFail(e); return; }
+      log("[camera] request " + (i + 1) + " refused (" + (e && e.name) + "), relaxing");
+    }
   }
+  if (!s) return;
   CAM.stream = s;
   try { var vt0 = s.getVideoTracks()[0]; if (vt0 && "contentHint" in vt0) vt0.contentHint = "motion"; } catch (e) {}
 
@@ -1909,6 +1940,12 @@ async function openCamera() {
   if (older && older !== s) older.getTracks().forEach(function (t) { t.stop(); });
 
   await listCameras();
+  var st0 = videoTrack() && videoTrack().getSettings ? videoTrack().getSettings() : {};
+  if (st0.deviceId) {
+    var opt = Array.prototype.filter.call($("camPick").options, function (o) { return o.value === st0.deviceId; })[0];
+    if (opt) $("camPick").value = st0.deviceId;
+  }
+  if (st0.facingMode) CAM.facing = st0.facingMode;
   readCaps();
   camPushState();
   camStatus(CAM.connected ? "live" : "wait", CAM.connected ? "Streaming" : "Camera ready");
@@ -2682,5 +2719,5 @@ log("Fieldcam ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e1559e6d98e3f0',t:'MTc4NzIyODI0MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e16add8b39e3f0',t:'MTc4NzIyOTExMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
