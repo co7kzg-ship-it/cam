@@ -3,150 +3,185 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Field cam</title>
+<title>Field cam Video Feed</title>
 <style>
 :root{
-  --bg:#cfd3d8;--ink:#1a1e22;--mute:#4e575f;--line:#9aa1a8;
-  --panel:#e2e5e9;--well:#eceef1;--go:#215c43;--on:#f3f0e9;--hot:#8d3c2c;
-  --ui:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --bar:#2b2f33;--bar2:#353a3f;--bg:#1e2124;--ink:#e8eaed;--mute:#9aa0a6;
+  --line:#3c4248;--btn:#3a4046;--hot:#3d8b40;--ui:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
   --mono:ui-monospace,Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.4 var(--ui)}
-body{padding:14px}
-.w{max-width:1100px;margin:0 auto}
-.head{display:flex;justify-content:space-between;align-items:end;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:12px}
-h1{margin:0;font:700 1.65rem/1 var(--ui)}
-.head small{font:700 .8rem var(--mono);color:var(--mute)}
-.pick{display:flex;gap:8px;margin-bottom:12px}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 var(--ui);min-height:100%}
 button,select,input{font:inherit;color:var(--ink)}
-button{border:1px solid var(--ink);background:var(--well);padding:10px 12px;font-weight:700;cursor:pointer}
-button.go{background:var(--go);color:var(--on);border-color:var(--go)}
-button.hot{background:var(--hot);color:var(--on);border-color:var(--hot)}
-button.lit{background:var(--ink);color:var(--well)}
+button{
+  background:var(--btn);border:1px solid #4a5158;color:var(--ink);
+  padding:7px 10px;cursor:pointer;font-weight:650;
+}
+button:hover{background:#454c53}
+button.lit{background:#2e5a30;border-color:#3d8b40}
+button.go{background:#2e6b32;border-color:#3d8b40}
+button.hot{background:#6b322c;border-color:#8d3c2c}
 button:disabled{opacity:.4;cursor:default}
-select,input[type=range]{width:100%}
-select{border:1px solid var(--line);background:var(--well);padding:8px}
+select{background:var(--btn);border:1px solid #4a5158;padding:6px}
+.top{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--bar);padding:8px 12px;border-bottom:1px solid #111;
+}
+.brand{font-weight:700}
+.top-tools,.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tools{background:var(--bar2);padding:6px 8px;border-bottom:1px solid #111}
+.pick{display:flex;gap:8px;padding:8px 12px;background:#25282c}
 .unit{display:none}
 .unit.show{display:block}
-.desk{display:grid;grid-template-columns:280px 1fr;gap:12px}
-@media(max-width:800px){.desk{grid-template-columns:1fr}}
-.side,.stage{border:1px solid var(--line);background:var(--panel);padding:12px}
-.k{font:700 .72rem var(--mono);color:var(--mute);margin:0 0 6px}
-.lcd{font:700 3.1rem/1 var(--mono);letter-spacing:.18em;text-align:center;background:var(--well);border:1px solid var(--line);padding:16px 6px;margin:8px 0}
-.link{font:700 .85rem var(--mono);word-break:break-all;color:var(--mute);margin:0 0 10px}
+.stage{padding:10px 12px 8px;min-height:calc(100vh - 160px)}
+.frame{
+  position:relative;display:inline-block;max-width:100%;
+  background:#111;border:1px solid #111;
+}
+#remote,#local{display:block;background:#111;max-width:100%;max-height:70vh}
+.stamp{
+  position:absolute;left:8px;top:8px;font:700 12px var(--mono);
+  color:#d2d6c8;text-shadow:0 1px 2px #000;
+}
+.lcd{font:700 2.4rem/1 var(--mono);letter-spacing:.16em;margin:0 8px}
+.link{font:700 12px var(--mono);color:var(--mute);padding:0 12px 8px;word-break:break-all}
+.foot{
+  display:flex;align-items:center;gap:10px;padding:8px 12px;
+  background:var(--bar);border-top:1px solid #111;
+}
+.foot input[type=range]{flex:1;max-width:280px}
+.side{padding:10px 12px}
 .g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-label{display:block;font-size:.78rem;font-weight:700;color:var(--mute);margin:8px 0 3px}
-video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
-.row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
-.st{min-height:1.3em;margin-top:8px}
-.ok{color:var(--go)}.err{color:var(--hot)}
-.met{font:700 .82rem var(--mono);color:var(--mute)}
-.log{font:700 .75rem/1.45 var(--mono);color:var(--mute);max-height:9em;overflow:auto;border-top:1px solid var(--line);margin-top:10px;padding-top:8px;white-space:pre-wrap}
-#pinIn{font:700 1.8rem var(--mono);letter-spacing:.2em;width:8rem;padding:8px;border:1px solid var(--ink);background:var(--well)}
+label{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:6px 0 3px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.st{min-height:1.2em;margin-top:6px;color:var(--mute)}
+.ok{color:#8fd19a}.err{color:#e08880}
+.met{font:700 12px var(--mono);color:var(--mute)}
+.log{font:700 11px/1.4 var(--mono);color:var(--mute);max-height:7em;overflow:auto;margin-top:8px;white-space:pre-wrap}
+#pinIn{font:700 1.6rem var(--mono);letter-spacing:.18em;width:7.5rem;padding:6px;background:var(--btn);border:1px solid #4a5158;color:var(--ink)}
 #evWrap{display:none}
-.gridon video{outline:1px dashed var(--line);outline-offset:-40px}
+.desk-ph{display:grid;grid-template-columns:300px 1fr;gap:10px;padding:10px}
+@media(max-width:800px){.desk-ph{grid-template-columns:1fr}}
+.rot0{}.rot1{transform:rotate(90deg);transform-origin:center center;max-height:none}
 </style>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
-<div class="w">
-  <div class="head"><h1>Field cam</h1><small id="clock"></small></div>
-  <div class="pick">
-    <button class="go" id="bPc" type="button">PC receive</button>
-    <button class="hot" id="bPh" type="button">Phone send</button>
-  </div>
-
-  <section class="unit" id="pc">
-    <div class="desk">
-      <div class="side">
-        <p class="k">SESSION</p>
-        <div class="lcd" id="pin">----</div>
-        <p class="link" id="join"></p>
-        <div class="row">
-          <button type="button" id="copyLink">Copy link</button>
-          <button type="button" id="copyPin">Copy #</button>
-          <button type="button" id="newCode">New</button>
-        </div>
-        <p class="k" style="margin-top:14px">LIVE</p>
-        <div class="met" id="pcMet">—</div>
-        <div class="met" id="pcTime">00:00</div>
-        <div class="st" id="pcSt"></div>
-        <div class="log" id="pcLog"></div>
-      </div>
-      <div class="stage">
-        <p class="k">VIEWFINDER</p>
-        <video id="remote" playsinline autoplay></video>
-        <div class="row">
-          <button type="button" id="snap">Still</button>
-          <button type="button" id="clip">Clip</button>
-          <button type="button" id="full">Full</button>
-          <button type="button" id="muteIn">Sound</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="unit" id="ph">
-    <div class="desk">
-      <div class="side">
-        <p class="k">UPLINK</p>
-        <label>Code</label>
-        <input id="pinIn" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
-        <div class="g">
-          <div><label>Camera</label><select id="cam"></select></div>
-          <div><label>Size</label>
-            <select id="res">
-              <option value="640x480">640×480</option>
-              <option value="1280x720" selected>1280×720</option>
-              <option value="1920x1080">1920×1080</option>
-            </select>
-          </div>
-          <div><label>FPS</label>
-            <select id="fps"><option>15</option><option selected>24</option><option>30</option></select>
-          </div>
-          <div><label>Zoom <span id="zv">1</span></label>
-            <input id="zoom" type="range" min="1" max="1" step="0.1" value="1">
-          </div>
-          <div id="evWrap"><label>EV <span id="evv">0</span></label>
-            <input id="ev" type="range" min="-2" max="2" step="0.1" value="0">
-          </div>
-        </div>
-        <div class="row" style="margin-top:10px">
-          <button type="button" id="flip">Flip</button>
-          <button type="button" id="mic">Mic</button>
-          <button type="button" id="torch">Torch</button>
-          <button type="button" id="freeze">Freeze</button>
-          <button type="button" id="grid">Grid</button>
-          <button type="button" id="awake">Awake</button>
-        </div>
-        <div class="row" style="margin-top:10px">
-          <button class="hot" type="button" id="send">Send</button>
-          <button type="button" id="hang">Hang up</button>
-        </div>
-        <div class="met" id="phMet"></div>
-        <div class="st" id="phSt"></div>
-        <div class="log" id="phLog"></div>
-      </div>
-      <div class="stage" id="phStage">
-        <p class="k">PREVIEW</p>
-        <video id="local" playsinline muted autoplay></video>
-      </div>
-    </div>
-  </section>
+<div class="pick">
+  <button class="go" id="bPc" type="button">PC — watch</button>
+  <button class="hot" id="bPh" type="button">Phone — camera</button>
+  <span class="met" id="clock"></span>
 </div>
+
+<section class="unit" id="pc">
+  <div class="top">
+    <div class="top-tools">
+      <span class="brand">Field cam</span>
+      <button type="button" id="newCode" title="New session">↻</button>
+      <label>Size
+        <select id="viewSize">
+          <option value="100">Fit</option>
+          <option value="75">75%</option>
+          <option value="50">50%</option>
+        </select>
+      </label>
+      <button type="button" id="rot">Rotate</button>
+    </div>
+    <div class="top-tools">
+      <span class="lcd" id="pin">----</span>
+      <span class="met" id="pcTime">00:00</span>
+      <span class="met" id="pcMet">—</span>
+    </div>
+  </div>
+  <div class="tools">
+    <button type="button" id="limitFps">Limit FPS</button>
+    <button type="button" id="snap">Save Photo Here</button>
+    <button type="button" id="clip">Save clip</button>
+    <button type="button" id="af">Autofocus</button>
+    <button type="button" id="led">Toggle LED</button>
+    <button type="button" id="zOut">Zoom Out</button>
+    <button type="button" id="zIn">Zoom In</button>
+    <button type="button" id="full">Full</button>
+    <button type="button" id="muteIn">Sound</button>
+  </div>
+  <p class="link" id="join"></p>
+  <div class="row" style="padding:0 12px">
+    <button type="button" id="copyLink">Copy link</button>
+    <button type="button" id="copyPin">Copy #</button>
+    <span class="st" id="pcSt"></span>
+  </div>
+  <div class="stage">
+    <div class="frame" id="frame">
+      <video id="remote" playsinline autoplay></video>
+      <div class="stamp" id="stamp">Field cam Video Feed</div>
+    </div>
+  </div>
+  <div class="foot">
+    <button type="button" id="zReset">Reset</button>
+    <input id="viewZoom" type="range" min="25" max="150" value="100">
+    <span class="met" id="viewZoomL">100%</span>
+    <div class="log" id="pcLog"></div>
+  </div>
+</section>
+
+<section class="unit" id="ph">
+  <div class="desk-ph">
+    <div class="side">
+      <label>Code</label>
+      <input id="pinIn" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+      <div class="g">
+        <div><label>Camera</label><select id="cam"></select></div>
+        <div><label>Size</label>
+          <select id="res">
+            <option value="640x480">640×480</option>
+            <option value="1280x720" selected>1280×720</option>
+            <option value="1920x1080">1920×1080</option>
+          </select>
+        </div>
+        <div><label>FPS</label>
+          <select id="fps"><option>15</option><option selected>24</option><option>30</option></select>
+        </div>
+        <div><label>Zoom <span id="zv">1</span></label>
+          <input id="zoom" type="range" min="1" max="1" step="0.1" value="1">
+        </div>
+        <div id="evWrap"><label>EV <span id="evv">0</span></label>
+          <input id="ev" type="range" min="-2" max="2" step="0.1" value="0">
+        </div>
+      </div>
+      <div class="row">
+        <button type="button" id="flip">Flip</button>
+        <button type="button" id="mic">Mic</button>
+        <button type="button" id="torch">LED</button>
+        <button type="button" id="freeze">Freeze</button>
+        <button type="button" id="grid">Grid</button>
+        <button type="button" id="awake">Awake</button>
+        <button type="button" id="af2">AF</button>
+      </div>
+      <div class="row">
+        <button class="hot" type="button" id="send">Send</button>
+        <button type="button" id="hang">Hang up</button>
+      </div>
+      <div class="met" id="phMet"></div>
+      <div class="st" id="phSt"></div>
+      <div class="log" id="phLog"></div>
+    </div>
+    <div class="stage" id="phStage">
+      <video id="local" playsinline muted autoplay></video>
+    </div>
+  </div>
+</section>
 <script>
 (function () {
   var PFX = "c7cam";
   var peer = null, media = null, call = null, tick = 0, liveClock = 0, liveAt = 0;
   var frozen = false, torchOn = false, micOn = false, wake = null, preferBack = true;
-  var rec = null, recBits = [], lastBytes = 0, lastTs = 0, waitAns = 0;
+  var rec = null, recBits = [], lastBytes = 0, lastTs = 0, waitAns = 0, rot = 0, viewZ = 100, limitFps = false;
+  var dc = null;
 
   function $(id) { return document.getElementById(id); }
   function log(id, t) {
     if (!t) return;
-    var el = $(id);
-    if (!el) return;
+    var el = $(id); if (!el) return;
     el.textContent = (new Date().toLocaleTimeString() + "  " + t + "\n" + el.textContent).slice(0, 1400);
   }
   function say(id, t, k) {
@@ -156,8 +191,7 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   }
   function joinUrl(code) {
     var u = new URL(location.href);
-    u.hash = "";
-    u.search = "?c=" + code;
+    u.hash = ""; u.search = "?c=" + code;
     return u.href;
   }
   function show(which) {
@@ -177,12 +211,35 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
     if (rec && rec.state !== "inactive") try { rec.stop(); } catch (e) {}
     rec = null;
     if (call) { try { call.close(); } catch (e) {} call = null; }
+    dc = null;
     if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
   }
   function stopMedia() {
     if (media) media.getTracks().forEach(function (t) { t.stop(); });
     media = null;
   }
+  function stamp() {
+    var d = new Date();
+    var p = function (n) { return String(n).padStart(2, "0"); };
+    $("stamp").textContent = "Field cam Video Feed - " +
+      p(d.getMonth() + 1) + "/" + p(d.getDate()) + "/" + String(d.getFullYear()).slice(2) + " " +
+      p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+  }
+  stamp();
+  setInterval(stamp, 1000);
+  function clock() { $("clock").textContent = new Date().toLocaleTimeString(); }
+  clock(); setInterval(clock, 1000);
+
+  function applyView() {
+    var v = $("remote");
+    var base = $("viewSize").value / 100;
+    var z = (viewZ / 100) * base;
+    v.style.width = (z * 100) + "%";
+    v.style.maxHeight = (70 / Math.max(z, 0.4)) + "vh";
+    $("viewZoomL").textContent = viewZ + "%";
+    v.className = "rot" + (rot % 4);
+  }
+
   function markLive() {
     liveAt = Date.now();
     if (liveClock) clearInterval(liveClock);
@@ -221,12 +278,8 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
     }, 1000);
   }
 
-  function clock() { $("clock").textContent = new Date().toLocaleTimeString(); }
-  clock();
-  setInterval(clock, 1000);
-
   if (typeof Peer !== "function") {
-    document.body.insertAdjacentHTML("afterbegin", "<p class=\"err\">PeerJS failed to load. Need network.</p>");
+    document.body.insertAdjacentHTML("afterbegin", "<p class=\"err\">PeerJS failed to load.</p>");
   }
 
   async function listCams(keep) {
@@ -249,7 +302,6 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
       sel.innerHTML = "<option value=\"env\">Back</option><option value=\"user\">Front</option>";
     }
   }
-
   function applyCaps() {
     var t = vt();
     $("evWrap").style.display = "none";
@@ -268,10 +320,10 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
       $("ev").step = c.exposureCompensation.step || 0.1;
     }
   }
-
   async function openCam() {
     var wh = $("res").value.split("x");
-    var video = { width: { ideal: +wh[0] }, height: { ideal: +wh[1] }, frameRate: { ideal: +$("fps").value } };
+    var f = limitFps ? 15 : +$("fps").value;
+    var video = { width: { ideal: +wh[0] }, height: { ideal: +wh[1] }, frameRate: { ideal: f } };
     var id = $("cam").value;
     if (id === "user") video.facingMode = { ideal: "user" };
     else if (id === "env" || !id) video.facingMode = { ideal: preferBack ? "environment" : "user" };
@@ -305,9 +357,7 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
       if (e.type === "unavailable-id") startPc();
       else say("pcSt", e.type || String(e), "err");
     });
-    peer.on("open", function () {
-      say("pcSt", "Ready · " + n, "ok");
-    });
+    peer.on("open", function () { say("pcSt", "Ready · " + n, "ok"); });
     peer.on("call", function (incoming) {
       call = incoming;
       incoming.answer();
@@ -318,6 +368,7 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
         markLive();
         say("pcSt", "Live", "ok");
         meter($("pcMet"), incoming, true);
+        applyView();
       });
       incoming.on("close", function () { say("pcSt", "Phone left"); });
       incoming.on("error", function (e) { say("pcSt", String(e), "err"); });
@@ -353,14 +404,9 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
         setTimeout(function () { rej(new Error("signal timeout")); }, 9000);
       });
       if (waitAns) clearTimeout(waitAns);
-      waitAns = setTimeout(function () {
-        say("phSt", "No PC — wrong number or tab not waiting", "err");
-      }, 12000);
+      waitAns = setTimeout(function () { say("phSt", "No PC — wrong number or tab not waiting", "err"); }, 12000);
       call = peer.call(PFX + n, media);
       if (!call) throw new Error("Could not call");
-      call.on("stream", function () {
-        if (waitAns) { clearTimeout(waitAns); waitAns = 0; }
-      });
       call.on("error", function (e) { say("phSt", String(e), "err"); });
       say("phSt", "Calling " + n, "ok");
       meter($("phMet"), call, false);
@@ -390,18 +436,47 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   $("cam").onchange = $("res").onchange = $("fps").onchange = function () {
     if (media) openCam().catch(function (e) { say("phSt", String(e.message || e), "err"); });
   };
-  $("zoom").oninput = async function () {
-    $("zv").textContent = $("zoom").value;
-    try { if (vt()) await vt().applyConstraints({ advanced: [{ zoom: +$("zoom").value }] }); } catch (e) {}
+  async function nudgeZoom(dir) {
+    var el = $("zoom"), v = +el.value + dir * (+el.step || 0.1);
+    v = Math.min(+el.max, Math.max(+el.min, v));
+    el.value = v; $("zv").textContent = String(v);
+    try { if (vt()) await vt().applyConstraints({ advanced: [{ zoom: v }] }); } catch (e) {}
+  }
+  $("zoom").oninput = function () { nudgeZoom(0); };
+  function cmd(o) { if (dc && dc.open) dc.send(o); }
+  $("zIn").onclick = function () {
+    viewZ = Math.min(150, viewZ + 10); $("viewZoom").value = viewZ; applyView();
+    cmd({ t: "z", v: Math.min(+$("zoom").max || 1, +$("zoom").value + 0.2) });
+  };
+  $("zOut").onclick = function () {
+    viewZ = Math.max(25, viewZ - 10); $("viewZoom").value = viewZ; applyView();
+    cmd({ t: "z", v: Math.max(1, +$("zoom").value - 0.2) });
+  };
+  $("zReset").onclick = function () { viewZ = 100; $("viewZoom").value = 100; applyView(); };
+  $("viewZoom").oninput = function () { viewZ = +$("viewZoom").value; applyView(); };
+  $("viewSize").onchange = applyView;
+  $("rot").onclick = function () { rot = (rot + 1) % 4; applyView(); };
+  $("limitFps").onclick = async function () {
+    limitFps = !limitFps;
+    $("limitFps").classList.toggle("lit", limitFps);
+    cmd({ t: "fps", on: limitFps });
+    if (media) await openCam();
+  };
+  $("led").onclick = $("torch").onclick = async function () {
+    torchOn = !torchOn;
+    try {
+      await vt().applyConstraints({ advanced: [{ torch: torchOn }] });
+      $("torch").classList.toggle("lit", torchOn);
+      $("led").classList.toggle("lit", torchOn);
+    } catch (e) { torchOn = false; $("torch").classList.remove("lit"); $("led").classList.remove("lit"); }
+  };
+  $("af").onclick = $("af2").onclick = async function () {
+    try { await vt().applyConstraints({ advanced: [{ focusMode: "continuous" }] }); say("pcSt", "AF", "ok"); }
+    catch (e) { try { await vt().applyConstraints({ advanced: [{ focusMode: "single-shot" }] }); } catch (e2) {} }
   };
   $("ev").oninput = async function () {
     $("evv").textContent = $("ev").value;
     try { if (vt()) await vt().applyConstraints({ advanced: [{ exposureCompensation: +$("ev").value }] }); } catch (e) {}
-  };
-  $("torch").onclick = async function () {
-    torchOn = !torchOn;
-    try { await vt().applyConstraints({ advanced: [{ torch: torchOn }] }); $("torch").classList.toggle("lit", torchOn); }
-    catch (e) { torchOn = false; $("torch").classList.remove("lit"); }
   };
   $("freeze").onclick = function () {
     frozen = !frozen;
@@ -416,7 +491,6 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   $("mic").onclick = async function () {
     micOn = !micOn;
     $("mic").classList.toggle("lit", micOn);
-    $("mic").textContent = micOn ? "Mic on" : "Mic";
     if (media) await openCam();
   };
   $("awake").onclick = async function () {
@@ -450,12 +524,10 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   $("clip").onclick = function () {
     var s = $("remote").srcObject;
     if (!s) { say("pcSt", "Nothing to save", "err"); return; }
-    if (rec && rec.state === "recording") { rec.stop(); $("clip").textContent = "Clip"; return; }
+    if (rec && rec.state === "recording") { rec.stop(); $("clip").textContent = "Save clip"; return; }
     recBits = [];
     try { rec = new MediaRecorder(s, { mimeType: "video/webm" }); }
-    catch (e) {
-      try { rec = new MediaRecorder(s); } catch (e2) { say("pcSt", "Cannot record", "err"); return; }
-    }
+    catch (e) { try { rec = new MediaRecorder(s); } catch (e2) { say("pcSt", "Cannot record", "err"); return; } }
     rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) recBits.push(ev.data); };
     rec.onstop = function () {
       var a = document.createElement("a");
@@ -463,15 +535,49 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
       a.download = "clip.webm"; a.click();
     };
     rec.start(500);
-    $("clip").textContent = "Stop";
+    $("clip").textContent = "Stop clip";
     say("pcSt", "Clip rolling", "ok");
+  };
+
+  $("send").onclick = async function () {
+    var n = ($("pinIn").value || "").replace(/\D/g, "");
+    if (n.length !== 4) { say("phSt", "Need 4 digits", "err"); return; }
+    if (typeof Peer !== "function") { say("phSt", "PeerJS not loaded", "err"); return; }
+    if (!/^https:$/.test(location.protocol) && location.hostname !== "localhost") {
+      say("phSt", "Camera needs https", "err"); return;
+    }
+    $("send").disabled = true;
+    try {
+      try { sessionStorage.setItem("camLast", n); } catch (e) {}
+      if (!media) await openCam();
+      killPeer();
+      peer = new Peer(undefined, { debug: 0 });
+      peer.on("error", function (e) { say("phSt", e.type || String(e), "err"); });
+      await new Promise(function (res, rej) {
+        peer.on("open", res);
+        setTimeout(function () { rej(new Error("signal timeout")); }, 9000);
+      });
+      if (waitAns) clearTimeout(waitAns);
+      waitAns = setTimeout(function () { say("phSt", "No PC — wrong number or tab not waiting", "err"); }, 12000);
+      call = peer.call(PFX + n, media);
+      if (!call) throw new Error("Could not call");
+      call.on("error", function (e) { say("phSt", String(e), "err"); });
+      say("phSt", "Calling " + n, "ok");
+      meter($("phMet"), call, false);
+      setTimeout(function () {
+        if (call && call.open) {
+          if (waitAns) { clearTimeout(waitAns); waitAns = 0; }
+          say("phSt", "On air", "ok");
+        }
+      }, 2000);
+    } catch (e) { say("phSt", String(e.message || e), "err"); }
+    $("send").disabled = false;
   };
 
   var q = new URLSearchParams(location.search).get("c");
   if (q && /^\d{4}$/.test(q)) {
-    show("ph");
-    $("pinIn").value = q;
-    say("phSt", "Code " + q + " — tap Phone send, then Send", "ok");
+    show("ph"); $("pinIn").value = q;
+    say("phSt", "Code " + q + " — tap Phone — camera, then Send", "ok");
   } else {
     try {
       var last = sessionStorage.getItem("camLast");
@@ -480,5 +586,5 @@ video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
   }
 })();
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2decee1bfffe4b9',t:'MTc4NzIwMTc1MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
