@@ -193,6 +193,7 @@ input[type=checkbox]{accent-color:#3d8236}
 .pairtxt .url{font:600 12px/1.4 var(--mono);color:var(--ink-2);word-break:break-all;margin:9px 0 8px}
 .pairtxt .row{display:flex;gap:6px;flex-wrap:wrap}
 .hintline{font-size:12.5px;color:var(--dim);margin-top:9px;max-width:52ch}
+.hintline.warn{color:#7d5410;background:var(--amber-wash);border:1px solid #dcc188;border-radius:3px;padding:6px 8px}
 
 /* stage */
 .stage{
@@ -386,16 +387,16 @@ body.streaming span.sep.hideidle{display:block}
       <span class="tag">phone camera → this screen</span>
     </div>
     <div class="home-body">
-      <p class="lede">Point one device's camera at whatever you need to watch, and see it on another
-        device in real time. Direct peer-to-peer video — nothing is stored or uploaded.</p>
+      <p class="lede">Use a phone as a camera and watch it here, live. On one Wi-Fi the video travels
+        straight between the two devices — nothing is uploaded, and a VPN makes no difference.</p>
       <div class="roles">
         <button class="role" id="pickPc" type="button">
           <span class="rt"><svg><use href="#i-monitor"/></svg>Watch here</span>
-          <span class="rd">This screen becomes the monitor. You get a 4-digit code and a QR to open on the phone.</span>
+          <span class="rd">Shows a code and a QR for the phone to open.</span>
         </button>
         <button class="role" id="pickCam" type="button">
           <span class="rt"><svg><use href="#i-phone"/></svg>Use this camera</span>
-          <span class="rd">This device sends its camera. Needs the code from the monitor screen.</span>
+          <span class="rd">Sends this device's camera. Needs the code.</span>
         </button>
       </div>
       <div class="joinrow">
@@ -409,8 +410,7 @@ body.streaming span.sep.hideidle{display:block}
       </div>
     </div>
     <div class="home-foot">
-      Works best when both devices sit on the <b>same Wi-Fi</b>. The camera side must be opened over
-      <b>https</b> (this page already is, if you loaded it from GitHub Pages).
+      Same Wi-Fi keeps everything local. The camera side needs <b>https</b>, which GitHub Pages already gives you.
     </div>
   </div>
 </section>
@@ -463,7 +463,7 @@ body.streaming span.sep.hideidle{display:block}
   <div class="pairstrip" id="pairStrip">
     <div class="qrbox"><canvas id="qr" width="118" height="118"></canvas></div>
     <div class="pairtxt">
-      <div class="cap">Open on the phone, or type the code there</div>
+      <div class="cap">Scan on the phone, or type the code</div>
       <span class="lcd" id="pcCode">----</span>
       <div class="url" id="pcLink">—</div>
       <div class="row">
@@ -472,6 +472,8 @@ body.streaming span.sep.hideidle{display:block}
         <button class="btn sm" id="btnManual1"><svg><use href="#i-plug"/></svg>Offline pairing</button>
       </div>
       <div class="hintline" id="pairHint">Waiting for a camera to join…</div>
+      <div class="hintline warn" id="lanNote" style="display:none"></div>
+      <button class="btn sm" id="btnLanFix" style="display:none;margin-top:7px">Enable LAN pairing</button>
     </div>
   </div>
 
@@ -487,7 +489,7 @@ body.streaming span.sep.hideidle{display:block}
       </div>
       <div class="nosig" id="noSig">
         <svg><use href="#i-cam"/></svg>
-        <span>No video yet — the picture appears here<br>as soon as the phone connects.</span>
+        <span>Waiting for the camera</span>
       </div>
     </div>
   </div>
@@ -561,8 +563,8 @@ body.streaming span.sep.hideidle{display:block}
         <div>
           <label class="lab" for="camRes">Resolution</label>
           <select class="field" id="camRes" style="width:100%">
-            <option value="640x480">640 × 480</option>
-            <option value="1280x720" selected>1280 × 720</option>
+            <option value="640x480" selected>640 × 480 — fastest</option>
+            <option value="1280x720">1280 × 720</option>
             <option value="1920x1080">1920 × 1080</option>
             <option value="2560x1440">2560 × 1440</option>
           </select>
@@ -618,31 +620,25 @@ body.streaming span.sep.hideidle{display:block}
   <div class="sheet" id="sheetInfo" style="display:none">
     <header><svg style="width:15px;height:15px"><use href="#i-info"/></svg>How Fieldcam works<span class="spacer"></span><button class="btn sm veilclose">Close</button></header>
     <div class="body">
-      <h3>Two devices, one code</h3>
+      <h3>Pairing</h3>
       <ol>
-        <li>On the computer choose <b>Watch here</b>. A 4-digit code and a QR appear.</li>
-        <li>On the phone scan the QR (or open the same page and type the code).</li>
-        <li>Tap <b>Connect</b>. Allow the camera prompt. Video shows up on the computer.</li>
+        <li>Choose <b>Watch here</b> and allow the microphone prompt — it only lets the browser reveal
+          this machine's local address so the phone can find it.</li>
+        <li>Scan the QR with the phone, or type the code there.</li>
+        <li>Tap <b>Connect</b> and allow the camera.</li>
       </ol>
-      <h3>What the toolbar does</h3>
-      <ul>
-        <li><b>Limit FPS</b> — asks the phone to drop to 15 fps; kinder on battery and bandwidth.</li>
-        <li><b>Save photo here / on phone</b> — a frame from the stream, or a full-resolution frame saved on the phone.</li>
-        <li><b>Autofocus, LED, Zoom</b> — real remote control of the phone camera, sent over the data channel.</li>
-        <li><b>Record</b> — writes what you see (and hear) into a .webm file on the computer.</li>
-      </ul>
-      <h3>Keyboard (monitor side)</h3>
-      <p class="mono" style="font-size:12px">F fullscreen · S photo · R record · L led · A autofocus · M sound · P pause · + / − zoom · 0 reset view</p>
+      <h3>Remote control</h3>
+      <p>Autofocus, LED, zoom and frame rate act on the phone camera. A button greys out when that camera
+        cannot do it. Photos save on either device; <b>Record</b> writes a .webm here.</p>
+      <h3>Shortcuts</h3>
+      <p class="mono" style="font-size:12px">F fullscreen · S photo · R record · L led · A focus · M sound · P pause · +/− zoom · 0 reset</p>
       <h3>If it will not connect</h3>
       <ul>
-        <li>Both devices on the <b>same Wi-Fi</b> is the easy case; mobile data usually needs a relay server.</li>
-        <li>The camera side must be on <b>https</b> — browsers block cameras otherwise.</li>
-        <li>Pairing is tried over three unrelated rendezvous routes at once (PeerJS cloud, EMQX, HiveMQ);
-          if your network blocks all of them, <b>Settings → Run connection check</b> will say so.</li>
-        <li><b>Offline pairing</b> always remains: no server at all, you copy two blocks of text between the devices.</li>
+        <li>Same Wi-Fi is the reliable case, VPN or not — the video never leaves the network.</li>
+        <li>Different networks need your own TURN relay (Settings); the free public ones are gone.</li>
+        <li><b>Offline pairing</b> needs no server: copy one block of text each way.</li>
+        <li><b>Settings → Run connection check</b> reports what your network allows.</li>
       </ul>
-      <p class="note">Video and audio travel directly between the two devices. The rendezvous server only helps them
-        find each other; it never sees the picture.</p>
     </div>
   </div>
 
@@ -650,10 +646,10 @@ body.streaming span.sep.hideidle{display:block}
     <header><svg style="width:15px;height:15px"><use href="#i-gear"/></svg>Settings<span class="spacer"></span><button class="btn sm veilclose">Close</button></header>
     <div class="body">
       <h3>Picture</h3>
-      <label class="checkline"><input type="checkbox" id="optStamp" checked><span>Burn the timestamp overlay into the view <i style="color:var(--dim)">(and into saved photos)</i></span></label>
-      <label class="checkline"><input type="checkbox" id="optKeepAspect" checked><span>Keep the original aspect ratio</span></label>
+      <label class="checkline"><input type="checkbox" id="optStamp" checked><span>Timestamp overlay, also burned into saved photos</span></label>
+      <label class="checkline"><input type="checkbox" id="optKeepAspect" checked><span>Keep aspect ratio</span></label>
       <h3>Connection</h3>
-      <label class="checkline"><input type="checkbox" id="optRelay"><span>Use the free public TURN relay when a direct route fails <i style="color:var(--dim)">(slower, but crosses most networks)</i></span></label>
+      <label class="checkline"><input type="checkbox" id="optLanFirst" checked><span>Local network first — no servers, works with a VPN on</span></label>
       <div class="kv">
         <div>
           <label class="lab" for="optTurnUrl">Own TURN server</label>
@@ -669,7 +665,7 @@ body.streaming span.sep.hideidle{display:block}
         <div class="full" style="grid-column:1/-1">
           <label class="lab" for="optLink">Signalling route</label>
           <select class="field" id="optLink" style="width:100%">
-            <option value="auto">Automatic — try all three at once (recommended)</option>
+            <option value="auto">Automatic (recommended)</option>
             <option value="peerjs">PeerJS cloud only</option>
             <option value="emqx">EMQX relay only</option>
             <option value="hivemq">HiveMQ relay only</option>
@@ -678,7 +674,7 @@ body.streaming span.sep.hideidle{display:block}
         <div class="full" style="grid-column:1/-1">
           <label class="lab" for="optBroker">PeerJS host</label>
           <input class="field mono" id="optBroker" placeholder="0.peerjs.com" style="width:100%;font-size:12px">
-          <p class="note">Any PeerJS-compatible server works. Leave as it is unless yours is blocked.</p>
+          <p class="note">Only change this if the default is blocked.</p>
         </div>
       </div>
       <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
@@ -693,8 +689,7 @@ body.streaming span.sep.hideidle{display:block}
   <div class="sheet" id="sheetManual" style="display:none">
     <header><svg style="width:15px;height:15px"><use href="#i-plug"/></svg>Offline pairing<span class="spacer"></span><button class="btn sm veilclose">Close</button></header>
     <div class="body">
-      <p>No rendezvous server involved. Copy one block of text from the phone to the monitor, and one back.
-        Works on a plain LAN with no internet at all.</p>
+      <p>No server involved: copy one block from the phone to the monitor, and one back.</p>
       <div id="manCam">
         <h3>1 · On the phone</h3>
         <button class="btn go" id="manMake">Create invitation</button>
@@ -718,8 +713,7 @@ body.streaming span.sep.hideidle{display:block}
   <div class="sheet" id="sheetDiag" style="display:none">
     <header>Connection check<span class="spacer"></span><button class="btn sm" id="diagCopy">Copy report</button><button class="btn sm veilclose">Close</button></header>
     <div class="body">
-      <p>Runs the same checks the app relies on and prints what your network allows.
-         Copy the result if you need to show someone why pairing fails.</p>
+      <p>Reports what this network allows.</p>
       <div class="logbody" id="diagBody">not run yet</div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn go" id="diagRun">Run again</button>
@@ -1017,7 +1011,7 @@ function drawQR(canvas, text) {
 var cfg = {
   stamp: store.get("stamp", true),
   aspect: store.get("aspect", true),
-  relay: store.get("relay", false),
+  lanFirst: store.get("lanFirst", true),
   turnUrl: store.get("turnUrl", ""),
   turnUser: store.get("turnUser", ""),
   turnPass: store.get("turnPass", ""),
@@ -1025,24 +1019,54 @@ var cfg = {
   link: store.get("link", "auto")
 };
 
-function rtcConfig() {
-  var list = [
-    { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
-    { urls: "stun:stun.cloudflare.com:3478" }
-  ];
-  if (cfg.turnUrl) list.push({ urls: cfg.turnUrl, username: cfg.turnUser, credential: cfg.turnPass });
-  if (cfg.relay) list.push({
-    urls: ["turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443"],
-    username: "openrelayproject", credential: "openrelayproject"
-  });
-  return { iceServers: list, iceCandidatePoolSize: 2, bundlePolicy: "max-bundle" };
+/* Connection ladder.
+   0 — local network only: no servers at all, so nothing leaves your Wi-Fi.
+       This is the rung that keeps working while a VPN is on, the same way
+       LocalSend does, and it needs no internet whatsoever.
+   1 — add STUN, for two devices behind different routers.
+   2 — add your own TURN relay, the only thing that crosses a full tunnel.  */
+function rtcConfig(stage) {
+  var list = [];
+  if (stage >= 1) {
+    list.push({ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] });
+    list.push({ urls: "stun:stun.cloudflare.com:3478" });
+  }
+  if (stage >= 2 && cfg.turnUrl) list.push({ urls: cfg.turnUrl, username: cfg.turnUser, credential: cfg.turnPass });
+  return {
+    iceServers: list,
+    iceCandidatePoolSize: stage === 0 ? 0 : 2,
+    bundlePolicy: "max-bundle"
+  };
+}
+function stageName(n) { return n === 0 ? "local network" : n === 1 ? "internet (STUN)" : "relay (TURN)"; }
+
+/* Chrome hides the real local address behind an mDNS name unless the page
+   holds a media permission — and mDNS is exactly what a VPN breaks. Holding
+   a permission (the track is stopped again immediately) puts the real
+   192.168.x.x address in the offer, which is what makes LAN pairing work. */
+var localIpUnlocked = false;
+async function unlockLocalIp() {
+  if (localIpUnlocked) return true;
+  try {
+    var s = await navigator.mediaDevices.getUserMedia({ audio: true });
+    s.getTracks().forEach(function (t) { t.stop(); });
+    localIpUnlocked = true;
+    log("local address unlocked for LAN pairing");
+    return true;
+  } catch (e) {
+    log("local address stays hidden: " + (e && e.name));
+    return false;
+  }
 }
 
 /* The PeerJS cloud validates the message envelope, so signalling payloads
    keep the exact shape its own clients send. The MQTT links below carry the
    very same objects, so both paths share one code path further up. */
-function sigDesc(desc, connId) {
-  return { sdp: { type: desc.type, sdp: desc.sdp }, type: "media", connectionId: connId, browser: "web", metadata: null };
+function sigDesc(desc, connId, stage) {
+  return {
+    sdp: { type: desc.type, sdp: desc.sdp }, type: "media", connectionId: connId,
+    browser: "web", metadata: null, stage: stage
+  };
 }
 function sigCand(cand, connId) {
   return { candidate: cand, type: "media", connectionId: connId };
@@ -1306,7 +1330,7 @@ setInterval(function () {
 /* MONITOR SIDE                                                         */
 /* ==================================================================== */
 var PC = {
-  code: null, bus: null, link: null, conn: null, dc: null, peer: null, pend: [], stream: null, connId: "", dropT: 0, lastOffer: "",
+  code: null, bus: null, link: null, conn: null, dc: null, peer: null, cmdId: 0, acks: {}, pend: [], stream: null, connId: "", dropT: 0, lastOffer: "",
   live: 0, stats: 0, uptime: 0, rec: null, recBits: [], recStart: 0,
   rot: 0, mirror: false, viewZoom: 100, camState: {}, gotVideo: false
 };
@@ -1327,6 +1351,19 @@ function joinURL(code) {
   return u;
 }
 
+function lanCheck() {
+  return unlockLocalIp().then(function (ok) {
+    $("lanNote").textContent = ok ? "" :
+      "A phone on this Wi-Fi cannot find this screen yet. Allow the microphone prompt — nothing is recorded, it only reveals the local address.";
+    $("lanNote").style.display = ok ? "none" : "block";
+    $("btnLanFix").style.display = ok ? "none" : "inline-flex";
+    return ok;
+  });
+}
+on($("btnLanFix"), "click", function () {
+  lanCheck().then(function (ok) { toast(ok ? "LAN pairing enabled" : "Still blocked — check the site permissions"); });
+});
+
 function pcNewCode() {
   var c = String(1000 + Math.floor(Math.random() * 9000));
   pcStart(c);
@@ -1334,26 +1371,27 @@ function pcNewCode() {
 
 function pcStart(code) {
   pcTeardown();
+  lanCheck();
   PC.code = code;
   $("pcCode").textContent = code;
   var link = joinURL(code);
   $("pcLink").textContent = link;
   try { drawQR($("qr"), link); } catch (e) { log("qr: " + e.message); }
   $("pairStrip").classList.remove("hide");
-  $("pairHint").textContent = "Waiting for a camera to join…";
+  $("pairHint").textContent = "Waiting for a camera.";
   setTimeout(pcFitVideo, 30);
-  pcStatus("wait", "Opening signalling routes…");
+  pcStatus("wait", "Starting…");
   PC.bus = Bus("fieldcam-" + code, {
     up: function () {
       pcWarn("");
       if (PC.gotVideo) return;          /* a late route must not overwrite "Live" */
-      pcStatus("wait", "Ready on code " + code + " — listening via " + PC.bus.names());
-      $("pairHint").textContent = "Waiting for a camera to join. Routes up: " + PC.bus.names() + ".";
+      pcStatus("wait", "Ready — code " + code);
+      $("pairHint").textContent = "Waiting for a camera.";
     },
     down: function () {
       if (PC.bus && !PC.bus.ready().length) {
         pcStatus("bad", "No signalling route is reachable");
-        pcWarn("None of the three rendezvous routes answered. Your network may block them — use Offline pairing, which needs no server at all.");
+        pcWarn("No pairing route reachable. Use Offline pairing — it needs no server.");
       }
     },
     taken: function () { log("code busy, picking another"); pcNewCode(); },
@@ -1397,7 +1435,9 @@ function pcAccept(src, payload, link) {
   if (!renegotiate) { pcCloseConn(); PC.peer = src; }
   PC.connId = connId || PC.connId || "mc_pc";
   PC.lastOffer = sdpText;
-  var c = renegotiate ? PC.conn : new RTCPeerConnection(rtcConfig());
+  var stage = (payload && typeof payload.stage === "number") ? payload.stage : 1;
+  PC.stage = stage;
+  var c = renegotiate ? PC.conn : new RTCPeerConnection(rtcConfig(stage));
   if (!renegotiate) {
     PC.conn = c;
     c.onicecandidate = function (e) {
@@ -1417,6 +1457,9 @@ function pcAccept(src, payload, link) {
         try { PC.stream.removeTrack(e.track); } catch (err) {}
       };
       v.play().catch(function () {});
+      try {
+        if (e.receiver && "jitterBufferTarget" in e.receiver) e.receiver.jitterBufferTarget = 0;
+      } catch (err) {}
       if (e.track.kind === "video") pcOnVideo();
     };
     c.ondatachannel = function (e) { pcWireDC(e.channel); };
@@ -1426,7 +1469,7 @@ function pcAccept(src, payload, link) {
       clearTimeout(PC.dropT);
       if (st === "failed") {
         pcStatus("bad", "Direct route failed — enable a relay in Settings");
-        pcWarn("No direct network path between the two devices. Turn on the public relay in Settings, or add your own TURN server.");
+        pcWarn("No network path between the devices. Add a TURN relay in Settings, or use one Wi-Fi.");
         pcDropped();
       } else if (st === "disconnected") {
         pcStatus("wait", "Link interrupted — trying to recover");
@@ -1448,7 +1491,7 @@ function pcAccept(src, payload, link) {
   }).then(function () {
     if (PC.link) PC.link.send("ANSWER", sigDesc(c.localDescription, PC.connId), src);
     if (renegotiate && PC.gotVideo) pcStatus("live", "Live");
-    else pcStatus("wait", renegotiate ? "Updating stream…" : "Camera found — negotiating…");
+    else pcStatus("wait", renegotiate ? "Updating…" : "Camera found…");
   }).catch(function (e) {
     pcStatus("bad", "Could not answer: " + e.message);
   });
@@ -1498,9 +1541,11 @@ function pcDropped() {
   document.body.classList.remove("streaming");
   $("frame").classList.remove("hasvideo");
   $("pairStrip").classList.remove("hide");
-  $("pairHint").textContent = "The camera dropped out. It reconnects on its own if it comes back.";
+  $("pairHint").textContent = "Camera dropped out. It rejoins by itself.";
   clearInterval(PC.stats); clearInterval(PC.uptime);
-  pcStatus("wait", "Camera gone — waiting on code " + PC.code);
+  $("remote").srcObject = null;          /* clear the stale last frame */
+  PC.stream = null;
+  pcStatus("wait", "Camera gone — waiting on " + PC.code);
 }
 
 function pcCloseConn() {
@@ -1535,6 +1580,11 @@ function pcWireDC(ch) {
     try { m = JSON.parse(e.data); } catch (err) { return; }
     if (m.t === "ping") return;
     if (m.t === "bye") { pcCloseConn(); pcDropped(); pcStatus("wait", "Camera stopped — waiting on code " + PC.code); return; }
+    if (m.t === "ack") {
+      clearTimeout(PC.acks[m.id]); delete PC.acks[m.id];
+      if (m.msg) toast(m.msg);
+      return;
+    }
     if (m.t === "state") pcApplyState(m);
     else if (m.t === "batt") {
       $("roBatt").lastChild.textContent = Math.round(m.level * 100) + "%" + (m.charging ? " ⚡" : "");
@@ -1542,11 +1592,18 @@ function pcWireDC(ch) {
   };
 }
 function pcSend(k, v) {
-  if (PC.dc && PC.dc.readyState === "open") {
-    try { PC.dc.send(JSON.stringify({ t: "cmd", k: k, v: v })); return true; } catch (e) {}
-  }
-  toast("The camera is not connected yet");
-  return false;
+  if (!PC.dc || PC.dc.readyState !== "open") { toast("Camera not connected"); return false; }
+  var id = ++PC.cmdId;
+  try { PC.dc.send(JSON.stringify({ t: "cmd", k: k, v: v, id: id })); }
+  catch (e) { toast("Could not reach the camera"); return false; }
+  PC.acks[id] = setTimeout(function () { delete PC.acks[id]; toast("The camera did not respond"); }, 4000);
+  return true;
+}
+function gate(el, able, why) {
+  if (!el) return;
+  if (!el.dataset.tip) el.dataset.tip = el.title || "";
+  el.disabled = !able;
+  el.title = able ? el.dataset.tip : why;
 }
 function pcApplyState(s) {
   PC.camState = s;
@@ -1554,14 +1611,17 @@ function pcApplyState(s) {
   $("tbFps").classList.toggle("on", s.fps === 15);
   $("bgPause").classList.toggle("show", !!s.paused);
   $("bgMute").classList.toggle("show", !s.mic);
+  freezeFrame(!!s.paused);
+  /* a control this camera cannot honour is switched off, not left to fail quietly */
+  gate($("tbLed"), s.capTorch, "This camera has no LED");
+  gate($("tbZi"), s.capZoom, "This camera cannot zoom");
+  gate($("tbZo"), s.capZoom, "This camera cannot zoom");
+  gate($("tbAf"), s.capFocus, "Focus is fixed on this camera");
+  if (s.capZoom && s.zoom) $("tbZi").title = "Zoom in — now " + Number(s.zoom).toFixed(1) + "×";
   if (s.mic && $("remote").muted && !PC.audioHinted) {
     PC.audioHinted = true;
-    toast("The phone microphone is on — press Sound to listen");
+    toast("Microphone is live — press Sound to listen");
   }
-  if (s.paused) freezeFrame(true); else freezeFrame(false);
-  if (s.zoom) $("tbZi").title = "Camera zoom in — now " + Number(s.zoom).toFixed(1) + "×";
-  $("tbLed").disabled = !s.torchCap;
-  $("tbLed").title = s.torchCap ? "Phone flashlight (L)" : "This camera reports no LED";
 }
 
 /* freeze the last frame while the phone is paused */
@@ -1743,7 +1803,7 @@ on(document, "keydown", function (e) {
 var CAM = {
   code: null, rv: null, conn: null, dc: null, stream: null, want: false,
   facing: store.get("facing", "environment"), devId: store.get("devId", ""),
-  torch: false, mic: false, paused: false, zoom: 1, caps: {}, connId: "", bus: null, link: null, linkIdx: 0,
+  torch: false, mic: false, paused: false, zoom: 1, caps: {}, connId: "", bus: null, link: null, linkIdx: 0, stage: null,
   answerT: 0, shoutT: 0, renegT: 0, beatT: 0, negoPending: false, tries: 0, stats: 0, recon: 0, wake: null, negoT: 0, connected: false
 };
 
@@ -1784,6 +1844,7 @@ async function listCameras() {
         sel.appendChild(o);
       });
     }
+    CAM.camCount = vids.length;
     var target = CAM.devId || CAM.facing;
     var has = Array.prototype.some.call(sel.options, function (o) { return o.value === target; });
     sel.value = has ? target : (keep || sel.options[0].value);
@@ -1795,7 +1856,7 @@ async function openCamera() {
     camWarn("This browser has no camera API."); return;
   }
   if (!secureOK()) {
-    camWarn("Browsers only allow camera access over https. Open this page with an https:// address.");
+    camWarn("Camera needs https.");
     camStatus("bad", "Insecure page — camera blocked");
     return;
   }
@@ -1855,9 +1916,9 @@ async function openCamera() {
 
 function camFail(e) {
   var msg = e && e.name === "NotAllowedError"
-    ? "Camera permission was refused. Allow it in the address bar, then tap Connect again."
+    ? "Camera permission refused. Allow it in the address bar, then tap Connect."
     : e && e.name === "NotReadableError"
-      ? "Another app is holding the camera. Close it and try again."
+      ? "Another app is using the camera."
       : "Camera error: " + (e && (e.message || e.name));
   camWarn(msg);
   camStatus("bad", msg);
@@ -1890,6 +1951,9 @@ function readCaps() {
     if (st.exposureCompensation != null) { $("camEv").value = st.exposureCompensation; $("camEvV").textContent = Number(st.exposureCompensation).toFixed(1); }
   }
   $("cbTorch").disabled = !CAM.caps.torch;
+  $("cbTorch").title = CAM.caps.torch ? "" : "This camera has no LED";
+  $("cbFlip").disabled = (CAM.camCount || 1) < 2;
+  $("cbFlip").title = (CAM.camCount || 1) < 2 ? "Only one camera on this device" : "";
 }
 
 async function setFps(v) {
@@ -1931,7 +1995,7 @@ function applyBitrate() {
     if (!p.encodings || !p.encodings.length) p.encodings = [{}];
     if (kbps) p.encodings[0].maxBitrate = kbps * 1000;
     else delete p.encodings[0].maxBitrate;
-    p.degradationPreference = "balanced";
+    p.degradationPreference = "maintain-framerate";
     s.setParameters(p).catch(function () {});
   });
 }
@@ -1940,9 +2004,12 @@ function camPushState() {
   if (!CAM.dc || CAM.dc.readyState !== "open") return;
   try {
     CAM.dc.send(JSON.stringify({
-      t: "state", torch: CAM.torch, torchCap: !!CAM.caps.torch, paused: CAM.paused,
-      mic: !!audioTrack() && audioTrack().enabled, zoom: CAM.zoom, fps: +$("camFps").value,
-      res: $("camRes").value
+      t: "state",
+      torch: CAM.torch, paused: CAM.paused, zoom: CAM.zoom,
+      mic: !!(audioTrack() && audioTrack().enabled),
+      fps: +$("camFps").value, res: $("camRes").value,
+      capTorch: !!CAM.caps.torch, capZoom: !!CAM.caps.zoom, capFocus: !!CAM.caps.focus,
+      cams: CAM.camCount || 1
     }));
   } catch (e) {}
 }
@@ -1950,15 +2017,17 @@ function camPushState() {
 /* --- connection --- */
 async function camConnect(code) {
   code = String(code || "").replace(/\D/g, "");
-  if (code.length !== 4) { camWarn("Type the 4-digit code shown on the monitor."); return; }
+  if (code.length !== 4) { camWarn("Enter the 4-digit code."); return; }
   camWarn("");
   CAM.code = code;
   CAM.want = true;
+  CAM.stage = cfg.lanFirst ? 0 : 1;
   store.set("lastCode", code);
   $("camCodeTag").textContent = "code " + code;
   $("cbStop").disabled = false;
   if (!CAM.stream) await openCamera();
   if (!CAM.stream) return;
+  localIpUnlocked = true;   /* camera permission already reveals the address */
   if (!CAM.bus) {
     var myId = "fieldcam-cam-" + Math.random().toString(36).slice(2, 9);
     CAM.bus = Bus(myId, {
@@ -1972,14 +2041,14 @@ async function camConnect(code) {
       down: function () {
         if (CAM.bus && !CAM.bus.ready().length) {
           camStatus("bad", "No signalling route is reachable");
-          camWarn("None of the rendezvous routes answered on this network. Try Offline pairing — it needs no server.");
+          camWarn("No pairing route reachable. Try Offline pairing — it needs no server.");
         }
       },
       taken: function () { CAM.bus.close(); CAM.bus = null; camConnect(code); },
       error: function (m) { log("[camera] " + m); },
       msg: camSignal
     });
-    camStatus("wait", "Opening signalling routes…");
+    camStatus("wait", "Starting…");
   } else if (CAM.bus.ready().length) camOffer();
 }
 
@@ -1995,7 +2064,8 @@ async function camOffer() {
   CAM.link = null;
   camCloseConn();
   CAM.connId = "mc_" + Math.random().toString(36).slice(2, 10);
-  var c = new RTCPeerConnection(rtcConfig());
+  if (CAM.stage == null) CAM.stage = cfg.lanFirst ? 0 : 1;
+  var c = new RTCPeerConnection(rtcConfig(CAM.stage));
   CAM.conn = c;
   var dc = c.createDataChannel("ctl", { ordered: true });
   camWireDC(dc);
@@ -2014,15 +2084,21 @@ async function camOffer() {
     if (st === "connected" || st === "completed") {
       CAM.connected = true; CAM.tries = 0;
       clearTimeout(CAM.answerT);
-      camStatus("live", "Streaming to the monitor via " + (CAM.link ? CAM.link.label : "direct"));
+      camStatus("live", "Streaming");
       camWarn("");
       $("camPanel").classList.remove("show");
       camPushState();
     } else if (st === "failed") {
       CAM.connected = false;
-      camStatus("bad", "Route failed — retrying");
-      camWarn("Could not open a direct path. If the two devices are on different networks, enable the relay in Settings.");
-      scheduleRetry(2500);
+      if (CAM.stage < 2) {
+        CAM.stage++;
+        camStatus("wait", "Trying " + stageName(CAM.stage) + "…");
+        scheduleRetry(700);
+      } else {
+        camStatus("bad", "No usable network path");
+        camWarn("No network path. On a full-tunnel VPN this needs your own TURN relay (Settings), or put both devices on one Wi-Fi.");
+        scheduleRetry(4000);
+      }
     } else if (st === "disconnected") {
       CAM.connected = false;
       camStatus("wait", "Link interrupted…");
@@ -2042,7 +2118,7 @@ async function camOffer() {
   };
   applyBitrate();
   sendOffer(c, false);
-  camStatus("wait", "Calling code " + CAM.code + "…");
+  camStatus("wait", "Calling " + CAM.code + "…");
 }
 
 function camRenegotiate(c) {
@@ -2063,7 +2139,7 @@ function camRenegotiate(c) {
 function sendOffer(c, renego) {
   c.createOffer().then(function (o) { return c.setLocalDescription(o); }).then(function () {
     var dst = "fieldcam-" + CAM.code;
-    var body = sigDesc(c.localDescription, CAM.connId);
+    var body = sigDesc(c.localDescription, CAM.connId, CAM.stage);
     var shout = function () {
       if (CAM.link) CAM.link.send("OFFER", body, dst);
       else camEachLink(function (l) { l.send("OFFER", body, dst); });
@@ -2079,13 +2155,21 @@ function sendOffer(c, renego) {
       if (CAM.connected || !CAM.want || CAM.conn !== c || c.signalingState !== "have-local-offer") {
         clearInterval(CAM.shoutT); CAM.shoutT = 0; return;
       }
+      /* nothing came back on this rung — climb to the next one */
+      if (beats === 4 && CAM.stage < 2) {
+        clearInterval(CAM.shoutT); CAM.shoutT = 0;
+        CAM.stage++;
+        camStatus("wait", "Trying " + stageName(CAM.stage) + "…");
+        camOffer();
+        return;
+      }
       if (beats > 8) {
         clearInterval(CAM.shoutT); CAM.shoutT = 0;
         camStatus("bad", "The monitor never answered");
-        camWarn("Nobody answered on code " + CAM.code + " over any route. Check the digits on the monitor, press ↻ there for a fresh code, or use Offline pairing.");
+        camWarn("Nobody answered on " + CAM.code + ". Check the digits, or press ↻ on the monitor for a new code.");
         return;
       }
-      if (beats === 2) camStatus("wait", "Still calling code " + CAM.code + "…");
+      if (beats === 2) camStatus("wait", "Still calling " + CAM.code + "…");
       shout();
     }, 1800);
   }).catch(function (e) { camStatus("bad", "Offer failed: " + e.message); });
@@ -2105,7 +2189,7 @@ function camSignal(m, link) {
     if (link) CAM.link = link;
     clearInterval(CAM.shoutT); CAM.shoutT = 0;
     CAM.conn.setRemoteDescription(m.payload.sdp).then(function () {
-      if (!CAM.connected) camStatus("wait", "Answer received — opening media…");
+      if (!CAM.connected) camStatus("wait", "Connecting…");
     }).catch(function (e) { log("[camera] answer error " + e.message); });
     return;
   }
@@ -2140,57 +2224,62 @@ function camWireDC(ch) {
     var m;
     try { m = JSON.parse(e.data); } catch (err) { return; }
     if (m.t !== "cmd") return;
-    handleCmd(m.k, m.v);
+    handleCmd(m.k, m.v, m.id);
   };
 }
 function camToast(msg) {
   if (CAM.dc && CAM.dc.readyState === "open") { try { CAM.dc.send(JSON.stringify({ t: "toast", msg: msg })); } catch (e) {} }
 }
 
-async function handleCmd(k, v) {
-  if (k === "torch") { await setTorch(!!v); }
-  else if (k === "af") { await doFocus(); camToast("Autofocus triggered"); }
-  else if (k === "zoomStep") { await stepZoom(v); }
-  else if (k === "zoomSet") { await setZoom(v); }
-  else if (k === "fps") { await setFps(v); camToast("Frame rate " + v + " fps"); }
-  else if (k === "res") { await setRes(v); }
-  else if (k === "pause") { setPause(!!v); }
-  else if (k === "snap") { snapVideo($("local"), "fieldcam-phone"); camToast("Photo saved on the phone"); }
-  else if (k === "mic") { await setMic(!!v); }
+async function handleCmd(k, v, id) {
+  var msg = "";
+  if (k === "torch") msg = await setTorch(!!v);
+  else if (k === "af") msg = await doFocus();
+  else if (k === "zoomStep") msg = await stepZoom(v);
+  else if (k === "zoomSet") msg = await setZoom(v);
+  else if (k === "fps") { await setFps(v); msg = v + " fps"; }
+  else if (k === "res") { await setRes(v); msg = "Size " + String(v).replace("x", " × "); }
+  else if (k === "pause") { setPause(!!v); msg = v ? "Camera paused" : "Camera resumed"; }
+  else if (k === "snap") { snapVideo($("local"), "fieldcam-phone"); msg = "Photo saved on the phone"; }
+  else if (k === "mic") { await setMic(!!v); msg = v ? "Microphone on" : "Microphone off"; }
+  if (id && CAM.dc && CAM.dc.readyState === "open") {
+    try { CAM.dc.send(JSON.stringify({ t: "ack", id: id, msg: msg })); } catch (e) {}
+  }
   camPushState();
 }
 
 async function setTorch(want) {
-  if (!CAM.caps.torch) { camToast("This camera has no LED control"); return; }
+  if (!CAM.caps.torch) return "This camera has no LED";
   var ok = await applyTrack({ torch: want });
   CAM.torch = ok ? want : false;
   $("cbTorch").classList.toggle("on", CAM.torch);
   camPushState();
+  return ok ? (want ? "LED on" : "LED off") : "The camera refused the LED";
 }
 async function doFocus(x, y) {
-  var t = videoTrack();
-  if (!t) return;
+  if (!videoTrack()) return "No camera running";
   if (x != null && y != null) {
-    await applyTrack({ pointsOfInterest: [{ x: x, y: y }], focusMode: "single-shot" });
-  } else if (!(await applyTrack({ focusMode: "single-shot" }))) {
-    await applyTrack({ focusMode: "continuous" });
+    return (await applyTrack({ pointsOfInterest: [{ x: x, y: y }], focusMode: "single-shot" }))
+      ? "Focusing there" : "This camera has a fixed focus";
   }
+  if (await applyTrack({ focusMode: "single-shot" })) return "Autofocus";
+  if (await applyTrack({ focusMode: "continuous" })) return "Continuous autofocus";
+  return "Focus is fixed on this camera";
 }
 async function setZoom(v) {
   var c = CAM.caps.zoom;
-  if (!c) { camToast("This camera cannot zoom"); return; }
+  if (!c) return "This camera cannot zoom";
   v = clamp(v, c.min, c.max);
-  if (await applyTrack({ zoom: v })) {
-    CAM.zoom = v;
-    $("camZoom").value = v;
-    $("camZoomV").textContent = Number(v).toFixed(1) + "×";
-  }
+  if (!(await applyTrack({ zoom: v }))) return "The camera refused that zoom";
+  CAM.zoom = v;
+  $("camZoom").value = v;
+  $("camZoomV").textContent = Number(v).toFixed(1) + "×";
+  return "Zoom " + Number(v).toFixed(1) + "×";
 }
 async function stepZoom(dir) {
   var c = CAM.caps.zoom;
-  if (!c) { camToast("This camera cannot zoom"); return; }
-  var step = (c.max - c.min) / 10 || 0.1;
-  await setZoom(CAM.zoom + dir * step);
+  if (!c) return "This camera cannot zoom";
+  return await setZoom(CAM.zoom + dir * ((c.max - c.min) / 10 || 0.1));
 }
 function setPause(want) {
   CAM.paused = want;
@@ -2274,8 +2363,8 @@ on($("camInfoBtn"), "click", function () { openSheet("sheetInfo"); });
 on($("cbManual"), "click", function () { manualRole = "cam"; openSheet("sheetManual"); });
 on($("camCode"), "keydown", function (e) { if (e.key === "Enter") camConnect($("camCode").value); });
 
-on($("cbTorch"), "click", function () { setTorch(!CAM.torch); });
-on($("cbAf"), "click", function () { doFocus(); toast("Autofocus"); });
+on($("cbTorch"), "click", function () { setTorch(!CAM.torch).then(function (m) { if (m) toast(m); }); });
+on($("cbAf"), "click", function () { doFocus().then(function (m) { if (m) toast(m); }); });
 on($("cbPause"), "click", function () { setPause(!CAM.paused); });
 on($("cbMic"), "click", function () { setMic(!CAM.mic); });
 on($("cbGrid"), "click", function () { $("camGrid").classList.toggle("on"); $("cbGrid").classList.toggle("on"); });
@@ -2361,14 +2450,14 @@ function manualPrep() {
   $("manCam").style.display = manualRole === "cam" ? "block" : "none";
   $("manPc").style.display = manualRole === "pc" ? "block" : "none";
   $("manNote").textContent = manualRole === "cam"
-    ? "Tip: the two devices must still be able to reach each other on the network (same Wi-Fi is ideal)."
-    : "Paste what the phone produced, then send the reply back to it.";
+    ? "Both devices still need to reach each other — same Wi-Fi is ideal."
+    : "Paste the phone's block, then carry the reply back to it.";
 }
 on($("manMake"), "click", async function () {
   if (!CAM.stream) await openCamera();
   if (!CAM.stream) return;
   camCloseConn();
-  var c = new RTCPeerConnection(rtcConfig());
+  var c = new RTCPeerConnection(rtcConfig(cfg.lanFirst ? 0 : 1));
   CAM.conn = c; manualConn = c;
   camWireDC(c.createDataChannel("ctl", { ordered: true }));
   CAM.stream.getTracks().forEach(function (t) { c.addTrack(t, CAM.stream); });
@@ -2397,7 +2486,8 @@ on($("manAnswer"), "click", async function () {
   try {
     var d = unpackSDP($("manPcIn").value);
     pcCloseConn();
-    var c = new RTCPeerConnection(rtcConfig());
+    await unlockLocalIp();
+    var c = new RTCPeerConnection(rtcConfig(cfg.lanFirst ? 0 : 1));
     PC.conn = c;
     c.ontrack = function (e) {
       var v = $("remote");
@@ -2450,7 +2540,7 @@ function probeIce() {
   return new Promise(function (res) {
     var kinds = { host: 0, srflx: 0, relay: 0, prflx: 0 };
     var c;
-    try { c = new RTCPeerConnection(rtcConfig()); }
+    try { c = new RTCPeerConnection(rtcConfig(2)); }
     catch (e) { res("could not start: " + e.message); return; }
     try { c.createDataChannel("probe"); } catch (e) {}
     c.onicecandidate = function (e) {
@@ -2495,11 +2585,12 @@ async function runDiag() {
     $("diagBody").textContent = lines.join("\n");
   }
   diagLine("");
+  diagLine("local address: " + (localIpUnlocked ? "visible (LAN pairing possible)" : "hidden behind mDNS — allow the mic prompt on the monitor"));
+  diagLine("");
   diagLine("ice candidates (5 s sample)");
   diagLine("  " + (await probeIce()));
   diagLine("");
-  diagLine("If every route says unreachable, pairing by code cannot work on this");
-  diagLine("network — use Offline pairing, which needs no server at all.");
+  diagLine("All routes unreachable? Use Offline pairing — it needs no server.");
   $("diagRun").disabled = false;
 }
 on($("diagRun"), "click", runDiag);
@@ -2512,7 +2603,7 @@ on($("diagCopy"), "click", function () { copyText($("diagBody").textContent); })
 function settingsToForm() {
   $("optStamp").checked = cfg.stamp;
   $("optKeepAspect").checked = cfg.aspect;
-  $("optRelay").checked = cfg.relay;
+  $("optLanFirst").checked = cfg.lanFirst;
   $("optTurnUrl").value = cfg.turnUrl;
   $("optTurnUser").value = cfg.turnUser;
   $("optTurnPass").value = cfg.turnPass;
@@ -2522,7 +2613,7 @@ function settingsToForm() {
 on($("optSave"), "click", function () {
   cfg.stamp = $("optStamp").checked;
   cfg.aspect = $("optKeepAspect").checked;
-  cfg.relay = $("optRelay").checked;
+  cfg.lanFirst = $("optLanFirst").checked;
   cfg.turnUrl = $("optTurnUrl").value.trim();
   cfg.turnUser = $("optTurnUser").value.trim();
   cfg.turnPass = $("optTurnPass").value.trim();
@@ -2532,10 +2623,10 @@ on($("optSave"), "click", function () {
   pcFitVideo();
   closeSheet();
   toast("Settings saved");
-  log("settings saved (relay=" + cfg.relay + ", broker=" + cfg.broker + ")");
+  log("settings saved (lanFirst=" + cfg.lanFirst + ", broker=" + cfg.broker + ")");
 });
 on($("optReset"), "click", function () {
-  cfg = { stamp: true, aspect: true, relay: false, turnUrl: "", turnUser: "", turnPass: "", broker: "0.peerjs.com", link: "auto" };
+  cfg = { stamp: true, aspect: true, lanFirst: true, turnUrl: "", turnUser: "", turnPass: "", broker: "0.peerjs.com", link: "auto" };
   Object.keys(cfg).forEach(function (k) { store.set(k, cfg[k]); });
   settingsToForm();
   toast("Defaults restored");
@@ -2567,10 +2658,8 @@ if (!window.RTCPeerConnection) {
 }
 
 if (window.top !== window.self) {
-  pcWarn("This page is running inside an embedded frame, where browsers block camera access. Open it in its own browser tab.");
-  camWarn("This page is running inside an embedded frame, where browsers block camera access. Open it in its own browser tab.");
   document.body.insertAdjacentHTML("afterbegin",
-    '<div class="warnbar show">Open this page in its own browser tab — inside an embedded preview the browser blocks the camera and the network.</div>');
+    '<div class="warnbar show">Open this page in its own tab — embedded previews block the camera.</div>');
 }
 
 (function route() {
@@ -2579,9 +2668,9 @@ if (window.top !== window.self) {
   if (c.length === 4) {
     show("cam");
     $("camCode").value = c;
-    camStatus("wait", "Code " + c + " loaded — tap Connect to start the camera");
+    camStatus("wait", "Code " + c + " — tap Connect");
     $("camCodeTag").textContent = "code " + c;
-    if (!secureOK()) camWarn("Open this page over https, otherwise the browser will not hand over the camera.");
+    if (!secureOK()) camWarn("Camera needs https.");
     return;
   }
   var last = store.get("lastCode", "");
@@ -2593,5 +2682,5 @@ log("Fieldcam ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e11859acbee4b2',t:'MTc4NzIyNTczMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e1559e6d98e3f0',t:'MTc4NzIyODI0MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
