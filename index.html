@@ -3,124 +3,622 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cam</title>
+<title>Field cam</title>
 <style>
+:root{
+  --bg:#cfd3d8;--ink:#1a1e22;--mute:#4e575f;--line:#9aa1a8;
+  --panel:#e2e5e9;--well:#eceef1;--go:#215c43;--on:#f3f0e9;--hot:#8d3c2c;
+  --ui:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
 *{box-sizing:border-box}
-body{margin:0;font:20px/1.45 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:#d5d8dd;color:#2c3238;padding:20px}
-.w{max-width:640px;margin:0 auto}
-h1{font-size:1.7rem;margin:0 0 8px}
-p{color:#5c646c;margin:0 0 14px}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
-button,input{font:inherit;border:1px solid #b8bec6;background:#e4e6ea;color:#2c3238;padding:12px 14px}
-button{font-weight:700;cursor:pointer}
-button.go{background:#2d6b4f;color:#f4f1ec;border-color:#2d6b4f}
-button:disabled{opacity:.4}
-input{letter-spacing:.2em;text-transform:uppercase;width:8em;font-weight:700}
-.box{display:none;background:#e4e6ea;border:1px solid #b8bec6;padding:16px;margin-top:12px}
-.box.on{display:block}
-.code{font:2.4rem/1.1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.25em;margin:10px 0;font-weight:700}
-video{width:100%;background:#2c3238;margin-top:12px;display:block;max-height:70vh}
-.st{margin-top:10px;min-height:1.3em}
-.bad{color:#9a3f3a}
-.ok{color:#2d6b4f}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.4 var(--ui)}
+body{padding:14px}
+.w{max-width:1100px;margin:0 auto}
+.head{display:flex;justify-content:space-between;align-items:end;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:12px}
+h1{margin:0;font:700 1.65rem/1 var(--ui)}
+.head small{font:700 .8rem var(--mono);color:var(--mute)}
+.pick{display:flex;gap:8px;margin-bottom:12px}
+button,select,input{font:inherit;color:var(--ink)}
+button{border:1px solid var(--ink);background:var(--well);padding:10px 12px;font-weight:700;cursor:pointer}
+button.go{background:var(--go);color:var(--on);border-color:var(--go)}
+button.hot{background:var(--hot);color:var(--on);border-color:var(--hot)}
+button.lit{background:var(--ink);color:var(--well)}
+button:disabled{opacity:.4;cursor:default}
+select,input[type=range]{width:100%}
+select{border:1px solid var(--line);background:var(--well);padding:8px}
+.unit{display:none}
+.unit.show{display:block}
+.desk{display:grid;grid-template-columns:280px 1fr;gap:12px}
+@media(max-width:800px){.desk{grid-template-columns:1fr}}
+.side,.stage{border:1px solid var(--line);background:var(--panel);padding:12px}
+.k{font:700 .72rem var(--mono);color:var(--mute);letter-spacing:.04em;margin:0 0 6px}
+.lcd{font:700 3.1rem/1 var(--mono);letter-spacing:.18em;text-align:center;background:var(--well);border:1px solid var(--line);padding:16px 6px;margin:8px 0}
+.link{font:700 .85rem var(--mono);word-break:break-all;color:var(--mute);margin:0 0 10px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label{display:block;font-size:.78rem;font-weight:700;color:var(--mute);margin:8px 0 3px}
+video{width:100%;display:block;background:#1e2328;margin:8px 0;max-height:62vh}
+.row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.st{min-height:1.3em;margin-top:8px}
+.ok{color:var(--go)}.err{color:var(--hot)}
+.met{font:700 .82rem var(--mono);color:var(--mute)}
+.log{font:700 .75rem/1.45 var(--mono);color:var(--mute);max-height:9em;overflow:auto;border-top:1px solid var(--line);margin-top:10px;padding-top:8px;white-space:pre-wrap}
+#pinIn{font:700 1.8rem var(--mono);letter-spacing:.2em;width:8rem;padding:8px;border:1px solid var(--ink);background:var(--well)}
+#evWrap{display:none}
+.gridon video{outline:1px dashed var(--line);outline-offset:-40px}
 </style>
 </head>
 <body>
 <div class="w">
-  <h1>Phone → PC camera</h1>
-  <p>Same Wi‑Fi. No port. No copy of SDP. PC shows a code, phone types it.</p>
-  <div class="row">
-    <button class="go" id="asPc" type="button">This is the PC</button>
-    <button id="asPhone" type="button">This is the phone</button>
+  <div class="head">
+    <h1>Field cam</h1>
+    <small id="clock"></small>
+  </div>
+  <div class="pick">
+    <button class="go" id="bPc" type="button">PC receive</button>
+    <button class="hot" id="bPh" type="button">Phone send</button>
   </div>
 
-  <div class="box" id="pcBox">
-    <p>Leave this tab open. On the phone open this same site and enter:</p>
-    <div class="code" id="code">····</div>
-    <video id="remote" playsinline autoplay controls></video>
-    <div class="st" id="pcSt">Getting a code…</div>
-  </div>
-
-  <div class="box" id="phBox">
-    <p>Allow the camera, type the PC code, tap Go.</p>
-    <div class="row">
-      <input id="pin" maxlength="4" placeholder="CODE" autocomplete="off">
-      <button class="go" id="go" type="button">Go</button>
+  <section class="unit" id="pc">
+    <div class="desk">
+      <div class="side">
+        <p class="k">SESSION</p>
+        <div class="lcd" id="pin">----</div>
+        <p class="link" id="join"></p>
+        <div class="row">
+          <button type="button" id="copyLink">Copy link</button>
+          <button type="button" id="copyPin">Copy #</button>
+          <button type="button" id="newCode">New</button>
+        </div>
+        <p class="k" style="margin-top:14px">LIVE</p>
+        <div class="met" id="pcMet">—</div>
+        <div class="met" id="pcTime">00:00</div>
+        <div class="st" id="pcSt"></div>
+        <div class="log" id="pcLog"></div>
+      </div>
+      <div class="stage">
+        <p class="k">VIEWFINDER</p>
+        <video id="remote" playsinline autoplay></video>
+        <div class="row">
+          <button type="button" id="snap">Still</button>
+          <button type="button" id="clip">Clip</button>
+          <button type="button" id="full">Full</button>
+          <button type="button" id="muteIn">Sound</button>
+        </div>
+      </div>
     </div>
-    <video id="local" playsinline muted autoplay></video>
-    <div class="st" id="phSt"></div>
-  </div>
+  </section>
+
+  <section class="unit" id="ph">
+    <div class="desk">
+      <div class="side">
+        <p class="k">UPLINK</p>
+        <label>Code</label>
+        <input id="pinIn" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        <div class="g">
+          <div><label>Camera</label><select id="cam"></select></div>
+          <div><label>Size</label>
+            <select id="res">
+              <option value="640x480">640×480</option>
+              <option value="1280x720" selected>1280×720</option>
+              <option value="1920x1080">1920×1080</option>
+            </select>
+          </div>
+          <div><label>FPS</label>
+            <select id="fps"><option>15</option><option selected>24</option><option>30</option></select>
+          </div>
+          <div><label>Zoom <span id="zv">1</span></label>
+            <input id="zoom" type="range" min="1" max="1" step="0.1" value="1">
+          </div>
+          <div id="evWrap"><label>EV <span id="evv">0</span></label>
+            <input id="ev" type="range" min="-2" max="2" step="0.1" value="0">
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button type="button" id="flip">Flip</button>
+          <button type="button" id="mic">Mic</button>
+          <button type="button" id="torch">Torch</button>
+          <button type="button" id="freeze">Freeze</button>
+          <button type="button" id="grid">Grid</button>
+          <button type="button" id="awake">Awake</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="hot" type="button" id="send">Send</button>
+          <button type="button" id="hang">Hang up</button>
+        </div>
+        <div class="met" id="phMet"></div>
+        <div class="st" id="phSt"></div>
+        <div class="log" id="phLog"></div>
+      </div>
+      <div class="stage" id="phStage">
+        <p class="k">PREVIEW</p>
+        <video id="local" playsinline muted autoplay></video>
+      </div>
+    </div>
+  </section>
 </div>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 (function () {
+  var ICE = { iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" }
+  ]};
+  var PFX = "c7n";
   function $(id) { return document.getElementById(id); }
-  function say(id, m, k) {
-    $(id).textContent = m;
+  function say(id, t, k) {
+    $(id).textContent = t || "";
     $(id).className = "st" + (k ? " " + k : "");
+    log(id === "pcSt" ? "pcLog" : "phLog", t);
   }
-  function pin4() {
-    const a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let s = "";
-    for (let i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)];
-    return s;
+  function log(id, t) {
+    if (!t) return;
+    var el = $(id);
+    if (!el) return;
+    var line = new Date().toLocaleTimeString() + "  " + t + "\n";
+    el.textContent = (line + el.textContent).slice(0, 1200);
   }
-  const ns = "c7cam-";
+  function rid(n) { return Math.random().toString(36).slice(2, 2 + (n || 8)); }
+  function joinUrl(code) {
+    var u = new URL(location.href);
+    u.hash = "";
+    u.search = "?c=" + code;
+    return u.href;
+  }
+  function clock() {
+    var d = new Date();
+    $("clock").textContent = d.toLocaleTimeString();
+  }
+  clock();
+  setInterval(clock, 1000);
 
-  $("asPc").onclick = function () {
-    $("pcBox").classList.add("on");
-    $("phBox").classList.remove("on");
-    const code = pin4();
-    $("code").textContent = code;
-    say("pcSt", "Waiting for the phone…");
-    const peer = new Peer(ns + code, { debug: 0 });
-    peer.on("error", function (e) {
-      say("pcSt", e.type === "unavailable-id" ? "Code taken, reload." : String(e), "bad");
+  function Signal(id) {
+    this.id = id;
+    this.fn = [];
+    this.ws = null;
+    this.hb = 0;
+    var u = "wss://0.peerjs.com:443/peerjs?key=peerjs&id=" + encodeURIComponent(id) +
+      "&token=" + rid(12) + Date.now().toString(36) + "&version=1.5.4";
+    var self = this;
+    this.ready = new Promise(function (res, rej) {
+      var done = false;
+      var ws = new WebSocket(u);
+      self.ws = ws;
+      var to = setTimeout(function () {
+        if (!done) { done = true; try { ws.close(); } catch (e) {} rej(new Error("signal timeout")); }
+      }, 8000);
+      ws.onmessage = function (ev) {
+        var m;
+        try { m = JSON.parse(ev.data); } catch (e) { return; }
+        if (m.type === "OPEN") { if (!done) { done = true; clearTimeout(to); res(id); } }
+        else if (m.type === "ID-TAKEN" || m.type === "INVALID-KEY" || m.type === "ERROR") {
+          if (!done) { done = true; clearTimeout(to); rej(new Error(m.type)); }
+        } else self.fn.forEach(function (f) { f(m); });
+      };
+      ws.onerror = function () { if (!done) { done = true; clearTimeout(to); rej(new Error("socket")); } };
+      ws.onclose = function () { clearInterval(self.hb); };
+      ws.onopen = function () {
+        self.hb = setInterval(function () {
+          if (ws.readyState === 1) ws.send(JSON.stringify({ type: "HEARTBEAT" }));
+        }, 18000);
+      };
     });
-    peer.on("open", function () {
-      say("pcSt", "Ready. Enter " + code + " on the phone.", "ok");
-    });
-    peer.on("call", function (call) {
-      call.answer();
-      call.on("stream", function (s) {
-        $("remote").srcObject = s;
-        say("pcSt", "Live.", "ok");
+  }
+  Signal.prototype.on = function (f) { this.fn.push(f); };
+  Signal.prototype.send = function (o) {
+    if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(o));
+  };
+  Signal.prototype.close = function () {
+    clearInterval(this.hb);
+    try { if (this.ws) this.ws.close(); } catch (e) {}
+  };
+
+  var rtc = null, sig = null, media = null, conn = null, tick = 0, pending = [];
+  var remoteOk = false, frozen = false, torchOn = false, micOn = false, wake = null;
+  var lastBytes = 0, lastTs = 0, rec = null, recBits = [];
+  var preferBack = true, waitAns = 0, liveAt = 0, liveClock = 0;
+
+  function stopRtc() {
+    if (tick) clearInterval(tick);
+    tick = 0;
+    if (liveClock) clearInterval(liveClock);
+    liveClock = 0;
+    pending = [];
+    remoteOk = false;
+    if (waitAns) { clearTimeout(waitAns); waitAns = 0; }
+    if (rec && rec.state !== "inactive") try { rec.stop(); } catch (e) {}
+    rec = null;
+    if (rtc) { try { rtc.close(); } catch (e) {} rtc = null; }
+    if (sig) { sig.close(); sig = null; }
+  }
+  function stopMedia() {
+    if (media) media.getTracks().forEach(function (t) { t.stop(); });
+    media = null;
+  }
+  function vt() { return media && media.getVideoTracks()[0]; }
+  function markLive(el) {
+    liveAt = Date.now();
+    if (liveClock) clearInterval(liveClock);
+    liveClock = setInterval(function () {
+      var s = Math.floor((Date.now() - liveAt) / 1000);
+      var m = String(Math.floor(s / 60)).padStart(2, "0");
+      var sec = String(s % 60).padStart(2, "0");
+      if ($("pcTime")) $("pcTime").textContent = m + ":" + sec;
+    }, 500);
+    say(el, "Live", "ok");
+  }
+
+  function hookIce(peer, dst) {
+    peer.onicecandidate = function (ev) {
+      if (!ev.candidate || !sig) return;
+      sig.send({
+        type: "CANDIDATE", dst: dst,
+        payload: {
+          candidate: ev.candidate.toJSON ? ev.candidate.toJSON() : {
+            candidate: ev.candidate.candidate,
+            sdpMid: ev.candidate.sdpMid,
+            sdpMLineIndex: ev.candidate.sdpMLineIndex
+          },
+          type: "media", connectionId: conn
+        }
       });
-      call.on("close", function () { say("pcSt", "Phone left."); });
-    });
-  };
+    };
+    peer.onconnectionstatechange = function () {
+      var s = peer.connectionState;
+      var el = $("pc").classList.contains("show") ? "pcSt" : "phSt";
+      if (s === "connected") markLive(el);
+      if (s === "failed") say(el, "Link failed — Send again", "err");
+      if (s === "disconnected") say(el, "Dropped", "err");
+    };
+  }
+  async function addIce(peer, p) {
+    var c = p && p.candidate;
+    if (!c) return;
+    if (!remoteOk) { pending.push(c); return; }
+    try { await peer.addIceCandidate(c); } catch (e) {}
+  }
+  async function flushIce(peer) {
+    remoteOk = true;
+    while (pending.length) {
+      try { await peer.addIceCandidate(pending.shift()); } catch (e) {}
+    }
+  }
+  function meter(el, peer, inbound) {
+    if (tick) clearInterval(tick);
+    lastBytes = 0; lastTs = 0;
+    tick = setInterval(async function () {
+      if (!peer) return;
+      try {
+        var rtt = 0, fps = 0, kbps = 0;
+        var st = await peer.getStats();
+        st.forEach(function (r) {
+          if (r.type === "candidate-pair" && r.nominated && r.currentRoundTripTime != null)
+            rtt = Math.round(r.currentRoundTripTime * 1000);
+          if (inbound && r.type === "inbound-rtp" && r.kind === "video") {
+            fps = r.framesPerSecond || fps;
+            if (lastTs && r.bytesReceived != null)
+              kbps = Math.round((r.bytesReceived - lastBytes) * 8 / Math.max(1, r.timestamp - lastTs));
+            lastBytes = r.bytesReceived || lastBytes;
+            lastTs = r.timestamp || lastTs;
+          }
+          if (!inbound && r.type === "outbound-rtp" && r.kind === "video")
+            fps = r.framesPerSecond || fps;
+        });
+        var o = [];
+        if (fps) o.push(Math.round(fps) + " fps");
+        if (kbps) o.push(kbps + " kb/s");
+        if (rtt) o.push(rtt + " ms");
+        el.textContent = o.join(" · ") || "—";
+      } catch (e) {}
+    }, 1000);
+  }
 
-  $("asPhone").onclick = function () {
-    $("phBox").classList.add("on");
-    $("pcBox").classList.remove("on");
-    $("pin").focus();
-  };
-
-  $("go").onclick = async function () {
-    const code = ($("pin").value || "").trim().toUpperCase();
-    if (code.length < 4) { say("phSt", "Enter the 4-character code.", "bad"); return; }
+  async function listCams(keep) {
+    var sel = $("cam"), cur = keep || sel.value;
+    sel.innerHTML = "";
     try {
-      if (!navigator.mediaDevices || !location.protocol.startsWith("https")) {
-        say("phSt", "Need https + camera permission.", "bad");
+      var all = await navigator.mediaDevices.enumerateDevices();
+      var vids = all.filter(function (d) { return d.kind === "videoinput"; });
+      if (!vids.length) {
+        sel.innerHTML = "<option value=\"env\">Back</option><option value=\"user\">Front</option>";
         return;
       }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
-        audio: false
+      vids.forEach(function (d, i) {
+        var o = document.createElement("option");
+        o.value = d.deviceId;
+        o.textContent = d.label || ("Camera " + (i + 1));
+        sel.appendChild(o);
       });
-      $("local").srcObject = stream;
-      const peer = new Peer(undefined, { debug: 0 });
-      peer.on("error", function (e) { say("phSt", String(e), "bad"); });
-      peer.on("open", function () {
-        const call = peer.call(ns + code, stream);
-        if (!call) { say("phSt", "Could not call PC.", "bad"); return; }
-        call.on("error", function (e) { say("phSt", String(e), "bad"); });
-        say("phSt", "Sending… keep this tab open.", "ok");
-      });
+      if (cur && [].some.call(sel.options, function (o) { return o.value === cur; })) sel.value = cur;
     } catch (e) {
-      say("phSt", String(e.message || e), "bad");
+      sel.innerHTML = "<option value=\"env\">Back</option><option value=\"user\">Front</option>";
     }
+  }
+
+  function applyCaps() {
+    var t = vt();
+    $("evWrap").style.display = "none";
+    if (!t || !t.getCapabilities) return;
+    var c = t.getCapabilities();
+    if (c.zoom) {
+      $("zoom").min = c.zoom.min;
+      $("zoom").max = c.zoom.max;
+      $("zoom").step = c.zoom.step || 0.1;
+      var s = t.getSettings && t.getSettings();
+      if (s && s.zoom != null) { $("zoom").value = s.zoom; $("zv").textContent = String(s.zoom); }
+    }
+    if (c.exposureCompensation) {
+      $("evWrap").style.display = "block";
+      $("ev").min = c.exposureCompensation.min;
+      $("ev").max = c.exposureCompensation.max;
+      $("ev").step = c.exposureCompensation.step || 0.1;
+    }
+  }
+
+  async function openCam() {
+    var wh = $("res").value.split("x");
+    var video = {
+      width: { ideal: +wh[0] },
+      height: { ideal: +wh[1] },
+      frameRate: { ideal: +$("fps").value }
+    };
+    var id = $("cam").value;
+    if (id === "user") video.facingMode = { ideal: "user" };
+    else if (id === "env" || !id) video.facingMode = { ideal: preferBack ? "environment" : "user" };
+    else video.deviceId = { exact: id };
+    if (media) media.getTracks().forEach(function (t) { t.stop(); });
+    media = await navigator.mediaDevices.getUserMedia({ audio: micOn, video: video });
+    $("local").srcObject = media;
+    var keep = (id && id !== "env" && id !== "user") ? id : "";
+    await listCams(keep);
+    applyCaps();
+    if (rtc) {
+      var vs = rtc.getSenders().find(function (x) { return x.track && x.track.kind === "video"; });
+      var as = rtc.getSenders().find(function (x) { return x.track && x.track.kind === "audio"; });
+      if (vs && vt()) await vs.replaceTrack(vt());
+      if (as) await as.replaceTrack(media.getAudioTracks()[0] || null);
+    }
+  }
+
+  function show(which) {
+    $("pc").classList.toggle("show", which === "pc");
+    $("ph").classList.toggle("show", which === "ph");
+  }
+
+  function bindPcTracks(peer) {
+    peer.ontrack = function (ev) {
+      var s = ev.streams[0] || new MediaStream([ev.track]);
+      $("remote").srcObject = s;
+      $("remote").muted = $("muteIn").classList.contains("lit");
+      $("remote").play && $("remote").play();
+      meter($("pcMet"), peer, true);
+    };
+  }
+
+  async function startPc() {
+    show("pc");
+    stopRtc();
+    $("remote").srcObject = null;
+    $("pcTime").textContent = "00:00";
+    var n = null, tries = 0;
+    while (tries++ < 6) {
+      n = String(1000 + Math.floor(Math.random() * 9000));
+      $("pin").textContent = n;
+      $("join").textContent = joinUrl(n);
+      try {
+        sig = new Signal(PFX + n);
+        await sig.ready;
+        break;
+      } catch (e) {
+        if (sig) sig.close();
+        sig = null;
+        n = null;
+      }
+    }
+    if (!n) { say("pcSt", "No free code. Try again.", "err"); return; }
+    try { sessionStorage.setItem("camPin", n); } catch (e) {}
+    rtc = new RTCPeerConnection(ICE);
+    bindPcTracks(rtc);
+    sig.on(async function (msg) {
+      if (msg.type === "OFFER" && msg.payload && msg.payload.sdp) {
+        if (rtc) { try { rtc.close(); } catch (e) {} }
+        rtc = new RTCPeerConnection(ICE);
+        bindPcTracks(rtc);
+        conn = msg.payload.connectionId || ("mc_" + rid());
+        hookIce(rtc, msg.src);
+        pending = [];
+        remoteOk = false;
+        await rtc.setRemoteDescription(msg.payload.sdp);
+        await flushIce(rtc);
+        var a = await rtc.createAnswer();
+        await rtc.setLocalDescription(a);
+        sig.send({
+          type: "ANSWER", dst: msg.src,
+          payload: { sdp: { type: rtc.localDescription.type, sdp: rtc.localDescription.sdp }, type: "media", connectionId: conn }
+        });
+        log("pcLog", "answer → phone");
+      } else if (msg.type === "CANDIDATE") addIce(rtc, msg.payload);
+    });
+    say("pcSt", "Ready · " + n, "ok");
+  }
+
+  $("bPc").onclick = startPc;
+  $("bPh").onclick = async function () {
+    show("ph");
+    try { await openCam(); say("phSt", "Preview on. Send when PC shows a code.", "ok"); }
+    catch (e) { say("phSt", String(e.message || e), "err"); }
   };
+  $("newCode").onclick = startPc;
+  function copyText(t) {
+    if (navigator.clipboard) return navigator.clipboard.writeText(t);
+    var i = document.createElement("textarea");
+    i.value = t; document.body.appendChild(i); i.select(); document.execCommand("copy"); i.remove();
+    return Promise.resolve();
+  }
+  $("copyLink").onclick = function () { copyText($("join").textContent); say("pcSt", "Link copied", "ok"); };
+  $("copyPin").onclick = function () { copyText($("pin").textContent); say("pcSt", "Number copied", "ok"); };
+
+  $("send").onclick = async function () {
+    var n = ($("pinIn").value || "").replace(/\D/g, "");
+    if (n.length !== 4) { say("phSt", "Need 4 digits", "err"); return; }
+    if (!/^https:$/.test(location.protocol) && location.hostname !== "localhost") {
+      say("phSt", "Camera needs https", "err"); return;
+    }
+    $("send").disabled = true;
+    try {
+      try { sessionStorage.setItem("camLast", n); } catch (e) {}
+      if (!media) await openCam();
+      stopRtc();
+      sig = new Signal(PFX + "p" + rid(8));
+      await sig.ready;
+      conn = "mc_" + rid();
+      rtc = new RTCPeerConnection(ICE);
+      media.getTracks().forEach(function (t) { rtc.addTrack(t, media); });
+      var dst = PFX + n;
+      hookIce(rtc, dst);
+      pending = [];
+      remoteOk = false;
+      if (waitAns) clearTimeout(waitAns);
+      waitAns = setTimeout(function () {
+        say("phSt", "No PC — wrong number or tab not waiting", "err");
+      }, 10000);
+      sig.on(async function (msg) {
+        if (msg.type === "ANSWER" && msg.payload && msg.payload.sdp) {
+          if (waitAns) { clearTimeout(waitAns); waitAns = 0; }
+          await rtc.setRemoteDescription(msg.payload.sdp);
+          await flushIce(rtc);
+          say("phSt", "On air", "ok");
+          meter($("phMet"), rtc, false);
+        } else if (msg.type === "CANDIDATE") addIce(rtc, msg.payload);
+      });
+      var o = await rtc.createOffer();
+      await rtc.setLocalDescription(o);
+      sig.send({
+        type: "OFFER", dst: dst,
+        payload: { sdp: { type: rtc.localDescription.type, sdp: rtc.localDescription.sdp }, type: "media", connectionId: conn }
+      });
+      say("phSt", "Calling " + n, "ok");
+    } catch (e) { say("phSt", String(e.message || e), "err"); }
+    $("send").disabled = false;
+  };
+
+  $("hang").onclick = function () {
+    stopRtc(); stopMedia();
+    $("local").srcObject = null;
+    say("phSt", "Stopped");
+  };
+  $("flip").onclick = async function () {
+    preferBack = !preferBack;
+    var opts = $("cam").options;
+    if (opts.length > 1 && $("cam").value !== "env" && $("cam").value !== "user") {
+      $("cam").selectedIndex = ($("cam").selectedIndex + 1) % opts.length;
+    } else $("cam").value = preferBack ? "env" : "user";
+    if (media) await openCam();
+  };
+  $("cam").onchange = $("res").onchange = $("fps").onchange = function () {
+    if (media) openCam().catch(function (e) { say("phSt", String(e.message || e), "err"); });
+  };
+  $("zoom").oninput = async function () {
+    $("zv").textContent = $("zoom").value;
+    try { if (vt()) await vt().applyConstraints({ advanced: [{ zoom: +$("zoom").value }] }); } catch (e) {}
+  };
+  $("ev").oninput = async function () {
+    $("evv").textContent = $("ev").value;
+    try { if (vt()) await vt().applyConstraints({ advanced: [{ exposureCompensation: +$("ev").value }] }); } catch (e) {}
+  };
+  $("torch").onclick = async function () {
+    torchOn = !torchOn;
+    try {
+      await vt().applyConstraints({ advanced: [{ torch: torchOn }] });
+      $("torch").classList.toggle("lit", torchOn);
+    } catch (e) { torchOn = false; $("torch").classList.remove("lit"); }
+  };
+  $("freeze").onclick = function () {
+    frozen = !frozen;
+    if (vt()) vt().enabled = !frozen;
+    $("freeze").textContent = frozen ? "Live" : "Freeze";
+    $("freeze").classList.toggle("lit", frozen);
+  };
+  $("grid").onclick = function () {
+    $("phStage").classList.toggle("gridon");
+    $("grid").classList.toggle("lit");
+  };
+  $("mic").onclick = async function () {
+    micOn = !micOn;
+    $("mic").classList.toggle("lit", micOn);
+    $("mic").textContent = micOn ? "Mic on" : "Mic";
+    if (media) await openCam();
+  };
+  $("awake").onclick = async function () {
+    try {
+      if (!wake) {
+        wake = await navigator.wakeLock.request("screen");
+        $("awake").classList.add("lit");
+      } else {
+        await wake.release(); wake = null;
+        $("awake").classList.remove("lit");
+      }
+    } catch (e) { say("phSt", "No wake lock", "err"); }
+  };
+  document.addEventListener("visibilitychange", async function () {
+    if (document.visibilityState === "visible" && $("awake").classList.contains("lit")) {
+      try { wake = await navigator.wakeLock.request("screen"); } catch (e) {}
+    }
+  });
+  $("snap").onclick = function () {
+    var v = $("remote"); if (!v.videoWidth) return;
+    var c = document.createElement("canvas");
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext("2d").drawImage(v, 0, 0);
+    var a = document.createElement("a");
+    a.href = c.toDataURL("image/jpeg", 0.92);
+    a.download = "snap.jpg"; a.click();
+  };
+  $("full").onclick = function () {
+    var v = $("remote");
+    if (v.requestFullscreen) v.requestFullscreen();
+    else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+  };
+  $("muteIn").onclick = function () {
+    var on = $("muteIn").classList.toggle("lit");
+    $("remote").muted = on;
+    $("muteIn").textContent = on ? "Muted" : "Sound";
+  };
+  $("clip").onclick = function () {
+    var s = $("remote").srcObject;
+    if (!s) { say("pcSt", "Nothing to save", "err"); return; }
+    if (rec && rec.state === "recording") {
+      rec.stop();
+      $("clip").textContent = "Clip";
+      return;
+    }
+    recBits = [];
+    try { rec = new MediaRecorder(s, { mimeType: "video/webm" }); }
+    catch (e) {
+      try { rec = new MediaRecorder(s); } catch (e2) { say("pcSt", "Cannot record", "err"); return; }
+    }
+    rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) recBits.push(ev.data); };
+    rec.onstop = function () {
+      var blob = new Blob(recBits, { type: "video/webm" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "clip.webm"; a.click();
+    };
+    rec.start(500);
+    $("clip").textContent = "Stop";
+    say("pcSt", "Clip rolling", "ok");
+  };
+
+  var q = new URLSearchParams(location.search).get("c");
+  if (q && /^\d{4}$/.test(q)) {
+    show("ph");
+    $("pinIn").value = q;
+    say("phSt", "Code " + q + " — Phone for preview, then Send", "ok");
+  } else {
+    try {
+      var last = sessionStorage.getItem("camLast");
+      if (last && /^\d{4}$/.test(last)) $("pinIn").value = last;
+    } catch (e) {}
+  }
 })();
 </script>
 </body>
