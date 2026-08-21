@@ -158,7 +158,10 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .rotwrap{position:relative;flex:none}
 .frame{position:absolute;left:50%;top:50%;line-height:0;background:var(--matte);border-radius:var(--rp);overflow:hidden}
 #remote{display:block;width:100%;height:100%;background:var(--matte);object-fit:contain}
-.frame.mirror #remote{transform:scaleX(-1)}
+.frame.stretch #remote{object-fit:fill}
+.frame.mirror #remote,.frame.mirror .freeze{transform:scaleX(-1)}
+.freeze{position:absolute;inset:0;width:100%;height:100%;display:none}
+.frame.frozen .freeze{display:block}
 .tally{position:absolute;right:10px;top:10px;display:flex;gap:7px;pointer-events:none}
 .tally span{
   display:none;font:600 12px/1 var(--sans);padding:6px 9px;border-radius:20px;
@@ -173,7 +176,6 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .blank .t{font:600 16px/1.3 var(--sans)}
 .blank .s{font-size:14px;color:#dfe6ea;max-width:36ch}
 .frame.hasvideo .blank{display:none}
-.paircode-large{font:800 clamp(54px,12vw,118px)/1 var(--sans);letter-spacing:.18em;text-indent:.18em;color:#fff;background:rgba(20,26,30,.4);border:2px solid rgba(255,255,255,.72);border-radius:14px;padding:24px 28px;font-variant-numeric:tabular-nums}
 
 .toolstrip{
   flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
@@ -187,12 +189,15 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .sect + .sect{border-top:1px solid var(--line-2)}
 .sect > h2{font:600 13px/1 var(--sans);color:var(--dim);margin:0 0 11px;display:flex;align-items:center;gap:10px}
 .sect > h2 .grow{display:none}
+.pairgrid{display:flex;gap:14px;align-items:flex-start}
+.qrbox{flex:none;border:1px solid var(--line);border-radius:var(--r);padding:7px;background:#fff;line-height:0}
+.qrbox canvas{display:block;width:112px;height:112px;image-rendering:pixelated}
+.codebig{font:700 36px/1 var(--sans);letter-spacing:.08em;color:var(--ink)}
 .pairnote{font-size:14px;color:var(--ink-2);margin-top:9px}
-.codebig{font:700 32px/1.2 var(--sans);letter-spacing:.12em;margin-top:8px}
-.orline{font-size:13px;color:var(--dim);align-self:center}
-.localpair .pairnote{margin:14px 0 7px;line-height:1.45}
-.localpair .pairnote:first-child{margin-top:0}
-.camlocalpair{padding-bottom:16px;border-bottom:1px solid var(--line-2);margin-bottom:16px}
+.urlline{font:400 12.5px/1.45 var(--mono);color:var(--dim);word-break:break-all;margin-top:10px}
+.relayline{font-size:13px;color:var(--dim);margin-top:9px}
+.relayline b{font-weight:600;color:var(--ink-2)}
+.relayline.bad{color:var(--hot)}
 .rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ctlgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .ctlgrid .full{grid-column:1/-1}
@@ -237,12 +242,24 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 }
 .focusring.go{animation:fring .7s ease-out}
 @keyframes fring{0%{opacity:1;transform:scale(1.3)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+.scanbox{
+  position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;background:rgba(16,24,28,.45);
+}
+.scanbox.on{display:flex}
+.scanframe{
+  width:min(62vw,240px);height:min(62vw,240px);border:3px solid #fff;border-radius:10px;
+  box-shadow:0 0 0 2000px rgba(16,24,28,.25);
+}
+.scanhint{color:#fff;font-size:15px;text-align:center;padding:0 24px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.orline{font-size:13.5px;color:var(--dim);align-self:center}
 .camdock{
   flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;
   background:var(--bar);border-top:1px solid var(--line);
 }
 .campanel{flex:none;background:var(--panel);border-top:1px solid var(--line);padding:16px;display:none;max-height:54vh;overflow:auto}
 .campanel.show{display:block}
+.connrow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line-2);margin-bottom:16px}
 .p2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .p2 .full{grid-column:1/-1}
 .slider{display:flex;align-items:center;gap:12px}
@@ -290,6 +307,9 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .onlylive{display:none}
 body.live .onlylive{display:inline-flex}
 body.live .hideonlive{display:none}
+body.live #pairSect .qrbox,body.live #pairSect .urlline{display:none}
+body.live #pairSect .codebig{font-size:22px}
+body.live #pairSect .pairnote{margin-top:5px}
 
 @media (max-width:1000px){
   #scView.show{height:auto;min-height:100dvh;overflow:visible}
@@ -318,6 +338,7 @@ body.live .hideonlive{display:none}
 <g id="i-gear"><path d="M6.7 2h2.6l.3 1.6 1.1.65 1.55-.55 1.3 2.25-1.2 1.07v1.26l1.2 1.07-1.3 2.25-1.55-.55-1.1.65-.3 1.6H6.7l-.3-1.6-1.1-.65-1.55.55-1.3-2.25 1.2-1.07V7.03l-1.2-1.07 1.3-2.25 1.55.55 1.1-.65z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.85" fill="none" stroke="currentColor" stroke-width="1.2"/></g>
 <g id="i-x"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.4"/></g>
 <g id="i-refresh"><path d="M13.2 8a5.2 5.2 0 1 1-1.65-3.8M13.2 2.3V5h-2.7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
+<g id="i-fps"><path d="M13.4 2.6C6.5 2.6 3.2 5.6 3.2 9.6c0 1.5.6 2.5.6 2.5s2.1-4.5 8-6.8c-3.3 2.3-6.3 4.2-7.3 7.8" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></g>
 <g id="i-save"><path d="M8 2v7.6M4.9 6.8 8 9.9l3.1-3.1M2.8 13.3h10.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-card"><path d="M3.6 2.4h5.6l3.2 3.2v8H3.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 4.9V3.3M8 4.9V3.3M10 5.5V4.1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></g>
 <g id="i-focus"><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.5v2.1M8 12.4v2.1M1.5 8h2.1M12.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
@@ -330,12 +351,19 @@ body.live .hideonlive{display:none}
 <g id="i-rec"><circle cx="8" cy="8" r="3.6" fill="currentColor"/><circle cx="8" cy="8" r="6.1" fill="none" stroke="currentColor" stroke-width="1.1"/></g>
 <g id="i-rotate"><path d="M4.2 4.4h6a2.9 2.9 0 0 1 0 5.8H6.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="m8.2 12.4-2.4-2.2 2.4-2.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-mirror"><path d="M8 1.7v12.6" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 2"/><path d="M6.5 4.3 2.6 8l3.9 3.7zM9.5 4.3 13.4 8l-3.9 3.7z" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></g>
+<g id="i-stretch"><path d="M1.8 8h12.4M4.4 5.4 1.8 8l2.6 2.6M11.6 5.4 14.2 8l-2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-mic"><rect x="6.1" y="1.7" width="3.8" height="7.6" rx="1.9" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3.7 8a4.3 4.3 0 0 0 8.6 0M8 12.3v2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
+<g id="i-pause"><path d="M5.7 3.6v8.8M10.3 3.6v8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></g>
 <g id="i-play"><path d="M5.2 3.4 12 8l-6.8 4.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></g>
 <g id="i-grid"><path d="M1.9 6.2h12.2M1.9 9.8h12.2M6.2 1.9v12.2M9.8 1.9v12.2" stroke="currentColor" stroke-width="1.1"/></g>
 <g id="i-eye"><path d="M1.6 8S4.2 3.9 8 3.9 14.4 8 14.4 8 11.8 12.1 8 12.1 1.6 8 1.6 8z" fill="none" stroke="currentColor" stroke-width="1.25"/><circle cx="8" cy="8" r="1.8" fill="none" stroke="currentColor" stroke-width="1.25"/></g>
 <g id="i-swap"><path d="M2.2 4.6h3l1-1.5h3.6l1 1.5h3v7.8h-11.6z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.2 8.4a2 2 0 0 1 3.5-1.3M9.8 8.4a2 2 0 0 1-3.5 1.3" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></g>
+<g id="i-copy"><rect x="2.4" y="2.4" width="7.6" height="7.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.6 13.6h8v-8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></g>
+<g id="i-link"><path d="M6.7 9.3a2.7 2.7 0 0 0 3.9 0l1.9-1.9a2.75 2.75 0 0 0-3.9-3.9l-.8.8" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M9.3 6.7a2.7 2.7 0 0 0-3.9 0L3.5 8.6a2.75 2.75 0 0 0 3.9 3.9l.8-.8" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></g>
 <g id="i-batt"><rect x="1.6" y="4.7" width="10.8" height="6.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M13.8 7.1v1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g>
+<g id="i-scan"><path d="M2.4 5.6V2.4h3.2M13.6 5.6V2.4h-3.2M2.4 10.4v3.2h3.2M13.6 10.4v3.2h-3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M2.4 8h11.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></g>
+<g id="i-prev"><path d="M9.8 3.4 5.2 8l4.6 4.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g id="i-next"><path d="M6.2 3.4 10.8 8l-4.6 4.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></g>
 </defs></svg>
 
 <!-- ============================ START ============================ -->
@@ -356,23 +384,25 @@ body.live .hideonlive{display:none}
         <li>
           <button class="role" id="pickViewer" type="button">
             <span class="rt">Watch here</span>
-            <span class="rd">Shows a four-digit pairing code.</span>
+            <span class="rd">Shows a square for the phone to scan, and a four-digit code as a fallback.</span>
             <span class="arw">→</span>
           </button>
         </li>
         <li>
           <button class="role" id="pickCamera" type="button">
             <span class="rt">Send this camera</span>
-            <span class="rd">Enter the four-digit code and connect the camera.</span>
+            <span class="rd">Scans the square on the other screen, then streams this camera to it.</span>
             <span class="arw">→</span>
           </button>
         </li>
       </ul>
 
+      <p class="ready" id="ready">Checking this page…</p>
+
       <dl class="facts">
         <div><dt>The video</dt><dd>Goes straight from the phone to this browser across your Wi-Fi. It is never uploaded, and by default the app refuses any route that leaves the local network.</dd></div>
-        <div><dt>The pairing</dt><dd>The four-digit code starts a short signaling handshake. The camera stream itself remains direct on local Wi-Fi.</dd></div>
-        <div><dt>Needs</dt><dd>Both devices on the same Wi-Fi and a recent Chrome, Edge, Firefox or Safari.</dd></div>
+        <div><dt>The code</dt><dd>Only the four-digit handshake passes through a public relay, and it carries no picture or sound.</dd></div>
+        <div><dt>Needs</dt><dd>An https page (GitHub Pages qualifies) and a recent Chrome, Edge, Firefox or Safari on both ends.</dd></div>
       </dl>
     </div>
   </div>
@@ -383,7 +413,7 @@ body.live .hideonlive{display:none}
   <header class="topbar">
     <span class="mark">Tether<s>.</s></span>
     <span class="vrule"></span>
-    <span class="chip hideonlive">local Wi-Fi only</span>
+    <span class="chip hideonlive" id="vCodeChip">code <b id="vCodeTxt">----</b></span>
     <span class="ro onlylive" id="roRes">—</span>
     <span class="vrule onlylive"></span>
     <span class="ro onlylive" id="roRate">—</span>
@@ -391,7 +421,7 @@ body.live .hideonlive{display:none}
     <span class="ro onlylive" id="roRtt">—</span>
     <span class="grow"></span>
     <span class="ro onlylive" id="roBatt" title="Phone battery">—</span>
-    <button class="btn quiet sq" id="vNew" title="Create a new pairing code"><svg><use href="#i-refresh"/></svg></button>
+    <button class="btn quiet sq" id="vNew" title="New code, restart the session"><svg><use href="#i-refresh"/></svg></button>
     <button class="btn quiet sq" id="vSet" title="Settings"><svg><use href="#i-gear"/></svg></button>
     <button class="btn quiet sq" id="vHelp" title="Help"><svg><use href="#i-info"/></svg></button>
     <button class="btn quiet sq" id="vExit" title="Leave"><svg><use href="#i-x"/></svg></button>
@@ -405,14 +435,15 @@ body.live .hideonlive{display:none}
         <div class="rotwrap" id="rotwrap">
           <div class="frame" id="frame">
             <video id="remote" playsinline autoplay muted></video>
+            <canvas class="freeze" id="freeze"></canvas>
             <div class="tally">
               <span class="rec" id="tRec">Rec</span>
+              <span id="tPause">Held</span>
               <span id="tMute">No sound</span>
             </div>
             <div class="blank">
-              <div class="paircode-large" id="vPairCodeLarge">----</div>
-              <span class="t">Enter this code on the phone</span>
-              <span class="s" id="vPairState">Creating pairing code…</span>
+              <span class="t">No camera yet</span>
+              <span class="s">Open this page on the phone, tap “Scan the square”, and point it at the code on this screen.</span>
             </div>
           </div>
         </div>
@@ -427,6 +458,7 @@ body.live .hideonlive{display:none}
           <option value="50">50%</option>
           <option value="25">25%</option>
         </select>
+        <button class="btn sq" id="vStretch" title="Stretch to the frame, ignore aspect ratio"><svg><use href="#i-stretch"/></svg></button>
         <button class="btn sq" id="vRotate" title="Rotate 90° (Shift+R)"><svg><use href="#i-rotate"/></svg></button>
         <button class="btn sq" id="vMirror" title="Mirror"><svg><use href="#i-mirror"/></svg></button>
         <span class="vrule"></span>
@@ -442,8 +474,14 @@ body.live .hideonlive{display:none}
     <aside class="rail">
       <div class="sect" id="pairSect">
         <h2>Pairing<span class="grow"></span></h2>
-        <p class="pairnote" id="pairNote">Enter the large code in the middle on the phone.</p>
-        <div class="codebig" id="pairCode">----</div>
+        <div class="pairgrid">
+          <div class="qrbox"><canvas id="qr" width="104" height="104"></canvas></div>
+          <div style="min-width:0">
+            <div class="codebig" id="pairCode">----</div>
+            <div class="pairnote" id="pairNote">Open this page on the phone, tap <b>Scan the square</b>, and point it here.</div>
+          </div>
+        </div>
+        <div class="relayline" id="vRelay">Pairing relays: opening…</div>
       </div>
 
       <div class="sect">
@@ -453,6 +491,8 @@ body.live .hideonlive{display:none}
           <button class="btn stack" id="rFocus"><svg><use href="#i-focus"/></svg>Autofocus</button>
           <button class="btn stack" id="rZout"><svg><use href="#i-zout"/></svg>Zoom out</button>
           <button class="btn stack" id="rZin"><svg><use href="#i-zin"/></svg>Zoom in</button>
+          <button class="btn stack" id="rFps"><svg><use href="#i-fps"/></svg>Limit fps</button>
+          <button class="btn stack" id="rHold"><svg><use href="#i-pause"/></svg>Hold</button>
           <button class="btn stack" id="rSd"><svg><use href="#i-card"/></svg>Photo on phone</button>
           <button class="btn stack" id="rMic"><svg><use href="#i-mic"/></svg>Microphone</button>
         </div>
@@ -525,6 +565,11 @@ body.live .hideonlive{display:none}
       <video id="local" playsinline autoplay muted></video>
       <div class="gridlines" id="camGrid"></div>
       <div class="focusring" id="focusRing"></div>
+      <div class="scanbox" id="scanBox">
+        <div class="scanframe"></div>
+        <p class="scanhint">Point at the square on the computer screen</p>
+        <button class="btn sm" id="cScanStop">Cancel</button>
+      </div>
     </div>
 
     <div class="camdock">
@@ -532,20 +577,21 @@ body.live .hideonlive{display:none}
       <button class="btn stack" id="cSwap"><svg><use href="#i-swap"/></svg>Flip</button>
       <button class="btn stack" id="cFocus"><svg><use href="#i-focus"/></svg>Focus</button>
       <button class="btn stack" id="cMic"><svg><use href="#i-mic"/></svg>Mic</button>
+      <button class="btn stack" id="cHold"><svg><use href="#i-pause"/></svg><span id="cHoldT">Hold</span></button>
       <button class="btn stack" id="cGrid"><svg><use href="#i-grid"/></svg>Grid</button>
       <button class="btn stack" id="cSnap"><svg><use href="#i-save"/></svg>Photo</button>
       <button class="btn stack" id="cWake"><svg><use href="#i-eye"/></svg>Stay on</button>
     </div>
 
     <div class="campanel show" id="camPanel">
-      <div class="localpair camlocalpair">
-        <p class="pairnote">Enter the four digits shown on the viewing screen.</p>
-        <div class="rowbtns">
-          <input class="inp codein" id="cCode" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
-          <button class="btn" id="cConnect">Connect</button>
-          <button class="btn" id="cStop" disabled>Stop</button>
-        </div>
+      <div class="connrow">
+        <button class="btn tall pri" id="cScan"><svg><use href="#i-scan"/></svg>Scan the square</button>
+        <span class="orline">or type the four digits</span>
+        <input class="inp codein" id="cCode" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        <button class="btn tall" id="cConnect">Connect</button>
+        <button class="btn tall" id="cStop" disabled>Stop</button>
       </div>
+      <div class="relayline" id="cRelay" style="margin:-4px 0 12px">Pairing relays: idle</div>
 
       <div class="p2">
         <div class="full">
@@ -614,24 +660,30 @@ body.live .hideonlive{display:none}
     <div class="body">
       <h3>Pairing</h3>
       <ol>
-        <li>On the viewing screen choose <b>Watch here</b>.</li>
-        <li>On the phone choose <b>Send this camera</b> and enter the four-digit code.</li>
-        <li>The phone connects and its camera appears automatically.</li>
+        <li>On the desktop choose <b>Watch here</b>. A four-digit code and a QR appear.</li>
+        <li>Scan the QR with the phone, or open the same page there and type the code.</li>
+        <li>Tap <b>Connect</b> on the phone and allow the camera.</li>
       </ol>
-      <p>The short signaling handshake is automatic. Video and audio still travel directly between the devices on local Wi-Fi.</p>
+      <p>The relay used to swap the two handshake messages never carries the picture. Once the
+        handshake is done the two devices talk to each other directly.</p>
 
       <h3>Controlling the phone from the desktop</h3>
-      <p>LED, autofocus, zoom, resolution and the microphone are all driven
+      <p>LED, autofocus, zoom, frame rate, resolution and the microphone are all driven
         from the rail on the right. A control that the phone's camera cannot honour is switched off
         rather than left to fail silently.</p>
 
-      <h3>Local network requirement</h3>
-      <p>Both devices must be on the same Wi-Fi, and the router must allow devices to reach each other.
-        If a VPN is active, enable its <b>local network access</b> or <b>LAN bypass</b> option.</p>
+      <h3>Working with a VPN</h3>
+      <p>Two devices on one Wi-Fi pair through their local addresses. Most VPN apps have a switch called
+        <b>allow local network access</b>, <b>LAN bypass</b> or <b>split tunnelling</b> — with that on, pairing
+        behaves as if the VPN were not there. With it off the tunnel swallows local traffic and no direct
+        route exists. Then either:</p>
+      <p>If the status line says <b>paired, but no route</b>, the code did its job and only the video path is
+        blocked. Switch local network access on in the VPN app, or turn off <b>keep the video on this Wi-Fi</b>
+        in Settings so it can go the long way round.</p>
       <h3>Keyboard</h3>
       <p class="keys">
         <b>F</b> fullscreen &nbsp; <b>S</b> save photo &nbsp; <b>R</b> record &nbsp; <b>L</b> LED &nbsp;
-        <b>A</b> autofocus &nbsp; <b>M</b> sound &nbsp; <b>+ −</b> zoom &nbsp;
+        <b>A</b> autofocus &nbsp; <b>M</b> sound &nbsp; <b>H</b> hold &nbsp; <b>+ −</b> zoom &nbsp;
         <b>0</b> reset view &nbsp; <b>⇧R</b> rotate
       </p>
     </div>
@@ -650,6 +702,42 @@ body.live .hideonlive{display:none}
       <h3>Feedback</h3>
       <label class="checkline"><input type="checkbox" id="optBeep"><span>Sound a short tick when the camera joins or drops</span></label>
 
+      <h3>Connection</h3>
+      <label class="checkline"><input type="checkbox" id="optLanOnly" checked><span><b>Keep the video on this Wi-Fi.</b> The picture only ever travels between the two devices on your own network — no STUN, no relay, nothing to the internet. Turn this off only if the devices are on different networks.</span></label>
+      <label class="checkline"><input type="checkbox" id="optLocal" checked><span>When the above is off, still try the local network first</span></label>
+      <label class="checkline"><input type="checkbox" id="optRelayOnly"><span>Send everything through the TURN relay below, never directly</span></label>
+      <div class="k2">
+        <div class="full">
+          <label class="lab" for="optRoute">Pairing relay</label>
+          <select class="inp" id="optRoute" style="width:100%">
+            <option value="auto">All of them at once (recommended)</option>
+            <option value="peerjs">PeerJS cloud only</option>
+            <option value="emqx">EMQX only</option>
+            <option value="hivemq">HiveMQ only</option>
+            <option value="mosquitto">Mosquitto only</option>
+          </select>
+        </div>
+        <div class="full">
+          <label class="lab" for="optTurn">TURN relay — one per line, or separated by spaces</label>
+          <textarea class="inp mono" id="optTurn" rows="2" placeholder="turn:host.example:3478"></textarea>
+          <p class="note">A relay is the only thing that works when both devices are behind a full tunnel.
+            <button class="btn sm" id="turnPreset" type="button" style="margin-top:6px">Fill in the public test relay</button>
+          </p>
+        </div>
+        <div>
+          <label class="lab" for="optTurnU">TURN user</label>
+          <input class="inp mono" id="optTurnU" style="width:100%;font-size:12px">
+        </div>
+        <div>
+          <label class="lab" for="optTurnP">TURN password</label>
+          <input class="inp mono" id="optTurnP" type="password" style="width:100%;font-size:12px">
+        </div>
+        <div class="full">
+          <label class="lab" for="optPeerHost">PeerJS host</label>
+          <input class="inp mono" id="optPeerHost" placeholder="0.peerjs.com" style="width:100%;font-size:12px">
+          <p class="note">Only worth changing if the default is blocked on your network.</p>
+        </div>
+      </div>
       <div class="dlgfoot">
         <button class="btn pri" id="optSave">Save</button>
         <button class="btn" id="optReset">Restore defaults</button>
@@ -682,14 +770,15 @@ body.live .hideonlive{display:none}
    Tether
    viewer  : answers, shows the picture, drives the phone over a datachannel
    camera  : offers, owns the media, obeys commands
-   pairing : one short online handshake; media remains local WebRTC with
-             no STUN or TURN media relay
+   pairing : PeerJS-compatible websocket + hand-written MQTT, all at once,
+             plus a copy/paste path that needs no server
    ===================================================================== */
 
 var $ = function (id) { return document.getElementById(id); };
 function on(el, ev, fn) { if (el) el.addEventListener(ev, fn, false); }
 function p2(n) { return (n < 10 ? "0" : "") + n; }
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+function rid(n) { return Math.random().toString(36).slice(2, 2 + (n || 8)); }
 
 var store = {
   get: function (k, d) { try { var v = localStorage.getItem("tether." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -747,73 +836,938 @@ function tick(kind) {
 }
 
 /* ------------------------------------------------------------------ */
-/* cloud handshake, local-only media path */
-var DEF = { beep: false };
+/* QR, byte mode, ECC M, versions 1-10 — enough for any join link      */
+/* ------------------------------------------------------------------ */
+function qrMatrix(text, ecl) {
+  var CAP = {
+    L: { 1:[7,[[1,19]]],2:[10,[[1,34]]],3:[15,[[1,55]]],4:[20,[[1,80]]],5:[26,[[1,108]]],
+         6:[18,[[2,68]]],7:[20,[[2,78]]],8:[24,[[2,97]]],9:[30,[[2,116]]],10:[18,[[2,68],[2,69]]] },
+    M: { 1:[10,[[1,16]]],2:[16,[[1,28]]],3:[26,[[1,44]]],4:[18,[[2,32]]],5:[24,[[2,43]]],
+         6:[16,[[4,27]]],7:[18,[[4,31]]],8:[22,[[2,38],[2,39]]],9:[22,[[3,36],[2,37]]],10:[26,[[4,43],[1,44]]] }
+  };
+  var ALIGN = {1:[],2:[6,18],3:[6,22],4:[6,26],5:[6,30],6:[6,34],7:[6,22,38],8:[6,24,42],9:[6,26,46],10:[6,28,50]};
+  var bytes = [], enc = unescape(encodeURIComponent(text)), i, j;
+  for (i = 0; i < enc.length; i++) bytes.push(enc.charCodeAt(i) & 255);
+  var tbl = CAP[ecl] || CAP.M, ver = 0, spec = null, dataCap = 0;
+  for (var v = 1; v <= 10; v++) {
+    var s = tbl[v], cap = 0;
+    for (var g = 0; g < s[1].length; g++) cap += s[1][g][0] * s[1][g][1];
+    if (Math.ceil((4 + (v < 10 ? 8 : 16) + bytes.length * 8) / 8) <= cap) { ver = v; spec = s; dataCap = cap; break; }
+  }
+  if (!ver) return null;
+  var bits = [];
+  function put(val, len) { for (var k = len - 1; k >= 0; k--) bits.push((val >>> k) & 1); }
+  put(4, 4); put(bytes.length, ver < 10 ? 8 : 16);
+  for (i = 0; i < bytes.length; i++) put(bytes[i], 8);
+  var capBits = dataCap * 8;
+  for (i = 0; i < 4 && bits.length < capBits; i++) bits.push(0);
+  while (bits.length % 8) bits.push(0);
+  var pi = 0;
+  while (bits.length < capBits) put(pi++ % 2 ? 0x11 : 0xEC, 8);
+  var data = [];
+  for (i = 0; i < bits.length; i += 8) {
+    var by = 0;
+    for (j = 0; j < 8; j++) by = (by << 1) | bits[i + j];
+    data.push(by);
+  }
+  var EXP = new Array(512), LOG = new Array(256), x = 1;
+  for (i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; }
+  for (i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  function gmul(a, b) { return (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]]; }
+  function rs(block, n) {
+    var poly = [1], k, q;
+    for (k = 0; k < n; k++) {
+      var nx = poly.concat([0]);
+      for (q = 0; q < poly.length; q++) nx[q + 1] ^= gmul(poly[q], EXP[k]);
+      poly = nx;
+    }
+    var res = block.slice();
+    for (k = 0; k < n; k++) res.push(0);
+    for (k = 0; k < block.length; k++) {
+      var cf = res[k];
+      if (!cf) continue;
+      for (q = 0; q < poly.length; q++) res[k + q] ^= gmul(poly[q], cf);
+    }
+    return res.slice(block.length);
+  }
+  var ecLen = spec[0], groups = spec[1], dB = [], eB = [], off = 0;
+  for (var gi = 0; gi < groups.length; gi++) {
+    for (var bn = 0; bn < groups[gi][0]; bn++) {
+      var blk = data.slice(off, off + groups[gi][1]);
+      off += groups[gi][1];
+      dB.push(blk); eB.push(rs(blk, ecLen));
+    }
+  }
+  var maxD = 0;
+  for (i = 0; i < dB.length; i++) maxD = Math.max(maxD, dB[i].length);
+  var fin = [];
+  for (i = 0; i < maxD; i++) for (j = 0; j < dB.length; j++) if (i < dB[j].length) fin.push(dB[j][i]);
+  for (i = 0; i < ecLen; i++) for (j = 0; j < eB.length; j++) fin.push(eB[j][i]);
+
+  var size = 17 + ver * 4, m = [], rsv = [];
+  for (i = 0; i < size; i++) { m.push(new Array(size).fill(0)); rsv.push(new Array(size).fill(false)); }
+  function setF(r, c, val) { if (r < 0 || c < 0 || r >= size || c >= size) return; m[r][c] = val ? 1 : 0; rsv[r][c] = true; }
+  function finder(r, c) {
+    for (var dr = -1; dr <= 7; dr++) for (var dc = -1; dc <= 7; dc++) {
+      var ring = (dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6) &&
+        (dr === 0 || dr === 6 || dc === 0 || dc === 6 || (dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4));
+      setF(r + dr, c + dc, ring);
+    }
+  }
+  finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
+  for (i = 8; i < size - 8; i++) { setF(6, i, i % 2 === 0); setF(i, 6, i % 2 === 0); }
+  var ac = ALIGN[ver];
+  for (i = 0; i < ac.length; i++) for (j = 0; j < ac.length; j++) {
+    var ar = ac[i], acc = ac[j];
+    if ((ar <= 8 && acc <= 8) || (ar <= 8 && acc >= size - 9) || (ar >= size - 9 && acc <= 8)) continue;
+    for (var dr2 = -2; dr2 <= 2; dr2++) for (var dc2 = -2; dc2 <= 2; dc2++)
+      setF(ar + dr2, acc + dc2, Math.max(Math.abs(dr2), Math.abs(dc2)) !== 1);
+  }
+  setF(size - 8, 8, true);
+  for (i = 0; i < 9; i++) {
+    if (!rsv[8][i]) { m[8][i] = 0; rsv[8][i] = true; }
+    if (!rsv[i][8]) { m[i][8] = 0; rsv[i][8] = true; }
+  }
+  for (i = 0; i < 8; i++) {
+    if (!rsv[8][size - 1 - i]) { m[8][size - 1 - i] = 0; rsv[8][size - 1 - i] = true; }
+    if (!rsv[size - 1 - i][8]) { m[size - 1 - i][8] = 0; rsv[size - 1 - i][8] = true; }
+  }
+  if (ver >= 7) {
+    var rem = ver;
+    for (i = 0; i < 12; i++) rem = (rem << 1) ^ (((rem >>> 11) & 1) * 0x1F25);
+    var vd = (ver << 12) | (rem & 0xFFF);
+    for (i = 0; i < 18; i++) {
+      var bt = (vd >>> i) & 1, rr = Math.floor(i / 3), cc = i % 3;
+      setF(size - 11 + cc, rr, bt); setF(rr, size - 11 + cc, bt);
+    }
+  }
+  var up = true, bi = 0;
+  for (var col = size - 1; col > 0; col -= 2) {
+    if (col === 6) col = 5;
+    for (var rn = 0; rn < size; rn++) {
+      var row = up ? size - 1 - rn : rn;
+      for (var sc = 0; sc < 2; sc++) {
+        var cx = col - sc;
+        if (rsv[row][cx]) continue;
+        m[row][cx] = bi < fin.length * 8 ? (fin[bi >> 3] >>> (7 - (bi & 7))) & 1 : 0;
+        bi++;
+      }
+    }
+    up = !up;
+  }
+  function mask(k, r, c) {
+    switch (k) {
+      case 0: return (r + c) % 2 === 0;
+      case 1: return r % 2 === 0;
+      case 2: return c % 3 === 0;
+      case 3: return (r + c) % 3 === 0;
+      case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
+      case 5: return ((r * c) % 2) + ((r * c) % 3) === 0;
+      case 6: return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0;
+      default: return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0;
+    }
+  }
+  function fmt(e, mk) {
+    var eb = { L: 1, M: 0, Q: 3, H: 2 }[e], d = (eb << 3) | mk, r = d;
+    for (var k = 0; k < 10; k++) r = (r << 1) ^ (((r >>> 9) & 1) * 0x537);
+    return ((d << 10) | (r & 0x3FF)) ^ 0x5412;
+  }
+  function penalty(mm) {
+    var p = 0, n = size, a, b, run, last, rowA, colA;
+    for (a = 0; a < n; a++) {
+      run = 1; last = mm[a][0];
+      for (b = 1; b < n; b++) { if (mm[a][b] === last) run++; else { if (run >= 5) p += run - 2; run = 1; last = mm[a][b]; } }
+      if (run >= 5) p += run - 2;
+      run = 1; last = mm[0][a];
+      for (b = 1; b < n; b++) { if (mm[b][a] === last) run++; else { if (run >= 5) p += run - 2; run = 1; last = mm[b][a]; } }
+      if (run >= 5) p += run - 2;
+    }
+    for (a = 0; a < n - 1; a++) for (b = 0; b < n - 1; b++) {
+      var vv = mm[a][b];
+      if (vv === mm[a][b + 1] && vv === mm[a + 1][b] && vv === mm[a + 1][b + 1]) p += 3;
+    }
+    var q1 = [1,0,1,1,1,0,1,0,0,0,0], q2 = [0,0,0,0,1,0,1,1,1,0,1];
+    function match(arr, pat, st) { for (var q = 0; q < 11; q++) if (arr[st + q] !== pat[q]) return false; return true; }
+    for (a = 0; a < n; a++) {
+      rowA = mm[a]; colA = [];
+      for (b = 0; b < n; b++) colA.push(mm[b][a]);
+      for (b = 0; b + 11 <= n; b++) {
+        if (match(rowA, q1, b) || match(rowA, q2, b)) p += 40;
+        if (match(colA, q1, b) || match(colA, q2, b)) p += 40;
+      }
+    }
+    var dark = 0;
+    for (a = 0; a < n; a++) for (b = 0; b < n; b++) dark += mm[a][b];
+    p += Math.floor(Math.abs(dark * 100 / (n * n) - 50) / 5) * 10;
+    return p;
+  }
+  var best = null, bestScore = Infinity;
+  for (var mk = 0; mk < 8; mk++) {
+    var cand = m.map(function (r) { return r.slice(); });
+    for (var r2 = 0; r2 < size; r2++) for (var c2 = 0; c2 < size; c2++)
+      if (!rsv[r2][c2] && mask(mk, r2, c2)) cand[r2][c2] ^= 1;
+    var fb = fmt(ecl || "M", mk);
+    for (i = 0; i < 15; i++) {
+      var bit = (fb >>> i) & 1;
+      if (i <= 5) cand[i][8] = bit;
+      else if (i === 6) cand[7][8] = bit;
+      else if (i === 7) cand[8][8] = bit;
+      else if (i === 8) cand[8][7] = bit;
+      else cand[8][14 - i] = bit;
+      if (i < 8) cand[8][size - 1 - i] = bit;
+      else cand[size - 15 + i][8] = bit;
+    }
+    cand[size - 8][8] = 1;
+    var sc2 = penalty(cand);
+    if (sc2 < bestScore) { bestScore = sc2; best = cand; }
+  }
+  return best;
+}
+function drawQR(cv, text) {
+  var m = qrMatrix(text, "M") || qrMatrix(text, "L");
+  if (!m) return;
+  var n = m.length, quiet = 2, total = n + quiet * 2;
+  var scale = Math.max(2, Math.floor(208 / total));
+  cv.width = cv.height = total * scale;
+  var g = cv.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+  g.fillStyle = "#191a1a";
+  for (var r = 0; r < n; r++) for (var c = 0; c < n; c++)
+    if (m[r][c]) g.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+}
+
+/* ---- QR reader: binarize, locate, sample, read. No error correction:
+   a frame whose codewords do not re-encode identically is dropped and the
+   next frame is tried, which is safer than guessing at a blurred module. ---- */
+function qrDist(a, b) { return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
+
+function qrBinarize(data, w, h) {
+  var gray = new Uint8Array(w * h), i, p;
+  for (i = 0; i < w * h; i++) {
+    p = i << 2;
+    gray[i] = (data[p] * 77 + data[p + 1] * 150 + data[p + 2] * 29) >> 8;
+  }
+  var BS = 8, bw = Math.max(1, w >> 3), bh = Math.max(1, h >> 3);
+  var avg = new Float32Array(bw * bh);
+  for (var by = 0; by < bh; by++) for (var bx = 0; bx < bw; bx++) {
+    var sum = 0, mn = 255, mx = 0, n = 0;
+    for (var y = 0; y < BS; y++) {
+      var yy = by * BS + y; if (yy >= h) break;
+      for (var x = 0; x < BS; x++) {
+        var xx = bx * BS + x; if (xx >= w) break;
+        var g = gray[yy * w + xx]; sum += g; n++;
+        if (g < mn) mn = g;
+        if (g > mx) mx = g;
+      }
+    }
+    var a;
+    if (mx - mn > 24) a = sum / n;
+    else {
+      /* A low-contrast block is usually the light background, but inside a
+         large dark module it is not, so use what the neighbours decided. */
+      a = mn / 2;
+      if (by > 0 && bx > 0) {
+        var nb = (avg[(by - 1) * bw + bx] + 2 * avg[by * bw + bx - 1] + avg[(by - 1) * bw + bx - 1]) / 4;
+        if (mn < nb) a = nb;
+      }
+    }
+    avg[by * bw + bx] = a;
+  }
+  var bits = new Uint8Array(w * h);
+  for (var y2 = 0; y2 < h; y2++) {
+    var by2 = Math.min(bh - 1, y2 >> 3);
+    for (var x2 = 0; x2 < w; x2++) {
+      var bx2 = Math.min(bw - 1, x2 >> 3), s = 0, c = 0;
+      for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+        var ny = by2 + dy, nx = bx2 + dx;
+        if (ny < 0 || nx < 0 || ny >= bh || nx >= bw) continue;
+        s += avg[ny * bw + nx]; c++;
+      }
+      bits[y2 * w + x2] = gray[y2 * w + x2] < s / c ? 1 : 0;
+    }
+  }
+  return bits;
+}
+
+function qrFinders(bits, w, h) {
+  var out = [];
+  function ratio(r) {
+    var total = r[0] + r[1] + r[2] + r[3] + r[4];
+    if (total < 7) return 0;
+    var mod = total / 7, tol = mod * 0.6;
+    return Math.abs(mod - r[0]) < tol && Math.abs(mod - r[1]) < tol &&
+           Math.abs(3 * mod - r[2]) < 3 * tol && Math.abs(mod - r[3]) < tol &&
+           Math.abs(mod - r[4]) < tol ? mod : 0;
+  }
+  function get(x, y) { return (x < 0 || y < 0 || x >= w || y >= h) ? 0 : bits[y * w + x]; }
+  function vcheck(cx, cy, mod) {
+    var r = [0, 0, 0, 0, 0], y = cy;
+    while (y >= 0 && get(cx, y)) { r[2]++; y--; }
+    while (y >= 0 && !get(cx, y) && r[1] <= mod * 3) { r[1]++; y--; }
+    while (y >= 0 && get(cx, y) && r[0] <= mod * 3) { r[0]++; y--; }
+    y = cy + 1;
+    while (y < h && get(cx, y)) { r[2]++; y++; }
+    while (y < h && !get(cx, y) && r[3] <= mod * 3) { r[3]++; y++; }
+    while (y < h && get(cx, y) && r[4] <= mod * 3) { r[4]++; y++; }
+    if (!ratio(r)) return -1;
+    return y - r[4] - r[3] - r[2] / 2;
+  }
+  for (var y = 0; y < h; y += 2) {
+    var run = [0, 0, 0, 0, 0], cur = 0, x;
+    for (x = 0; x < w; x++) {
+      var b = bits[y * w + x];
+      if (b === cur) run[4]++;
+      else {
+        if (cur === 1) {
+          var mod = ratio(run);
+          if (mod) {
+            var cx = x - run[4] - run[3] - run[2] / 2;
+            var cy = vcheck(Math.round(cx), y, mod);
+            if (cy >= 0) out.push({ x: cx, y: cy, m: mod });
+          }
+        }
+        run[0] = run[1]; run[1] = run[2]; run[2] = run[3]; run[3] = run[4];
+        run[4] = 1; cur = b;
+      }
+    }
+    if (cur === 1) {
+      var mod2 = ratio(run);
+      if (mod2) {
+        var cx2 = x - run[4] - run[3] - run[2] / 2;
+        var cy2 = vcheck(Math.round(cx2), y, mod2);
+        if (cy2 >= 0) out.push({ x: cx2, y: cy2, m: mod2 });
+      }
+    }
+  }
+  var merged = [];
+  out.forEach(function (p) {
+    for (var i = 0; i < merged.length; i++) {
+      var q = merged[i];
+      if (Math.abs(q.x - p.x) < q.m * 2 && Math.abs(q.y - p.y) < q.m * 2) {
+        q.x = (q.x * q.n + p.x) / (q.n + 1);
+        q.y = (q.y * q.n + p.y) / (q.n + 1);
+        q.m = (q.m * q.n + p.m) / (q.n + 1);
+        q.n++;
+        return;
+      }
+    }
+    merged.push({ x: p.x, y: p.y, m: p.m, n: 1 });
+  });
+  return merged.filter(function (p) { return p.n >= 2; });
+}
+
+function qrTriple(pts) {
+  var best = null, bestScore = 1e9;
+  for (var a = 0; a < pts.length; a++)
+    for (var b = a + 1; b < pts.length; b++)
+      for (var c = b + 1; c < pts.length; c++) {
+        var P = [pts[a], pts[b], pts[c]];
+        var d = [qrDist(P[1], P[2]), qrDist(P[0], P[2]), qrDist(P[0], P[1])];
+        var hi = d[0] > d[1] ? (d[0] > d[2] ? 0 : 2) : (d[1] > d[2] ? 1 : 2);
+        var tl = P[hi], o1 = P[(hi + 1) % 3], o2 = P[(hi + 2) % 3];
+        var l1 = qrDist(tl, o1), l2 = qrDist(tl, o2), hyp = qrDist(o1, o2);
+        if (!l1 || !l2 || !hyp) continue;
+        var sq = Math.abs(l1 - l2) / Math.max(l1, l2);
+        var right = Math.abs(hyp - Math.sqrt(l1 * l1 + l2 * l2)) / hyp;
+        var msz = (Math.abs(P[0].m - P[1].m) + Math.abs(P[1].m - P[2].m)) / Math.max(1, P[0].m);
+        var score = sq * 2 + right * 3 + msz;
+        if (score < bestScore && sq < .4 && right < .3) {
+          bestScore = score;
+          var v1 = { x: o1.x - tl.x, y: o1.y - tl.y }, v2 = { x: o2.x - tl.x, y: o2.y - tl.y };
+          best = (v1.x * v2.y - v1.y * v2.x) > 0 ? { tl: tl, tr: o1, bl: o2 } : { tl: tl, tr: o2, bl: o1 };
+        }
+      }
+  return best;
+}
+
+
+/* ---- perspective transform, ported from the standard four-point method,
+   so a phone held at an angle still samples the grid correctly ---- */
+function ptSquareToQuad(x0, y0, x1, y1, x2, y2, x3, y3) {
+  var dx3 = x0 - x1 + x2 - x3, dy3 = y0 - y1 + y2 - y3;
+  if (dx3 === 0 && dy3 === 0) return [x1 - x0, x2 - x1, x0, y1 - y0, y2 - y1, y0, 0, 0, 1];
+  var dx1 = x1 - x2, dx2 = x3 - x2, dy1 = y1 - y2, dy2 = y3 - y2;
+  var den = dx1 * dy2 - dx2 * dy1;
+  if (!den) return null;
+  var a13 = (dx3 * dy2 - dx2 * dy3) / den, a23 = (dx1 * dy3 - dx3 * dy1) / den;
+  return [x1 - x0 + a13 * x1, x3 - x0 + a23 * x3, x0,
+          y1 - y0 + a13 * y1, y3 - y0 + a23 * y3, y0,
+          a13, a23, 1];
+}
+function ptAdjoint(m) {
+  /* m = [a11,a21,a31, a12,a22,a32, a13,a23,a33] */
+  return [m[4] * m[8] - m[7] * m[5],
+          m[7] * m[2] - m[1] * m[8],
+          m[1] * m[5] - m[4] * m[2],
+          m[6] * m[5] - m[3] * m[8],
+          m[0] * m[8] - m[6] * m[2],
+          m[3] * m[2] - m[0] * m[5],
+          m[3] * m[7] - m[6] * m[4],
+          m[6] * m[1] - m[0] * m[7],
+          m[0] * m[4] - m[3] * m[1]];
+}
+function ptTimes(a, b) {
+  return [a[0]*b[0]+a[1]*b[3]+a[2]*b[6], a[0]*b[1]+a[1]*b[4]+a[2]*b[7], a[0]*b[2]+a[1]*b[5]+a[2]*b[8],
+          a[3]*b[0]+a[4]*b[3]+a[5]*b[6], a[3]*b[1]+a[4]*b[4]+a[5]*b[7], a[3]*b[2]+a[4]*b[5]+a[5]*b[8],
+          a[6]*b[0]+a[7]*b[3]+a[8]*b[6], a[6]*b[1]+a[7]*b[4]+a[8]*b[7], a[6]*b[2]+a[7]*b[5]+a[8]*b[8]];
+}
+function ptQuadToQuad(s, d) {
+  var sq = ptSquareToQuad(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]);
+  var dq = ptSquareToQuad(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7]);
+  if (!sq || !dq) return null;
+  return ptTimes(dq, ptAdjoint(sq));
+}
+function ptApply(m, x, y) {
+  var den = m[6] * x + m[7] * y + m[8];
+  if (!den) return null;
+  return { x: (m[0] * x + m[1] * y + m[2]) / den, y: (m[3] * x + m[4] * y + m[5]) / den };
+}
+
+/* look for the small alignment square near the estimated spot. Candidates
+   from a cheap run scan are then checked against the full 5 by 5 shape, which
+   stops the search locking onto an ordinary dark data module. */
+function qrAlignShape(bits, w, h, cx, cy, m) {
+  var want = [[1,1,1,1,1],[1,0,0,0,1],[1,0,1,0,1],[1,0,0,0,1],[1,1,1,1,1]];
+  var wrong = 0;
+  for (var r = 0; r < 5; r++) for (var c = 0; c < 5; c++) {
+    var x = Math.round(cx + (c - 2) * m), y = Math.round(cy + (r - 2) * m);
+    var v = (x < 0 || y < 0 || x >= w || y >= h) ? 0 : bits[y * w + x];
+    if (v !== want[r][c]) { wrong++; if (wrong > 2) return false; }
+  }
+  return true;
+}
+function qrFindAlign(bits, w, h, ex, ey, mod, reach) {
+  var win = Math.max(5, Math.round(mod * (reach || 4)));
+  var x0 = Math.max(0, Math.round(ex - win)), x1 = Math.min(w - 1, Math.round(ex + win));
+  var y0 = Math.max(0, Math.round(ey - win)), y1 = Math.min(h - 1, Math.round(ey + win));
+  var scales = [1, .85, 1.15, .7, 1.3];
+  var best = null, bestD = 1e9;
+  for (var y = y0; y <= y1; y++) {
+    for (var x = x0; x <= x1; x++) {
+      if (!bits[y * w + x]) continue;                 /* centre must be dark */
+      var d = (x - ex) * (x - ex) + (y - ey) * (y - ey);
+      if (d >= bestD) continue;
+      for (var si = 0; si < scales.length; si++) {
+        if (qrAlignShape(bits, w, h, x, y, mod * scales[si])) { bestD = d; best = { x: x, y: y }; break; }
+      }
+    }
+  }
+  return best;
+}
+
+function qrReserved(ver) {
+  var size = 17 + ver * 4, i, j;
+  var ALIGN = { 1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30], 6: [6, 34],
+                7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50] };
+  var rsv = [];
+  for (i = 0; i < size; i++) rsv.push(new Uint8Array(size));
+  function mark(r, c) { if (r >= 0 && c >= 0 && r < size && c < size) rsv[r][c] = 1; }
+  function block(r, c, n) { for (var a = 0; a < n; a++) for (var b = 0; b < n; b++) mark(r + a, c + b); }
+  block(0, 0, 8); block(0, size - 8, 8); block(size - 8, 0, 8);
+  for (i = 0; i < size; i++) { mark(6, i); mark(i, 6); }
+  var ac = ALIGN[ver] || [];
+  for (i = 0; i < ac.length; i++) for (j = 0; j < ac.length; j++) {
+    var ar = ac[i], acc = ac[j];
+    if ((ar <= 8 && acc <= 8) || (ar <= 8 && acc >= size - 9) || (ar >= size - 9 && acc <= 8)) continue;
+    block(ar - 2, acc - 2, 5);
+  }
+  for (i = 0; i < 9; i++) { mark(8, i); mark(i, 8); }
+  for (i = 0; i < 8; i++) { mark(8, size - 1 - i); mark(size - 1 - i, 8); }
+  if (ver >= 7) for (i = 0; i < 6; i++) for (j = 0; j < 3; j++) { mark(i, size - 11 + j); mark(size - 11 + j, i); }
+  return rsv;
+}
+
+function qrMaskFn(k, r, c) {
+  switch (k) {
+    case 0: return (r + c) % 2 === 0;
+    case 1: return r % 2 === 0;
+    case 2: return c % 3 === 0;
+    case 3: return (r + c) % 3 === 0;
+    case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
+    case 5: return ((r * c) % 2) + ((r * c) % 3) === 0;
+    case 6: return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0;
+    default: return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0;
+  }
+}
+
+function qrFormat(word) {
+  var best = -1, bestD = 99;
+  for (var d = 0; d < 32; d++) {
+    var r = d;
+    for (var k = 0; k < 10; k++) r = (r << 1) ^ (((r >>> 9) & 1) * 0x537);
+    var v = ((d << 10) | (r & 0x3FF)) ^ 0x5412;
+    var diff = 0, x = v ^ word;
+    while (x) { diff += x & 1; x >>>= 1; }
+    if (diff < bestD) { bestD = diff; best = d; }
+  }
+  if (bestD > 3) return null;
+  return { ecl: ["M", "L", "H", "Q"][best >> 3], mask: best & 7 };
+}
+
+function qrReadGrid(sample, dim) {
+  var f = 0, i;
+  for (i = 0; i <= 5; i++) f |= sample(i, 8) << i;
+  f |= sample(7, 8) << 6;
+  f |= sample(8, 8) << 7;
+  f |= sample(8, 7) << 8;
+  for (i = 9; i < 15; i++) f |= sample(8, 14 - i) << i;
+  var fmt = qrFormat(f);
+  if (!fmt) {
+    f = 0;
+    for (i = 0; i < 8; i++) f |= sample(8, dim - 1 - i) << i;
+    for (i = 8; i < 15; i++) f |= sample(dim - 15 + i, 8) << i;
+    fmt = qrFormat(f);
+    if (!fmt) return null;
+  }
+  var ver = (dim - 17) / 4, rsv = qrReserved(ver);
+  var bytes = [], bit = 0, cur = 0, up = true;
+  for (var col = dim - 1; col > 0; col -= 2) {
+    if (col === 6) col = 5;
+    for (var rn = 0; rn < dim; rn++) {
+      var row = up ? dim - 1 - rn : rn;
+      for (var sc = 0; sc < 2; sc++) {
+        var cx = col - sc;
+        if (rsv[row][cx]) continue;
+        var b = sample(row, cx) ^ (qrMaskFn(fmt.mask, row, cx) ? 1 : 0);
+        cur = (cur << 1) | b;
+        if (++bit === 8) { bytes.push(cur); cur = 0; bit = 0; }
+      }
+    }
+    up = !up;
+  }
+  return { ecl: fmt.ecl, ver: ver, codewords: bytes };
+}
+
+
+/* ---- Reed-Solomon over GF(256), the QR field. Corrects up to ecLen/2
+   wrong codewords per block, which is what makes a blurred or slightly
+   glared frame still readable. ---- */
+var QR_EXP = null, QR_LOG = null;
+function qrGF() {
+  if (QR_EXP) return;
+  QR_EXP = new Uint8Array(512); QR_LOG = new Uint8Array(256);
+  var x = 1;
+  for (var i = 0; i < 255; i++) { QR_EXP[i] = x; QR_LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; }
+  for (i = 255; i < 512; i++) QR_EXP[i] = QR_EXP[i - 255];
+}
+function gmul(a, b) { if (!a || !b) return 0; qrGF(); return QR_EXP[QR_LOG[a] + QR_LOG[b]]; }
+function gdiv(a, b) { if (!a) return 0; qrGF(); return QR_EXP[(QR_LOG[a] + 255 - QR_LOG[b]) % 255]; }
+function gpow(n) { qrGF(); return QR_EXP[((n % 255) + 255) % 255]; }
+function gpolyMul(p, q) {
+  var r = new Array(p.length + q.length - 1).fill(0);
+  for (var i = 0; i < p.length; i++) for (var j = 0; j < q.length; j++) r[i + j] ^= gmul(p[i], q[j]);
+  return r;
+}
+function gpolyEval(p, x) {
+  var y = p[0];
+  for (var i = 1; i < p.length; i++) y = gmul(y, x) ^ p[i];
+  return y;
+}
+function qrPolyScale(p, x) { return p.map(function (v) { return gmul(v, x); }); }
+function qrPolyAdd(p, q) {
+  var r = new Array(Math.max(p.length, q.length)).fill(0), i;
+  for (i = 0; i < p.length; i++) r[i + r.length - p.length] = p[i];
+  for (i = 0; i < q.length; i++) r[i + r.length - q.length] ^= q[i];
+  return r;
+}
+function rsDecode(msg, nsym) {
+  qrGF();
+  var i, j;
+  var synd = [0], bad = false;
+  for (i = 0; i < nsym; i++) { var sv = gpolyEval(msg, gpow(i)); synd.push(sv); if (sv) bad = true; }
+  if (!bad) return msg.slice();
+  var errLoc = [1], oldLoc = [1];
+  for (i = 0; i < nsym; i++) {
+    var K = i + 1, delta = synd[K];
+    for (j = 1; j < errLoc.length; j++) delta ^= gmul(errLoc[errLoc.length - 1 - j], synd[K - j]);
+    oldLoc = oldLoc.concat([0]);
+    if (delta !== 0) {
+      if (oldLoc.length > errLoc.length) {
+        var neu = qrPolyScale(oldLoc, delta);
+        oldLoc = qrPolyScale(errLoc, gdiv(1, delta));
+        errLoc = neu;
+      }
+      errLoc = qrPolyAdd(errLoc, qrPolyScale(oldLoc, delta));
+    }
+  }
+  while (errLoc.length && errLoc[0] === 0) errLoc.shift();
+  var nerr = errLoc.length - 1;
+  if (nerr === 0 || nerr * 2 > nsym) return null;
+  /* the locator vanishes at negative powers: root a^-k means the error sits
+     k codewords from the end */
+  var pos = [], coefPos = [];
+  for (i = 0; i < msg.length; i++) if (gpolyEval(errLoc, gpow(-i)) === 0) { coefPos.push(i); pos.push(msg.length - 1 - i); }
+  if (pos.length !== nerr) return null;
+  /* Forney, with polynomials indexed lowest degree first */
+  var lam = errLoc.slice().reverse();
+  if (lam[0] !== 1) { var inv0 = gdiv(1, lam[0]); lam = lam.map(function (v) { return gmul(v, inv0); }); }
+  var S = [];
+  for (i = 0; i < nsym; i++) S.push(synd[i + 1]);
+  var omega = new Array(nsym).fill(0);
+  for (i = 0; i < S.length; i++) for (j = 0; j < lam.length; j++)
+    if (i + j < nsym) omega[i + j] ^= gmul(S[i], lam[j]);
+  var lamp = [];
+  for (i = 1; i < lam.length; i++) lamp.push(i % 2 ? lam[i] : 0);
+  function evalLow(poly, x) {
+    var y = 0, xp = 1;
+    for (var k = 0; k < poly.length; k++) { y ^= gmul(poly[k], xp); xp = gmul(xp, x); }
+    return y;
+  }
+  var out = msg.slice();
+  for (i = 0; i < coefPos.length; i++) {
+    var X = gpow(coefPos[i]), Xinv = gpow(-coefPos[i]);
+    var den = evalLow(lamp, Xinv);
+    if (!den) return null;
+    out[msg.length - 1 - coefPos[i]] ^= gdiv(gmul(X, evalLow(omega, Xinv)), den);
+  }
+  for (i = 0; i < nsym; i++) if (gpolyEval(out, gpow(i)) !== 0) return null;
+  return out;
+}
+
+var QR_SPEC = {
+  L: { 1:[7,[[1,19]]],2:[10,[[1,34]]],3:[15,[[1,55]]],4:[20,[[1,80]]],5:[26,[[1,108]]],
+       6:[18,[[2,68]]],7:[20,[[2,78]]],8:[24,[[2,97]]],9:[30,[[2,116]]],10:[18,[[2,68],[2,69]]] },
+  M: { 1:[10,[[1,16]]],2:[16,[[1,28]]],3:[26,[[1,44]]],4:[18,[[2,32]]],5:[24,[[2,43]]],
+       6:[16,[[4,27]]],7:[18,[[4,31]]],8:[22,[[2,38],[2,39]]],9:[22,[[3,36],[2,37]]],10:[26,[[4,43],[1,44]]] }
+};
+
+function qrPayload(res) {
+  var spec = QR_SPEC[res.ecl] && QR_SPEC[res.ecl][res.ver];
+  if (!spec) return null;
+  var ecLen = spec[0], sizes = [];
+  spec[1].forEach(function (g) { for (var i = 0; i < g[0]; i++) sizes.push(g[1]); });
+  var nb = sizes.length, dataTotal = sizes.reduce(function (a, b) { return a + b; }, 0);
+  if (res.codewords.length < dataTotal + nb * ecLen) return null;
+  var i, b;
+  var dBlocks = sizes.map(function () { return []; });
+  var eBlocks = sizes.map(function () { return []; });
+  var maxLen = Math.max.apply(null, sizes), k = 0;
+  for (i = 0; i < maxLen; i++) for (b = 0; b < nb; b++) if (i < sizes[b]) dBlocks[b].push(res.codewords[k++]);
+  for (i = 0; i < ecLen; i++) for (b = 0; b < nb; b++) eBlocks[b].push(res.codewords[k++]);
+  var data = [];
+  for (b = 0; b < nb; b++) {
+    var fixed = rsDecode(dBlocks[b].concat(eBlocks[b]), ecLen);
+    if (!fixed) return null;
+    data = data.concat(fixed.slice(0, sizes[b]));
+  }
+  var pos = 0;
+  function take(n) {
+    var v = 0;
+    for (var i2 = 0; i2 < n; i2++) {
+      v = (v << 1) | ((data[pos >> 3] >>> (7 - (pos & 7))) & 1);
+      pos++;
+    }
+    return v;
+  }
+  if (take(4) !== 4) return null;
+  var len = take(res.ver < 10 ? 8 : 16);
+  if (len < 1 || len > data.length - 2) return null;
+  var out = [];
+  for (var j = 0; j < len; j++) out.push(take(8));
+  return out;
+}
+
+function qrBytesToText(b) {
+  var s = "";
+  for (var i = 0; i < b.length; i++) s += "%" + ("0" + b[i].toString(16)).slice(-2);
+  try { return decodeURIComponent(s); } catch (e) { return null; }
+}
+
+function qrDecodeImage(data, w, h) {
+  var bits = qrBinarize(data, w, h);
+  var pts = qrFinders(bits, w, h);
+  if (pts.length < 3) return null;
+  var t = qrTriple(pts);
+  if (!t) return null;
+  var mod = (t.tl.m + t.tr.m + t.bl.m) / 3;
+  if (mod < 1.5) return null;
+  var dimX = Math.round(qrDist(t.tl, t.tr) / mod) + 7;
+  var dimY = Math.round(qrDist(t.tl, t.bl) / mod) + 7;
+  var est = Math.round((dimX + dimY) / 2);
+  est -= ((est - 17) % 4 + 4) % 4;
+  /* the size estimate can be one version out when the phone is tilted, and a
+     wrong grid simply fails the checksum, so a few sizes are tried in turn */
+  var tries = [est, est - 4, est + 4, est - 8, est + 8];
+  for (var ti = 0; ti < tries.length; ti++) {
+    var dim = tries[ti];
+    if (dim < 21 || dim > 57) continue;
+    var span = dim - 7;
+    var ux = (t.tr.x - t.tl.x) / span, uy = (t.tr.y - t.tl.y) / span;
+    var vx = (t.bl.x - t.tl.x) / span, vy = (t.bl.y - t.tl.y) / span;
+    var ox = t.tl.x - 3.5 * ux - 3.5 * vx, oy = t.tl.y - 3.5 * uy - 3.5 * vy;
+    var forms = [null];
+    if (dim >= 25) {
+      var ax = ox + (dim - 6.5) * ux + (dim - 6.5) * vx;
+      var ay = oy + (dim - 6.5) * uy + (dim - 6.5) * vy;
+      var al = qrFindAlign(bits, w, h, ax, ay, mod, 4) || qrFindAlign(bits, w, h, ax, ay, mod, 8);
+      var src = [3.5, 3.5, dim - 3.5, 3.5, dim - 6.5, dim - 6.5, 3.5, dim - 3.5];
+      if (al) {
+        var xf = ptQuadToQuad(src, [t.tl.x, t.tl.y, t.tr.x, t.tr.y, al.x, al.y, t.bl.x, t.bl.y]);
+        if (xf) forms = [xf, null];
+      }
+    }
+    for (var fi = 0; fi < forms.length; fi++) {
+      var out = qrTryGrid(bits, w, h, dim, forms[fi], ox, oy, ux, uy, vx, vy, mod);
+      if (out) return out;
+    }
+  }
+  return null;
+}
+
+function qrTryGrid(bits, w, h, dim, xf, ox, oy, ux, uy, vx, vy, mod) {
+  function sample(r, c) {
+    var x, y;
+    if (xf) {
+      var q = ptApply(xf, c + .5, r + .5);
+      if (!q) return 0;
+      x = q.x; y = q.y;
+    } else {
+      x = ox + (c + .5) * ux + (r + .5) * vx;
+      y = oy + (c + .5) * uy + (r + .5) * vy;
+    }
+    var xi = Math.round(x), yi = Math.round(y);
+    if (xi < 0 || yi < 0 || xi >= w || yi >= h) return 0;
+    if (mod < 3.5) return bits[yi * w + xi];
+    var s = 0, n = 0;
+    for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+      var X = xi + dx, Y = yi + dy;
+      if (X < 0 || Y < 0 || X >= w || Y >= h) continue;
+      s += bits[Y * w + X]; n++;
+    }
+    return s * 2 > n ? 1 : 0;
+  }
+  var res = qrReadGrid(sample, dim);
+  if (!res) return null;
+  var pl = qrPayload(res);
+  if (!pl) return null;
+  return qrBytesToText(pl);
+}
+
+/* ------------------------------------------------------------------ */
+/* settings                                                            */
+/* ------------------------------------------------------------------ */
+var DEF = { beep: false, local: true, lanOnly: true, relayOnly: false, route: "auto",
+            turn: "", turnU: "", turnP: "", peerHost: "0.peerjs.com" };
 var cfg = {};
 Object.keys(DEF).forEach(function (k) { cfg[k] = store.get(k, DEF[k]); });
 
-/* Empty ICE server list guarantees that media can use host candidates only:
-   signaling is online, but camera/audio remain on the local network. */
-function iceConf() {
-  return { iceServers: [], iceCandidatePoolSize: 0, bundlePolicy: "max-bundle" };
+/* Three rungs. 0 keeps everything inside the local network, which is the
+   rung that survives a VPN and needs no internet at all. 1 adds STUN so two
+   routers can find each other. 2 adds a relay you supply yourself. */
+/* lanOnly is the promise that the picture never leaves the Wi-Fi: no STUN,
+   no relay, and every candidate that is not a local address is dropped before
+   it is offered or accepted. If that finds no route at all the session gives
+   up on the promise rather than on the connection, and says so. */
+var relaxLan = false;
+function lanActive() { return cfg.lanOnly && !relaxLan; }
+
+function iceConf(stage) {
+  if (lanActive()) return { iceServers: [], iceCandidatePoolSize: 0, bundlePolicy: "max-bundle" };
+  var list = [];
+  if (stage >= 1) {
+    list.push({ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] });
+    list.push({ urls: "stun:stun.cloudflare.com:3478" });
+  }
+  if (stage >= 2 && cfg.turn) {
+    cfg.turn.split(/[\s,]+/).filter(Boolean).forEach(function (u) {
+      list.push({ urls: u, username: cfg.turnU, credential: cfg.turnP });
+    });
+  }
+  var conf = { iceServers: list, iceCandidatePoolSize: stage ? 2 : 0, bundlePolicy: "max-bundle" };
+  if (stage >= 2 && cfg.turn && cfg.relayOnly) conf.iceTransportPolicy = "relay";
+  return conf;
 }
-function descMsg(desc, connId) {
-  return { sdp: { type: desc.type, sdp: desc.sdp }, type: "media", connectionId: connId, browser: "web", metadata: null };
+function stageName(n) { return n === 0 ? "local network" : n === 1 ? "STUN" : "your relay"; }
+
+function isHostCand(c) {
+  var t = (c && (c.type || "")) || "";
+  var line = (c && (c.candidate || "")) || "";
+  return t === "host" || / typ host/.test(line);
 }
-function candMsg(candidate, connId) {
-  return { candidate: candidate, type: "media", connectionId: connId };
+/* keep only local candidates in a description we are about to send */
+function trimSdp(sdp) {
+  if (!lanActive()) return sdp;
+  return sdp.split(/\r?\n/).filter(function (l) {
+    return !(/^a=candidate:/.test(l) && !/ typ host/.test(l));
+  }).join("\r\n");
 }
-function PeerLink(id, cb) {
-  var ws = null, heartbeat = 0, retryT = 0, tries = 0, dead = false, ready = false;
+
+/* PeerJS cloud validates the envelope, so payloads keep the shape its own
+   clients send. The MQTT routes carry the identical objects. */
+function descMsg(d, connId, stage) {
+  return { sdp: { type: d.type, sdp: trimSdp(d.sdp) }, type: "media", connectionId: connId, browser: "web", metadata: null, stage: stage };
+}
+function candMsg(c, connId) { return { candidate: c, type: "media", connectionId: connId }; }
+
+/* ------------------------------------------------------------------ */
+/* pairing relays                                                      */
+/* ------------------------------------------------------------------ */
+function relaySpecs() {
+  var all = [
+    { kind: "peerjs", key: "peerjs", host: cfg.peerHost || "0.peerjs.com", label: "PeerJS cloud" },
+    { kind: "mqtt", key: "emqx", url: "wss://broker.emqx.io:8084/mqtt", label: "EMQX" },
+    { kind: "mqtt", key: "hivemq", url: "wss://broker.hivemq.com:8884/mqtt", label: "HiveMQ" },
+    { kind: "mqtt", key: "mosquitto", url: "wss://test.mosquitto.org:8081/mqtt", label: "Mosquitto" }
+  ];
+  if (cfg.route !== "auto") return all.filter(function (s) { return s.key === cfg.route; });
+  /* the public Mosquitto test broker drops websocket clients often, so it is
+     kept as a hand-picked fallback rather than part of the default fan-out */
+  return all.filter(function (s) { return s.key !== "mosquitto"; });
+}
+
+function PeerLink(spec, id, cb) {
+  var ws = null, hb = 0, tries = 0, dead = false, ready = false;
   function open() {
     if (dead) return;
-    var url = "wss://0.peerjs.com:443/peerjs?key=peerjs&id=" + encodeURIComponent(id) +
-      "&token=" + Math.random().toString(36).slice(2) + "&version=1.5.4";
+    var url = "wss://" + spec.host + ":443/peerjs?key=peerjs&id=" + encodeURIComponent(id) +
+              "&token=" + rid(10) + "&version=1.5.4";
     try { ws = new WebSocket(url); } catch (e) { retry(); return; }
-    ws.onmessage = function (event) {
-      var message;
-      try { message = JSON.parse(event.data); } catch (e) { return; }
-      if (message.type === "OPEN") {
+    ws.onmessage = function (ev) {
+      var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.type === "OPEN") {
         ready = true; tries = 0;
-        clearInterval(heartbeat);
-        heartbeat = setInterval(function () { try { ws.send('{"type":"HEARTBEAT"}'); } catch (e) {} }, 10000);
+        clearInterval(hb);
+        hb = setInterval(function () { try { ws.send('{"type":"HEARTBEAT"}'); } catch (e) {} }, 10000);
         if (cb.up) cb.up();
         return;
       }
-      if (message.type === "ID-TAKEN") {
-        dead = true; try { ws.close(); } catch (e) {}
-        if (cb.taken) cb.taken();
-        return;
-      }
-      if (message.type === "ERROR") {
-        if (cb.error) cb.error((message.payload && message.payload.msg) || "signaling error");
-        return;
-      }
-      if (cb.message) cb.message(message);
+      if (m.type === "ID-TAKEN") { dead = true; try { ws.close(); } catch (e) {} if (cb.taken) cb.taken(); return; }
+      if (m.type === "ERROR") { if (cb.error) cb.error((m.payload && m.payload.msg) || "relay error"); return; }
+      if (cb.msg) cb.msg(m);
     };
     ws.onclose = function () {
-      ready = false; clearInterval(heartbeat);
-      if (!dead) { if (cb.down) cb.down(); retry(); }
+      ready = false; clearInterval(hb);
+      if (dead) return;
+      if (cb.down) cb.down();
+      retry();
     };
     ws.onerror = function () {};
   }
-  function retry() {
-    if (dead) return;
-    clearTimeout(retryT); tries++;
-    retryT = setTimeout(open, Math.min(1200 * Math.pow(1.7, tries), 15000));
-  }
+  function retry() { if (dead) return; tries++; setTimeout(open, Math.min(1200 * Math.pow(1.7, tries), 15000)); }
   open();
   return {
-    send: function (type, payload, destination) {
-      if (!ws || ws.readyState !== 1) return false;
-      try { ws.send(JSON.stringify({ type: type, payload: payload, dst: destination })); return true; }
-      catch (e) { return false; }
+    label: spec.label,
+    send: function (type, payload, dst) {
+      if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify({ type: type, payload: payload, dst: dst })); return true; } catch (e) {} }
+      return false;
     },
     isReady: function () { return ready; },
-    close: function () {
-      dead = true; clearTimeout(retryT); clearInterval(heartbeat);
-      try { if (ws) ws.close(); } catch (e) {}
+    close: function () { dead = true; clearInterval(hb); try { if (ws) ws.close(); } catch (e) {} }
+  };
+}
+
+/* MQTT 3.1.1 over a websocket, written out by hand so nothing is imported */
+function mqttSocket(url, clientId, cb) {
+  var ws;
+  try { ws = new WebSocket(url, "mqtt"); } catch (e) { if (cb.err) cb.err(); return null; }
+  try { ws.binaryType = "arraybuffer"; } catch (e) {}
+  var pid = 1, ping = 0, live = false;
+  function enc(s) {
+    var b = [], i, c;
+    for (i = 0; i < s.length; i++) {
+      c = s.charCodeAt(i);
+      if (c < 128) b.push(c);
+      else if (c < 2048) b.push(192 | (c >> 6), 128 | (c & 63));
+      else b.push(224 | (c >> 12), 128 | ((c >> 6) & 63), 128 | (c & 63));
     }
+    return b;
+  }
+  function dec(a) {
+    var s = "", i, c;
+    for (i = 0; i < a.length; i++) {
+      c = a[i];
+      if (c < 128) s += String.fromCharCode(c);
+      else if (c > 191 && c < 224) s += String.fromCharCode(((c & 31) << 6) | (a[++i] & 63));
+      else s += String.fromCharCode(((c & 15) << 12) | ((a[++i] & 63) << 6) | (a[++i] & 63));
+    }
+    return s;
+  }
+  function str(s) { var b = enc(s); return [b.length >> 8, b.length & 255].concat(b); }
+  function pkt(type, flags, body) {
+    var out = [(type << 4) | flags], len = body.length, d;
+    do { d = len % 128; len = Math.floor(len / 128); out.push(len > 0 ? d | 128 : d); } while (len > 0);
+    return new Uint8Array(out.concat(body));
+  }
+  function raw(u8) { try { ws.send(u8); } catch (e) {} }
+  ws.onopen = function () { raw(pkt(1, 0, str("MQTT").concat([4, 2, 0, 60], str(clientId)))); };
+  ws.onmessage = function (ev) {
+    var arr = new Uint8Array(ev.data), i = 0;
+    while (i < arr.length) {
+      var type = arr[i] >> 4, mult = 1, len = 0, j = i + 1, b;
+      do { b = arr[j++]; len += (b & 127) * mult; mult *= 128; } while (b & 128);
+      var body = arr.subarray(j, j + len);
+      i = j + len;
+      if (type === 2) {
+        live = body[1] === 0;
+        if (live && !ping) ping = setInterval(function () { raw(pkt(12, 0, [])); }, 25000);
+        if (cb.connack) cb.connack(live);
+      } else if (type === 3) {
+        var tl = (body[0] << 8) | body[1];
+        if (cb.msg) cb.msg(dec(body.subarray(2, 2 + tl)), dec(body.subarray(2 + tl)));
+      } else if (type === 9 && cb.suback) cb.suback();
+    }
+  };
+  ws.onclose = function () { clearInterval(ping); ping = 0; live = false; if (cb.down) cb.down(); };
+  ws.onerror = function () { if (cb.err) cb.err(); };
+  return {
+    sub: function (t) { raw(pkt(8, 2, [pid >> 8, pid & 255].concat(str(t), [0]))); pid++; },
+    pub: function (t, m) { raw(pkt(3, 0, str(t).concat(enc(m)))); },
+    close: function () { clearInterval(ping); try { ws.close(); } catch (e) {} },
+    isUp: function () { return live; }
+  };
+}
+
+function MqttLink(spec, id, cb) {
+  var mq = null, dead = false, ready = false, tries = 0;
+  function open() {
+    if (dead) return;
+    mq = mqttSocket(spec.url, "th" + rid(10), {
+      connack: function (ok) { if (ok) mq.sub("tether/v2/" + id); else retry(); },
+      suback: function () { ready = true; tries = 0; if (cb.up) cb.up(); },
+      msg: function (tp, payload) {
+        var m; try { m = JSON.parse(payload); } catch (e) { return; }
+        if (m && m.src !== id && cb.msg) cb.msg(m);
+      },
+      down: function () { ready = false; if (!dead) { if (cb.down) cb.down(); retry(); } },
+      err: function () { ready = false; }
+    });
+  }
+  function retry() { if (dead) return; tries++; setTimeout(open, Math.min(1500 * Math.pow(1.6, tries), 15000)); }
+  open();
+  return {
+    label: spec.label,
+    send: function (type, payload, dst) {
+      if (!mq || !mq.isUp()) return false;
+      try { mq.pub("tether/v2/" + dst, JSON.stringify({ type: type, payload: payload, src: id })); return true; } catch (e) { return false; }
+    },
+    isReady: function () { return ready; },
+    close: function () { dead = true; if (mq) mq.close(); }
+  };
+}
+
+/* Every relay at once, tagged, so a reply travels back the way it came and
+   one blocked host cannot stop a pairing. None of them sees the video. */
+function Bus(id, cb) {
+  var links = relaySpecs().map(function (spec) {
+    var L;
+    var hooks = {
+      up: function () { log("relay up: " + spec.label); if (cb.up) cb.up(L); },
+      down: function () { log("relay down: " + spec.label); if (cb.down) cb.down(L); },
+      taken: function () { if (cb.taken) cb.taken(L); },
+      error: function (m) { log("relay " + spec.label + ": " + m); if (cb.error) cb.error(m, L); },
+      msg: function (m) { if (cb.msg) cb.msg(m, L); }
+    };
+    L = spec.kind === "mqtt" ? MqttLink(spec, id, hooks) : PeerLink(spec, id, hooks);
+    return L;
+  });
+  return {
+    id: id, links: links, born: Date.now(), warned: false,
+    ready: function () { return links.filter(function (l) { return l.isReady(); }); },
+    names: function () {
+      var r = links.filter(function (l) { return l.isReady(); }).map(function (l) { return l.label; });
+      return r.length ? r.join(", ") : "none";
+    },
+    close: function () { links.forEach(function (l) { l.close(); }); }
   };
 }
 
@@ -898,105 +1852,149 @@ on(document, "keydown", function (e) { if (e.key === "Escape") closeDlg(); });
 /* VIEWER                                                               */
 /* ==================================================================== */
 var V = {
-  code: null, bus: null, pc: null, dc: null, stream: null, peer: null, connId: "", pend: [],
-  gotVideo: false, since: 0, upT: 0, statT: 0,
-  rot: 0, mirror: false, zoom: 100, cam: {}, rec: null, recBits: [],
-  cmdId: 0, acks: {}, lastBeat: 0, lastMedia: 0, badSince: 0, hist: [], routeT: 0
+  code: null, bus: null, link: null, pc: null, dc: null, peer: null, connId: "",
+  pend: [], stream: null, gotVideo: false, since: 0, upT: 0, statT: 0,
+  rot: 0, mirror: false, stretch: false, zoom: 100, cam: {}, rec: null, recBits: [],
+  cmdId: 0, acks: {}, lastBeat: 0, lastMedia: 0, badSince: 0, hist: []
 };
+
 function vStatus(kind, text) {
   $("vDot").className = "dot " + (kind || "") + (kind === "wait" ? " pulse" : "");
   $("vMsg").textContent = text;
   if (text) log("[screen] " + text);
 }
-function vWarn(text) {
-  var warning = $("vWarn");
-  if (!text) { warning.classList.remove("show"); warning.textContent = ""; return; }
-  warning.textContent = text; warning.classList.add("show");
+function vWarn(t) {
+  var w = $("vWarn");
+  if (!t) { w.classList.remove("show"); w.textContent = ""; return; }
+  w.textContent = t; w.classList.add("show");
 }
-function vNewCode() { vStartCloud(String(1000 + Math.floor(Math.random() * 9000))); }
-function wireViewerPc(pc, phoneId) {
-  pc.onicecandidate = function (event) {
-    if (!event.candidate || !V.bus) return;
-    V.bus.send("CANDIDATE", candMsg(event.candidate.toJSON ? event.candidate.toJSON() : event.candidate, V.connId), phoneId);
-  };
-  pc.ontrack = function (event) {
-    var video = $("remote");
-    if (!V.stream) { V.stream = new MediaStream(); video.srcObject = V.stream; }
-    if (V.stream.getTracks().indexOf(event.track) < 0) V.stream.addTrack(event.track);
-    video.srcObject = V.stream; video.play().catch(function () {});
-    try { if (event.receiver && "jitterBufferTarget" in event.receiver) event.receiver.jitterBufferTarget = 0; } catch (e) {}
-    if (event.track.kind === "video") vLive();
-  };
-  pc.ondatachannel = function (event) { vWireDC(event.channel); };
-  pc.oniceconnectionstatechange = function () {
-    var state = pc.iceConnectionState;
-    log("[screen] local ICE " + state);
-    if (state === "connected" || state === "completed") {
-      vWarn(""); if (V.gotVideo) vStatus("live", "Live on local Wi-Fi");
-    } else if (state === "failed") {
-      vStatus("bad", "No local Wi-Fi route to the phone");
-      vWarn("Pairing succeeded, but the devices cannot reach each other locally. Check Wi-Fi client isolation and VPN LAN access.");
-      vDropped();
-    } else if (state === "disconnected") vStatus("wait", "Local link interrupted");
-  };
-  pc.onconnectionstatechange = function () {
-    if (pc.connectionState === "failed" || pc.connectionState === "closed") vDropped();
-  };
-}
-function vStartCloud(code) {
+function pairText(code) { return "TETHER-PAIR-V1:" + code; }
+
+function vNewCode() { vStart(String(1000 + Math.floor(Math.random() * 9000))); }
+
+function vStart(code) {
   vTeardown();
+  relaxLan = false;
   V.code = code;
-  show("view"); railEnabled(false); vWarn("");
+  $("vCodeTxt").textContent = code;
   $("pairCode").textContent = code;
-  $("pairNote").textContent = "Enter the large code in the middle on the phone.";
-  $("vPairState").textContent = "Code " + code + " — waiting for the phone";
-  $("vPairCodeLarge").textContent = code;
-  vStatus("wait", "Opening pairing code " + code + "…");
-  V.bus = PeerLink("tether-" + code, {
-    up: function () { vStatus("wait", "Ready — enter code " + code + " with the phone"); },
-    down: function () { if (!V.gotVideo) vStatus("wait", "Restoring the pairing connection…"); },
-    taken: function () { vNewCode(); },
-    error: function (message) { vWarn(message); },
-    message: vSignal
+  try { drawQR($("qr"), pairText(code)); } catch (e) { log("qr: " + e.message); }
+  $("pairNote").innerHTML = "Open this page on the phone, tap <b>Scan the square</b>, and point it here.";
+  vStatus("wait", "Opening the code…");
+  railEnabled(false);
+  V.bus = Bus("tether-" + code, {
+    up: function () {
+      vWarn("");
+      if (V.gotVideo) return;
+      vStatus("wait", "Ready on code " + code + " · " + V.bus.names());
+    },
+    down: function () {
+      if (V.bus && !V.bus.ready().length && !V.gotVideo) {
+        vStatus("bad", "No pairing relay is reachable");
+        vWarn("No pairing relay could be reached from this machine.");
+      }
+    },
+    taken: function () { log("code already in use, choosing another"); vNewCode(); },
+    msg: vSignal
   });
+  show("view");
 }
-function vSignal(message) {
-  if (message.type === "OFFER") { vAnswer(message.src, message.payload); return; }
-  if (message.type === "CANDIDATE") {
-    var candidate = message.payload && message.payload.candidate;
-    if (!candidate) return;
-    if (V.pc && V.pc.remoteDescription) V.pc.addIceCandidate(candidate).catch(function () {});
-    else V.pend.push(candidate);
+
+function vSignal(m, link) {
+  if (m.type === "OFFER") return vAnswer(m.src, m.payload, link);
+  if (m.type === "CANDIDATE") {
+    var c = m.payload && m.payload.candidate;
+    if (!c) return;
+    if (lanActive() && c.candidate && !isHostCand(c)) return;
+    if (V.pc && V.pc.remoteDescription) V.pc.addIceCandidate(c).catch(function () {});
+    else V.pend.push(c);
     return;
   }
-  if (message.type === "LEAVE" && message.src === V.peer) vDropped();
-}
-function vAnswer(phoneId, payload) {
-  var incomingId = payload.connectionId || "";
-  /* The phone repeats its offer until an answer arrives. Do not tear down a
-     negotiation for duplicate offers; that race previously prevented pairing. */
-  if (V.pc && incomingId && V.connId === incomingId) {
-    if (V.pc.localDescription && V.pc.localDescription.type === "answer" && V.bus)
-      V.bus.send("ANSWER", descMsg(V.pc.localDescription, V.connId), phoneId);
+  if (m.type === "LEAVE" && m.src && m.src === V.peer) {
+    var hadVideo = V.gotVideo;
+    vClose();
+    $("pairNote").textContent = "The camera stopped. This code is ready for another connection.";
+    vStatus("wait", "Camera stopped — listening on " + V.code);
+    if (hadVideo) tick("down");
     return;
   }
-  vClose();
-  V.peer = phoneId;
-  V.connId = incomingId || ("tc_" + Math.random().toString(36).slice(2, 10));
-  var pc = new RTCPeerConnection(iceConf());
-  V.pc = pc;
-  wireViewerPc(pc, phoneId);
+  if (m.type === "EXPIRE" && m.src && m.src === V.peer) vDropped();
+}
+
+function vAnswer(src, payload, link) {
+  if (link) V.link = link;
+  var connId = (payload && payload.connectionId) || "";
+  var same = V.pc && V.pc.signalingState !== "closed" && V.connId === connId;
+  if (same && V.pc.signalingState !== "stable" && V.pc.signalingState !== "have-remote-offer") {
+    log("[screen] offer ignored, a negotiation is already running");
+    return;
+  }
+  if (!same) { vClose(); V.peer = src; }
+  V.connId = connId || V.connId || "tc_" + rid(6);
+  var stage = (payload && typeof payload.stage === "number") ? payload.stage : 1;
+  if (stage >= 1 && lanActive()) { relaxLan = true; log("[screen] the phone left Wi-Fi-only mode, following"); }
+  var pc = same ? V.pc : new RTCPeerConnection(iceConf(stage));
+
+  if (!same) {
+    V.pc = pc;
+    pc.onicecandidate = function (e) {
+      if (!e.candidate || !V.link) return;
+      if (lanActive() && !isHostCand(e.candidate)) return;
+      V.link.send("CANDIDATE", candMsg(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, V.connId), src);
+    };
+    pc.ontrack = function (e) {
+      var v = $("remote");
+      if (!V.stream) { V.stream = new MediaStream(); v.srcObject = V.stream; }
+      if (V.stream.getTracks().indexOf(e.track) < 0) V.stream.addTrack(e.track);
+      if (v.srcObject !== V.stream) v.srcObject = V.stream;
+      e.track.onended = function () { try { V.stream.removeTrack(e.track); } catch (err) {} };
+      v.play().catch(function () {});
+      try { if (e.receiver && "jitterBufferTarget" in e.receiver) e.receiver.jitterBufferTarget = 0; } catch (err) {}
+      if (e.track.kind === "video") vLive();
+    };
+    pc.ondatachannel = function (e) { vWireDC(e.channel); };
+    pc.oniceconnectionstatechange = function () {
+      var st = pc.iceConnectionState;
+      log("[screen] ice " + st);
+      if (st === "connected" || st === "completed") { vWarn(""); if (V.gotVideo) vStatus("live", "Live"); }
+      else if (st === "failed") {
+        vStatus("bad", "No network path to the phone");
+        vWarn("No route between the two devices. Put both on one network, allow local-network access in any VPN, or add a TURN relay in Settings.");
+        vDropped();
+      } else if (st === "disconnected") vStatus("wait", "Link interrupted, waiting for it to come back");
+    };
+    pc.onconnectionstatechange = function () {
+      if (pc.connectionState === "failed" || pc.connectionState === "closed") vDropped();
+    };
+  }
+
   pc.setRemoteDescription(payload.sdp).then(function () {
-    var pending = V.pend.slice(); V.pend = [];
-    pending.forEach(function (candidate) { pc.addIceCandidate(candidate).catch(function () {}); });
+    var f = V.pend.slice(); V.pend = [];
+    f.forEach(function (c) { pc.addIceCandidate(c).catch(function () {}); });
     return pc.createAnswer();
-  }).then(function (answer) { return pc.setLocalDescription(answer); }).then(function () {
-    if (V.bus) V.bus.send("ANSWER", descMsg(pc.localDescription, V.connId), phoneId);
-    $("pairNote").textContent = "Phone found. Connecting on local Wi-Fi…";
-    vStatus("wait", "Phone found — opening the local video path…");
-  }).catch(function (e) {
-    vStatus("bad", "Could not answer the phone"); vWarn(e.message || String(e));
-  });
+  }).then(function (a) { return pc.setLocalDescription(a); })
+    .then(function () {
+      if (V.link) V.link.send("ANSWER", descMsg(pc.localDescription, V.connId), src);
+      if (!V.gotVideo) { vStatus("wait", same ? "Updating…" : "Camera found — finding a route"); vRouteWatch(); }
+    })
+    .catch(function (e) { vStatus("bad", "Could not answer: " + e.message); });
+}
+
+/* the handshake and the media path fail for different reasons, and the fix
+   is different too, so they are reported separately */
+function vRouteWatch() {
+  clearTimeout(V.routeT);
+  V.routeT = setTimeout(function () {
+    if (V.gotVideo || !V.pc) return;
+    var st = V.pc.iceConnectionState;
+    if (st === "connected" || st === "completed") return;
+    vStatus("bad", "Paired, but no video route between the devices");
+    if (lanActive()) {
+      vWarn("The phone reached this screen, so pairing works — but no route exists inside the Wi-Fi. The devices may be on different networks, the router may isolate clients, or a VPN may block local traffic. Trying the internet route now.");
+      return;
+    }
+    vWarn("The phone reached this screen, so the code works, but the devices cannot pass video. Allow local-network access in any VPN, check router client isolation, then press the refresh button above.");
+  }, 11000);
 }
 
 function vLive() {
@@ -1006,9 +2004,9 @@ function vLive() {
   V.gotVideo = true;
   document.body.classList.add("live");
   $("frame").classList.add("hasvideo");
-  $("pairNote").textContent = "Connected directly over local Wi-Fi.";
+  $("pairNote").textContent = "Connected.";
   V.since = Date.now(); V.lastBeat = V.lastMedia = Date.now();
-  vStatus("live", "Live on local Wi-Fi");
+  vStatus("live", "Live");
   tick("up");
   clearInterval(V.upT);
   V.upT = setInterval(function () { $("vUp").textContent = dur(Date.now() - V.since); }, 500);
@@ -1078,18 +2076,18 @@ function vDropped() {
   railEnabled(false);
   V.gotVideo = false;
   document.body.classList.remove("live");
-  $("frame").classList.remove("hasvideo");
+  $("frame").classList.remove("hasvideo", "frozen");
   $("remote").srcObject = null;
   V.stream = null;
   clearInterval(V.statT); clearInterval(V.upT);
-  $("pairNote").textContent = "The camera disconnected. Enter the same code to reconnect.";
-  vStatus("wait", "Camera disconnected — still listening on " + V.code);
+  $("pairNote").textContent = "The camera dropped out. It reconnects on its own.";
+  vStatus("wait", V.code ? "Camera gone — still listening on " + V.code : "Camera gone");
   tick("down");
 }
 
 function vSendBye() {
   try { if (V.dc && V.dc.readyState === "open") V.dc.send(JSON.stringify({ t: "bye" })); } catch (e) {}
-  try { if (V.bus && V.peer) V.bus.send("LEAVE", { connectionId: V.connId }, V.peer); } catch (e) {}
+  try { if (V.link && V.peer) V.link.send("LEAVE", { connectionId: V.connId }, V.peer); } catch (e) {}
 }
 function vClose() {
   clearTimeout(V.routeT);
@@ -1098,16 +2096,16 @@ function vClose() {
   Object.keys(V.acks).forEach(function (k) { clearTimeout(V.acks[k]); delete V.acks[k]; });
   if (V.dc) { try { V.dc.close(); } catch (e) {} V.dc = null; }
   if (V.pc) { try { V.pc.close(); } catch (e) {} V.pc = null; }
-  V.gotVideo = false; V.stream = null;
+  V.pend = []; V.gotVideo = false; V.stream = null;
   document.body.classList.remove("live");
-  $("frame").classList.remove("hasvideo");
+  $("frame").classList.remove("hasvideo", "frozen");
   $("remote").srcObject = null;
 }
 function vTeardown() {
   vSendBye();
   vClose();
   if (V.bus) { V.bus.close(); V.bus = null; }
-  V.peer = null; V.pend = []; V.hist = [];
+  V.link = null; V.peer = null; V.hist = [];
 }
 
 function vWireDC(ch) {
@@ -1120,8 +2118,8 @@ function vWireDC(ch) {
     if (m.t === "bye") {
       var hadVideo = V.gotVideo;
       vClose();
-      $("pairNote").textContent = "The camera stopped. Enter the same code to reconnect.";
-      vStatus("wait", "Camera stopped — still listening on " + V.code);
+      $("pairNote").textContent = "The camera stopped. This code is ready for another connection.";
+      vStatus("wait", "Camera stopped — listening on " + V.code);
       if (hadVideo) tick("down");
       return;
     }
@@ -1145,7 +2143,7 @@ function able(el, ok, why) {
   el.disabled = !ok;
   el.title = ok ? el.dataset.tip : why;
 }
-var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rSd", "rMic", "rRes", "rBr"];
+var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rFps", "rHold", "rSd", "rMic", "rRes", "rBr"];
 function railEnabled(on2) {
   RAIL.forEach(function (id) {
     var el = $(id);
@@ -1158,8 +2156,12 @@ function railEnabled(on2) {
 function vApplyState(s) {
   V.cam = s;
   $("rLed").classList.toggle("on", !!s.torch);
+  $("rFps").classList.toggle("on", s.fps === 15);
+  $("rHold").classList.toggle("on", !!s.paused);
   $("rMic").classList.toggle("on", !!s.mic);
+  $("tPause").classList.toggle("show", !!s.paused);
   $("tMute").classList.toggle("show", !s.mic);
+  freeze(!!s.paused);
   able($("rLed"), s.capTorch !== false, "This camera has no LED");
   if (s.capTorch == null) $("rLed").title = "Press to test the phone LED";
   able($("rZin"), s.capZoom !== false, "Zoom is unavailable");
@@ -1176,6 +2178,16 @@ function vApplyState(s) {
     toast("The phone microphone is live — press the speaker to listen");
   }
 }
+function freeze(want) {
+  var f = $("frame"), v = $("remote"), cv = $("freeze");
+  if (want && v.videoWidth) {
+    cv.width = v.videoWidth; cv.height = v.videoHeight;
+    cv.getContext("2d").drawImage(v, 0, 0);
+    cv.style.width = "100%"; cv.style.height = "100%";
+    f.classList.add("frozen");
+  } else f.classList.remove("frozen");
+}
+
 /* --- geometry --- */
 function fitVideo() {
   var v = $("remote"), fr = $("frame"), rw = $("rotwrap"), st = $("stage");
@@ -1198,6 +2210,7 @@ function fitVideo() {
   rw.style.width = (odd ? h : w) + "px";
   rw.style.height = (odd ? w : h) + "px";
   fr.classList.toggle("mirror", V.mirror);
+  fr.classList.toggle("stretch", V.stretch);
   $("vZoomT").textContent = V.zoom + "%";
 }
 window.addEventListener("resize", function () { if (role === "view") fitVideo(); });
@@ -1249,7 +2262,7 @@ function toggleRecord() {
 }
 
 /* --- viewer wiring --- */
-on($("vNew"), "click", function () { vNewCode(); toast("New pairing code"); });
+on($("vNew"), "click", function () { vNewCode(); toast("New code"); });
 on($("vExit"), "click", function () { vTeardown(); show("start"); });
 on($("vSet"), "click", function () { openDlg("dlgSet"); });
 on($("vHelp"), "click", function () { openDlg("dlgHelp"); });
@@ -1261,10 +2274,11 @@ on($("vFit"), "change", fitVideo);
 on($("vZoom"), "input", function () { V.zoom = +$("vZoom").value; fitVideo(); });
 on($("vRotate"), "click", function () { V.rot = (V.rot + 1) % 4; $("vRotate").classList.toggle("on", V.rot !== 0); fitVideo(); });
 on($("vMirror"), "click", function () { V.mirror = !V.mirror; $("vMirror").classList.toggle("on", V.mirror); fitVideo(); });
+on($("vStretch"), "click", function () { V.stretch = !V.stretch; $("vStretch").classList.toggle("on", V.stretch); fitVideo(); });
 on($("vReset"), "click", function () {
-  V.rot = 0; V.mirror = false; V.zoom = 100;
+  V.rot = 0; V.mirror = false; V.stretch = false; V.zoom = 100;
   $("vZoom").value = 100; $("vFit").value = "fit";
-  ["vRotate", "vMirror"].forEach(function (i) { $(i).classList.remove("on"); });
+  ["vRotate", "vMirror", "vStretch"].forEach(function (i) { $(i).classList.remove("on"); });
   fitVideo();
 });
 on($("vSnap"), "click", function () { grabStill($("remote"), "tether"); });
@@ -1296,6 +2310,8 @@ on($("rLed"), "click", function () { vCmd("torch", !V.cam.torch); });
 on($("rFocus"), "click", function () { vCmd("af"); });
 on($("rZin"), "click", function () { vCmd("zoomStep", 1); });
 on($("rZout"), "click", function () { vCmd("zoomStep", -1); });
+on($("rFps"), "click", function () { vCmd("fps", V.cam.fps === 15 ? 30 : 15); });
+on($("rHold"), "click", function () { vCmd("pause", !V.cam.paused); });
 on($("rSd"), "click", function () { vCmd("snap"); });
 on($("rMic"), "click", function () { vCmd("mic", !V.cam.mic); });
 on($("rRes"), "change", function () { vCmd("res", $("rRes").value); });
@@ -1313,6 +2329,7 @@ on(document, "keydown", function (e) {
   else if (k === "l") $("rLed").click();
   else if (k === "a") $("rFocus").click();
   else if (k === "m") $("vSound").click();
+  else if (k === "h") $("rHold").click();
   else if (k === "+" || k === "=") $("rZin").click();
   else if (k === "-") $("rZout").click();
   else if (k === "0") $("vReset").click();
@@ -1324,17 +2341,19 @@ on(document, "keydown", function (e) {
 /* CAMERA                                                               */
 /* ==================================================================== */
 var C = {
-  code: null, bus: null, pc: null, dc: null, stream: null, rawStream: null, digital: null, want: false,
+  code: null, bus: null, link: null, pc: null, dc: null, stream: null, rawStream: null, digital: null, want: false,
   facing: store.get("facing", "environment"), devId: store.get("devId", ""),
-  torch: false, mic: false, zoom: 1, caps: {}, cams: 1,
-  statT: 0, wake: null, connected: false, lastPong: 0, beat: 0,
-  ending: false, endT: 0, connId: "", pend: [], shout: 0
+  torch: false, mic: false, paused: false, zoom: 1, caps: {}, cams: 1,
+  connId: "", stage: null, climbed: 0, shout: 0, renego: 0, beat: 0, negoT: 0,
+  pending: false, retry: 0, statT: 0, wake: null, connected: false, lastPong: 0, restarts: 0,
+  ending: false, endT: 0, resumeAfterPage: false, resuming: false
 };
 
 function cStatus(kind, text) {
   $("cDot").className = "dot " + (kind || "") + (kind === "wait" ? " pulse" : "");
   $("cMsg").textContent = text;
-  $("cChip").textContent = C.connected ? "local Wi-Fi" : C.code ? "code " + C.code : "not connected";
+  $("cChip").textContent = C.code ? (C.connected ? "on " + C.code : "code " + C.code)
+    : (C.connected ? "paired offline" : "not connected");
   if (text) log("[camera] " + text);
 }
 function cWarn(t) {
@@ -1406,18 +2425,11 @@ function openCamera() {
   else { video.deviceId = { exact: pick }; C.devId = pick; }
   store.set("facing", C.facing); store.set("devId", C.devId);
 
-  /* Keep an audio sender negotiated from the start. The track stays disabled
-     until Mic is enabled, so later control changes need no signaling server. */
-  var audio = { echoCancellation: true, noiseSuppression: true };
-  var relaxedVideo = { facingMode: { ideal: C.facing || "environment" }, advanced: [{ focusMode: "continuous" }] };
+  var audio = C.mic ? { echoCancellation: true, noiseSuppression: true } : false;
   var attempts = [
     { video: video, audio: audio },
-    { video: relaxedVideo, audio: audio },
-    { video: true, audio: audio },
-    /* A denied/unavailable microphone must not block the camera itself. */
-    { video: video, audio: false },
-    { video: relaxedVideo, audio: false },
-    { video: true, audio: false }
+    { video: { facingMode: { ideal: C.facing || "environment" }, advanced: [{ focusMode: "continuous" }] }, audio: audio },
+    { video: true, audio: audio }
   ];
   var older = C.rawStream || C.stream;
 
@@ -1438,7 +2450,6 @@ function openCamera() {
     C.rawStream = s;
     C.stream = s;
     C.zoom = 1;
-    s.getAudioTracks().forEach(function (a) { a.enabled = C.mic; });
     try { var t0 = s.getVideoTracks()[0]; if (t0 && "contentHint" in t0) t0.contentHint = "motion"; } catch (e) {}
     var chain = Promise.resolve();
     if (C.pc && C.pc.signalingState !== "closed") {
@@ -1612,9 +2623,28 @@ function applyAdv(obj, verify) {
   return applyTrackAttempts([{ advanced: [obj] }, obj], verify);
 }
 
-/* Add an SDP bandwidth line as a fallback for older WebRTC engines.
-   Modern browsers also get the live RTCRtpSender maxBitrate below. */
-function limitLocalBitrate(desc) {
+/* Add an SDP bandwidth line as a fallback for Safari/older WebRTC engines.
+   Modern Chromium/Firefox also get the live RTCRtpSender maxBitrate below. */
+function limitOfferBitrate(desc) {
+  if (!desc || !desc.sdp) return desc;
+  var kbps = +$("cBr").value;
+  var sections = desc.sdp.split(/(?=m=)/);
+  for (var i = 0; i < sections.length; i++) {
+    if (!/^m=video\s/m.test(sections[i])) continue;
+    sections[i] = sections[i].replace(/^b=(?:AS|TIAS):.*\r?\n/gm, "");
+    if (kbps) {
+      var line = "b=TIAS:" + (kbps * 1000) + "\r\nb=AS:" + kbps + "\r\n";
+      if (/^c=.*\r?$/m.test(sections[i])) sections[i] = sections[i].replace(/^(c=.*\r?\n)/m, "$1" + line);
+      else sections[i] = sections[i].replace(/^(m=.*\r?\n)/m, "$1" + line);
+    }
+  }
+  return { type: desc.type, sdp: sections.join("") };
+}
+/* The sender caps its encoder from the REMOTE description: the bandwidth
+   line must live in the viewer's answer that the phone receives. Putting
+   b= in the phone's own offer only decorates the wire, so the answer is
+   patched here just before setRemoteDescription. */
+function limitAnswerBitrate(desc) {
   if (!desc || !desc.sdp) return desc;
   var kbps = +$("cBr").value;
   var sections = desc.sdp.split(/(?=m=)/);
@@ -1642,13 +2672,13 @@ function applyBitrate(renegotiateNow) {
     if (!sender.getParameters || !sender.setParameters) return Promise.resolve(false);
     var p;
     try { p = sender.getParameters(); } catch (e) { return Promise.resolve(false); }
-    if (!p.encodings || !p.encodings.length) return Promise.resolve(false);
+    /* encodings stay empty until the first negotiation finishes — report that
+       so the retry below can revisit once the answer has been processed */
+    if (!p.encodings || !p.encodings.length) return Promise.resolve(null);
     p.encodings.forEach(function (enc) {
       if (kbps) enc.maxBitrate = kbps * 1000;
       else delete enc.maxBitrate;
     });
-    if ("degradationPreference" in p || typeof p.degradationPreference !== "undefined")
-      p.degradationPreference = "maintain-framerate";
     return sender.setParameters(p).then(function () {
       var got;
       try { got = sender.getParameters(); } catch (e) { got = null; }
@@ -1660,17 +2690,37 @@ function applyBitrate(renegotiateNow) {
     });
   });
   return Promise.all(jobs).then(function (r) {
-    var liveApplied = r.some(Boolean);
+    var hasVideoSender = jobs.length > 0;
+    var waitingOnNegotiation = hasVideoSender && r.some(function (x) { return x === null; });
+    var liveApplied = r.some(function (x) { return x === true; });
+    if (waitingOnNegotiation) {
+      /* Retry a few times while the offer/answer exchange completes, then the
+         patched answer in camSignal applies the ceiling for good. */
+      C.brTries = (C.brTries || 0) + 1;
+      if (C.brTries < 8) {
+        clearTimeout(C.brT);
+        C.brT = setTimeout(function () {
+          if (C.pc && C.pc.signalingState !== "closed") applyBitrate(false);
+        }, 700);
+      }
+    } else if (liveApplied || !hasVideoSender || !kbps) {
+      C.brTries = 0;
+    }
     pushState();
+    /* A fresh offer carries b=TIAS/b=AS too, covering engines that do not
+       implement sender.setParameters. */
+    if (renegotiateNow && C.connected && C.pc && C.pc.signalingState === "stable") {
+      setTimeout(function () { if (C.pc && C.connected) renegotiate(C.pc); }, 0);
+    }
     if (!kbps) return "Automatic bitrate";
-    return (liveApplied ? "Ceiling set to " : "Ceiling queued at ") + (kbps / 1000) + " Mbit/s";
+    return (liveApplied ? "Ceiling set to " : waitingOnNegotiation ? "Ceiling armed, applies on connect — " : "Ceiling queued at ") + (kbps / 1000) + " Mbit/s";
   });
 }
 function pushState() {
   if (!C.dc || C.dc.readyState !== "open") return;
   try {
     C.dc.send(JSON.stringify({
-      t: "state", torch: C.torch, zoom: C.zoom,
+      t: "state", torch: C.torch, paused: C.paused, zoom: C.zoom,
       mic: !!(atrack() && atrack().enabled),
       fps: +$("cFps").value, res: $("cRes").value, bitrate: +$("cBr").value,
       /* Unknown capability reports stay pressable. Zoom has a software
@@ -1703,89 +2753,255 @@ function setRes(v) {
   }, function () { return openCamera(); });
 }
 
-/* --- automatic signaling, local camera path --- */
-function wireCameraPc(pc) {
-  pc.onicecandidate = function (event) {
-    if (!event.candidate || !C.bus || !C.code) return;
-    C.bus.send("CANDIDATE", candMsg(event.candidate.toJSON ? event.candidate.toJSON() : event.candidate, C.connId), "tether-" + C.code);
+/* --- connect --- */
+function camConnect(code) {
+  code = String(code || "").replace(/\D/g, "");
+  if (code.length !== 4) { cWarn("Type the four digits shown on the screen."); return; }
+  cWarn("");
+  stopScan();
+  C.code = code; C.want = true; C.manual = false; C.ending = false;
+  clearTimeout(C.endT);
+  C.stage = cfg.local ? 0 : 1;
+  store.set("lastCode", code);
+  $("cStop").disabled = false;
+  $("cCode").value = code;
+  var go = C.stream ? Promise.resolve() : openCamera();
+  go.then(function () {
+    if (!C.stream) return;
+    if (!C.bus) {
+      C.bus = Bus("tether-cam-" + rid(7), {
+        up: function () {
+          if (C.connected) return;
+          if (C.pc && C.pc.signalingState === "have-local-offer") return;
+          camOffer();
+        },
+        down: function () {
+          if (C.bus && !C.bus.ready().length && !C.connected) {
+            cStatus("bad", "No pairing relay is reachable");
+            cWarn("No pairing relay could be reached from this phone. Try offline pairing.");
+          }
+        },
+        taken: function () { C.bus.close(); C.bus = null; camConnect(code); },
+        msg: camSignal
+      });
+      cStatus("wait", "Opening a relay…");
+    } else if (C.bus.ready().length) camOffer();
+  });
+}
+
+function climb() {
+  if (lanActive()) return false;
+  if (C.stage >= 2) return false;
+  if (Date.now() - C.climbed < 3000) return true;
+  C.climbed = Date.now();
+  C.stage++;
+  cStatus("wait", "Trying " + stageName(C.stage) + "…");
+  return true;
+}
+function eachLink(fn) {
+  var up = C.bus ? C.bus.ready() : [];
+  up.forEach(fn);
+  return up.length;
+}
+
+function camOffer() {
+  if (!C.want || !C.stream) return;
+  if (!eachLink(function () {})) { cStatus("wait", "Waiting for a relay…"); return; }
+  C.link = null;
+  camCloseConn();
+  C.connId = "tc_" + rid(8);
+  if (C.stage == null) C.stage = cfg.local ? 0 : 1;
+  var pc = new RTCPeerConnection(iceConf(C.stage));
+  C.pc = pc;
+  camWireDC(pc.createDataChannel("ctl", { ordered: true }));
+  C.stream.getTracks().forEach(function (t) { pc.addTrack(t, C.stream); });
+
+  pc.onicecandidate = function (e) {
+    if (!e.candidate) return;
+    if (lanActive() && !isHostCand(e.candidate)) return;
+    var body = candMsg(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, C.connId);
+    var dst = "tether-" + C.code;
+    if (C.link) C.link.send("CANDIDATE", body, dst);
+    else eachLink(function (l) { l.send("CANDIDATE", body, dst); });
   };
   pc.oniceconnectionstatechange = function () {
-    var state = pc.iceConnectionState;
-    log("[camera] local ICE " + state);
-    if (state === "connected" || state === "completed") {
-      C.connected = true; C.lastPong = Date.now(); clearInterval(C.shout); C.shout = 0;
-      cStatus("live", "Streaming over local Wi-Fi"); cWarn("");
-      $("camPanel").classList.remove("show"); pushState();
-    } else if (state === "failed") {
-      C.connected = false; $("camPanel").classList.add("show");
-      cStatus("bad", "No local Wi-Fi route to the viewing screen");
-      cWarn("Pairing worked, but the devices cannot reach each other locally. Check Wi-Fi client isolation and VPN LAN access.");
-    } else if (state === "disconnected") {
-      C.connected = false; cStatus("wait", "Local link interrupted");
+    var st = pc.iceConnectionState;
+    log("[camera] ice " + st);
+    if (st === "connected" || st === "completed") {
+      clearTimeout(C.routeT);
+      C.connected = true; C.restarts = 0; C.lastPong = Date.now();
+      cStatus("live", "Streaming to " + C.code);
+      cWarn("");
+      $("camPanel").classList.remove("show");
+      pushState();
+      applyBitrate(false);
+    } else if (st === "failed") {
+      C.connected = false;
+      $("camPanel").classList.add("show");
+      if (climb()) restartIce(true);
+      else {
+        cStatus("bad", "No usable route to that screen");
+        cWarn("No route between the devices. On a full-tunnel VPN this needs your own TURN relay.");
+        later(4000);
+      }
+    } else if (st === "disconnected") {
+      C.connected = false;
+      $("camPanel").classList.add("show");
+      cStatus("wait", "Link interrupted — you can connect again here");
+      later(5000);
     }
   };
   pc.onconnectionstatechange = function () {
-    if (C.pc === pc && (pc.connectionState === "failed" || pc.connectionState === "closed")) C.connected = false;
-  };
-}
-function camConnect(code) {
-  code = String(code || "").replace(/\D/g, "");
-  if (code.length !== 4) { cWarn("Enter the four digits shown on the viewing screen."); return; }
-  cWarn("");
-  C.code = code; C.want = true; C.ending = false; C.pend = [];
-  $("cCode").value = code; $("cStop").disabled = false;
-  cStatus("wait", "Opening the camera…");
-  var go = C.stream ? Promise.resolve() : openCamera();
-  go.then(function () {
-    if (!C.stream) throw new Error("The camera is not available");
-    if (C.bus) C.bus.close();
-    C.bus = PeerLink("tether-cam-" + Math.random().toString(36).slice(2, 10), {
-      up: function () { if (!C.connected && (!C.pc || C.pc.signalingState !== "have-local-offer")) camOffer(); },
-      down: function () { if (!C.connected) cStatus("wait", "Restoring the pairing connection…"); },
-      taken: function () { if (C.want) camConnect(code); },
-      error: function (message) { cWarn(message); },
-      message: camSignal
-    });
-    cStatus("wait", "Calling the viewing screen…");
-  }).catch(function (e) { cStatus("bad", "Could not start the camera"); cWarn(e.message || String(e)); });
-}
-function camOffer() {
-  if (!C.want || !C.stream || !C.bus || !C.code) return;
-  camCloseConn(); C.want = true;
-  C.connId = "tc_" + Math.random().toString(36).slice(2, 10);
-  var pc = new RTCPeerConnection(iceConf()); C.pc = pc;
-  wireCameraPc(pc); camWireDC(pc.createDataChannel("ctl", { ordered: true }));
-  C.stream.getTracks().forEach(function (track) { pc.addTrack(track, C.stream); });
-  applyBitrate(false).then(function () { return pc.createOffer(); }).then(function (offer) {
-    return pc.setLocalDescription(offer);
-  }).then(function () {
-    function send() {
-      if (C.pc === pc && C.bus && !C.connected)
-        C.bus.send("OFFER", descMsg(pc.localDescription, C.connId), "tether-" + C.code);
+    if (C.pc !== pc) return;
+    if (pc.connectionState === "failed" || pc.connectionState === "closed") {
+      C.connected = false;
+      $("camPanel").classList.add("show");
+      if (pc.connectionState === "closed" && C.want && !C.ending)
+        cStatus("wait", "Session ended — ready to connect again");
     }
-    send(); clearInterval(C.shout); C.shout = setInterval(send, 1800);
-    cStatus("wait", "Waiting for the viewing screen…");
-  }).catch(function (e) { cStatus("bad", "Could not create the connection"); cWarn(e.message || String(e)); });
+  };
+  pc.onnegotiationneeded = function () {
+    if (C.pc !== pc) return;
+    clearTimeout(C.negoT);
+    C.negoT = setTimeout(function () { renegotiate(pc); }, 300);
+  };
+  pc.onsignalingstatechange = function () {
+    if (pc.signalingState === "stable" && C.pending) {
+      C.pending = false;
+      setTimeout(function () { renegotiate(pc); }, 150);
+    }
+  };
+  applyBitrate(false).then(function () {
+    if (C.pc === pc) sendOffer(pc, "new");
+  });
+  cStatus("wait", "Calling " + C.code + "…");
 }
-function camSignal(message) {
-  if (message.type === "ANSWER") {
+
+/* ICE can sit in checking for half a minute before it admits defeat, so the
+   ladder is climbed on a timer instead of waiting for the failure */
+function routeWatch(second) {
+  clearTimeout(C.routeT);
+  C.routeT = setTimeout(function () {
+    if (C.connected || !C.pc) return;
+    var st = C.pc.iceConnectionState;
+    if (st === "connected" || st === "completed") return;
+    /* still checking on the first pass means a pair may yet come good, so it
+       gets one more grace period before the ladder is climbed */
+    if (st === "checking" && !second) { routeWatch(true); return; }
+    if (lanActive()) {
+      relaxLan = true;
+      C.stage = 1;
+      cStatus("wait", "No route inside the Wi-Fi — trying the long way round");
+      cWarn("No direct route on this Wi-Fi, so the video is being routed through the internet instead. " +
+        "To keep it local, switch local network access on in the VPN app, or put both devices on the same router.");
+      camOffer();
+      routeWatch();
+      return;
+    }
+    if (climb()) { restartIce(false); routeWatch(); return; }
+    cStatus("bad", "Paired, but no video route to that screen");
+    cWarn("The code worked, the video path did not. Allow local network access in the VPN app, put both " +
+      "devices on one Wi-Fi, add a TURN relay under Settings, or use offline pairing.");
+  }, second ? 6000 : 9000);
+}
+
+function restartIce(hard) {
+  var pc = C.pc;
+  if (!pc || pc.signalingState === "closed") { camOffer(); return; }
+  if (C.restarts > 2) { C.restarts = 0; camOffer(); return; }
+  C.restarts++;
+  log("[camera] ice restart " + C.restarts);
+  pc.createOffer({ iceRestart: true }).then(function (o) { return pc.setLocalDescription(limitOfferBitrate(o)); })
+    .then(function () { sendOffer(pc, "restart"); })
+    .catch(function () { camOffer(); });
+  if (hard) later(6000);
+}
+
+function renegotiate(pc) {
+  if (C.pc !== pc || !C.connected) return;
+  if (pc.signalingState !== "stable") { C.pending = true; return; }
+  sendOffer(pc, "renego");
+}
+
+function sendOffer(pc, mode) {
+  var prep = mode === "restart" ? Promise.resolve()
+    : pc.createOffer().then(function (o) { return pc.setLocalDescription(limitOfferBitrate(o)); });
+  prep.then(function () {
+    var dst = "tether-" + C.code;
+    var body = descMsg(pc.localDescription, C.connId, C.stage);
+    function shout() {
+      if (C.link) C.link.send("OFFER", body, dst);
+      else eachLink(function (l) { l.send("OFFER", body, dst); });
+    }
+    shout();
+    if (mode === "renego" || mode === "restart") {
+      /* a renegotiation can be dropped by a relay too — repeat while it hangs */
+      var left = 3;
+      clearInterval(C.renego);
+      C.renego = setInterval(function () {
+        if (C.pc !== pc || pc.signalingState === "stable" || left-- <= 0) { clearInterval(C.renego); C.renego = 0; return; }
+        shout();
+      }, 2500);
+      return;
+    }
+    /* relays keep nothing, so a call placed before the screen finished
+       subscribing would simply vanish. Repeat until it is answered. */
+    clearInterval(C.shout);
+    var beats = 0;
+    C.shout = setInterval(function () {
+      beats++;
+      if (C.connected || !C.want || C.pc !== pc || pc.signalingState !== "have-local-offer") {
+        clearInterval(C.shout); C.shout = 0; return;
+      }
+      if (beats === 4 && climb()) { clearInterval(C.shout); C.shout = 0; camOffer(); return; }
+      if (beats > 9) {
+        clearInterval(C.shout); C.shout = 0;
+        cStatus("bad", "Nobody answered on " + C.code);
+        cWarn("Nothing is listening on " + C.code + ". Check the digits, or press the refresh button on the screen for a new code.");
+        return;
+      }
+      if (beats === 2) cStatus("wait", "Still calling " + C.code + "…");
+      shout();
+    }, 1800);
+  }).catch(function (e) { cStatus("bad", "Offer failed: " + e.message); });
+}
+
+function later(ms) {
+  if (!C.want || C.manual) return;
+  clearTimeout(C.retry);
+  C.retry = setTimeout(function () {
+    if (C.want && !C.connected) { log("[camera] retrying"); camOffer(); }
+  }, ms);
+}
+
+function camSignal(m, link) {
+  if (m.type === "LEAVE") {
+    cameraSessionEnded("Session ended — ready to connect again");
+    return;
+  }
+  if (m.type === "ANSWER") {
     if (!C.pc || C.pc.signalingState !== "have-local-offer") return;
+    if (link) C.link = link;
     clearInterval(C.shout); C.shout = 0;
-    C.pc.setRemoteDescription(message.payload.sdp).then(function () {
-      var pending = C.pend.slice(); C.pend = [];
-      pending.forEach(function (candidate) { C.pc.addIceCandidate(candidate).catch(function () {}); });
-      cStatus("wait", "Viewing screen answered — opening local video…");
-    }).catch(function (e) { cWarn(e.message || String(e)); });
+    clearInterval(C.renego); C.renego = 0;
+    C.pc.setRemoteDescription(limitAnswerBitrate(m.payload.sdp)).then(function () {
+      /* Sender parameters only populate once negotiation has run. */
+      C.brTries = 0;
+      applyBitrate(false);
+      if (!C.connected) { cStatus("wait", "Answered — finding a route"); routeWatch(); }
+    }).catch(function (e) { log("[camera] answer: " + e.message); });
     return;
   }
-  if (message.type === "CANDIDATE") {
-    var candidate = message.payload && message.payload.candidate;
-    if (!candidate) return;
-    if (C.pc && C.pc.remoteDescription) C.pc.addIceCandidate(candidate).catch(function () {});
-    else C.pend.push(candidate);
+  if (m.type === "CANDIDATE") {
+    var c = m.payload && m.payload.candidate;
+    if (lanActive() && c && c.candidate && !isHostCand(c)) return;
+    if (c && C.pc) C.pc.addIceCandidate(c).catch(function () {});
     return;
   }
-  if (message.type === "LEAVE") cameraSessionEnded("Viewing screen left — enter a new code to reconnect");
+  if (m.type === "EXPIRE") {
+    cStatus("bad", "No screen on code " + C.code);
+    cWarn("Code " + C.code + " is not listening. Check the digits on the other screen.");
+  }
 }
 
 function camWireDC(ch) {
@@ -1799,10 +3015,7 @@ function camWireDC(ch) {
     C.beat = setInterval(function () {
       if (ch.readyState !== "open") { clearInterval(C.beat); C.beat = 0; return; }
       try { ch.send('{"t":"ping"}'); } catch (e) {}
-      if (C.connected && Date.now() - C.lastPong > 9000) {
-        C.lastPong = Date.now();
-        cStatus("wait", "The local control link is not responding");
-      }
+      if (C.connected && Date.now() - C.lastPong > 9000) { C.lastPong = Date.now(); restartIce(false); }
     }, 2000);
   };
   ch.onclose = function () {
@@ -1828,7 +3041,9 @@ function handleCmd(k, v, id) {
   else if (k === "af") { pulseFocusRing(.5, .5); job = doFocus(); }
   else if (k === "zoomStep") job = stepZoom(v);
   else if (k === "zoomSet") job = setZoom(v);
+  else if (k === "fps") job = setFps(v).then(function () { return v + " fps on the phone"; });
   else if (k === "res") job = setRes(v).then(function () { return "Size " + String(v).replace("x", " × "); });
+  else if (k === "pause") { setPause(!!v); job = Promise.resolve(v ? "Camera held" : "Camera resumed"); }
   else if (k === "snap") { grabStill($("local"), "tether-phone"); job = Promise.resolve("Photo saved on the phone"); }
   else if (k === "mic") job = setMic(!!v).then(function () { return v ? "Microphone on" : "Microphone off"; });
   else if (k === "camStep") job = stepCamera(v);
@@ -1910,46 +3125,55 @@ function startDigitalZoom() {
 }
 
 function setTorch(want) {
+  if (want && C.paused) setPause(false);
   function applyToCurrentTrack(switched) {
     var t = vtrack();
     if (!t || !t.applyConstraints) return Promise.resolve("LED is not available on this camera");
-    var supported = {}, caps = {};
-    try { supported = navigator.mediaDevices.getSupportedConstraints ? navigator.mediaDevices.getSupportedConstraints() : {}; } catch (e) {}
+    var caps = {}, st0 = {};
     try { caps = t.getCapabilities ? (t.getCapabilities() || {}) : {}; } catch (e) {}
-    var advertised = caps.torch === true || supported.torch === true || C.caps.torch === true;
+    try { st0 = t.getSettings ? (t.getSettings() || {}) : {}; } catch (e) {}
+    /* Only per-track evidence is trusted. navigator.mediaDevices
+       .getSupportedConstraints() lists "torch" even on desktops, where every
+       webcam silently ignores the request — that is why the button used to
+       claim success while nothing lit up. */
+    var trackExposes = caps.torch === true || "torch" in st0;
     var attempts = [
       { advanced: [{ torch: want }] },
-      { torch: want },
-      { torch: { ideal: want } },
-      { advanced: [{ torch: { exact: want } }] }
+      { advanced: [{ torch: { exact: want } }] },
+      { torch: { exact: want } }
     ];
     var i = 0, wasEnabled = t.enabled;
     if (want && !wasEnabled) t.enabled = true;
 
-    function inspect() {
+    function confirmed() {
       var st = {};
       try { st = t.getSettings ? (t.getSettings() || {}) : {}; } catch (e) {}
       if ("torch" in st) return !!st.torch === want;
-      /* Some Android builds apply torch correctly but omit it from settings;
-         an advertised capability plus a resolved constraint is sufficient. */
-      return advertised || !want;
+      /* Some Android builds apply the torch but omit it from settings; when
+         the track itself advertised the capability, a resolved request is
+         proof enough. Silent tracks that never advertised it say no. */
+      return caps.torch === true;
     }
     function next() {
       if (i >= attempts.length) return Promise.resolve(false);
       var q = attempts[i++];
       return t.applyConstraints(q).then(function () {
         return new Promise(function (resolve) {
-          setTimeout(function () { resolve(inspect()); }, 100);
+          setTimeout(function () { resolve(confirmed()); }, 120);
         }).then(function (ok) { return ok ? true : next(); });
-      }, next);
+      }, function () { return next(); });
     }
     return next().then(function (ok) {
-      if (!wasEnabled && !want) t.enabled = false;
-      C.torch = !!(want && ok);
+      if (C.paused) t.enabled = false;
+      else if (!wasEnabled && !want) t.enabled = false;
       if (ok) C.caps.torch = true;
+      C.torch = !!(want && ok);
       paintTorch(); pushState();
-      if (!ok) return want ? "LED is not exposed by this browser or camera" : "LED off";
-      return (switched ? "Rear camera · " : "") + (want ? "LED on" : "LED off");
+      if (ok) return (switched ? "Rear camera · " : "") + (want ? "LED on" : "LED off");
+      if (!want) return "LED off";
+      return trackExposes
+        ? "The camera refused the LED request"
+        : "This camera does not expose an LED to the browser";
     });
   }
 
@@ -1981,26 +3205,28 @@ function pulseFocusRing(x, y) {
 function doFocus(x, y) {
   var t = vtrack();
   if (!t || !t.applyConstraints) return Promise.resolve("No camera is running");
-  var caps = {}, supported = {};
+  var caps = {};
   try { caps = t.getCapabilities ? (t.getCapabilities() || {}) : {}; } catch (e) {}
-  try { supported = navigator.mediaDevices.getSupportedConstraints ? navigator.mediaDevices.getSupportedConstraints() : {}; } catch (e) {}
+  /* Only the track's own capability list is trusted — the engine-wide list
+     from getSupportedConstraints() claims focus support on desktop webcams
+     that simply ignore these requests, which made the button lie. */
   var reported = Array.isArray(caps.focusMode) ? caps.focusMode.slice() : (caps.focusMode ? [caps.focusMode] : []);
-  var modes = [];
-  ["single-shot", "continuous"].forEach(function (m) {
-    if (!reported.length || reported.indexOf(m) >= 0) modes.push(m);
-  });
+  var poiOk = caps.pointsOfInterest === true || Array.isArray(caps.pointsOfInterest);
   var attempts = [];
-  modes.forEach(function (mode) {
-    var q = { focusMode: mode };
-    if (x != null && y != null) q.pointsOfInterest = [{ x: x, y: y }];
-    attempts.push({ q: { advanced: [q] }, mode: mode });
-    attempts.push({ q: q, mode: mode });
-  });
-  if (x != null && y != null) {
-    var point = { pointsOfInterest: [{ x: x, y: y }] };
-    attempts.push({ q: { advanced: [point] }, mode: "" });
-    attempts.push({ q: point, mode: "" });
+  if (x != null && y != null && poiOk) {
+    /* Point focus first when the track says it understands points; modes it
+       advertised are attached so the lens actually re-meters on the spot. */
+    var poiModes = reported.length ? reported.slice() : ["single-shot", ""];
+    poiModes.forEach(function (mode) {
+      var q = { pointsOfInterest: [{ x: x, y: y }] };
+      if (mode) q.focusMode = mode;
+      attempts.push({ q: { advanced: [q] }, mode: mode, poi: true });
+    });
   }
+  ["single-shot", "continuous"].forEach(function (mode) {
+    if (reported.indexOf(mode) < 0) return;
+    attempts.push({ q: { advanced: [{ focusMode: mode }] }, mode: mode });
+  });
   var i = 0;
   function next() {
     if (i >= attempts.length) return Promise.resolve(false);
@@ -2008,11 +3234,12 @@ function doFocus(x, y) {
     return t.applyConstraints(a.q).then(function () {
       var st = {};
       try { st = t.getSettings ? (t.getSettings() || {}) : {}; } catch (e) {}
-      var advertised = a.mode ? (reported.indexOf(a.mode) >= 0 || supported.focusMode === true)
-        : supported.pointsOfInterest === true;
-      /* single-shot may return to continuous immediately after the lens moves,
-         so capability support also counts as a successful focus request. */
-      var ok = advertised || (a.mode && st.focusMode === a.mode);
+      /* single-shot may return to continuous immediately after the lens
+         moves, so a track-advertised mode on a resolved request also counts;
+         a settings echo is accepted whenever the browser provides one. */
+      var ok = (a.mode && st.focusMode === a.mode) ||
+        (a.mode && reported.indexOf(a.mode) >= 0) ||
+        (a.poi && poiOk && !a.mode);
       return ok ? true : next();
     }, next);
   }
@@ -2028,13 +3255,19 @@ function doFocus(x, y) {
     }
     /* Browsers such as Safari do not expose lens controls. Reopening the
        physical track makes the camera perform its normal acquisition focus,
-       so the button still has a useful, visible effect on those phones. */
+       so the button still has a useful, visible effect on those phones — and
+       on a webcam with a fixed lens the message now says so honestly. */
+    var capCount = 0;
+    try { capCount = Object.keys(caps).length; } catch (e) {}
+    var phoneLike = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || "");
+    if (!phoneLike && capCount > 6)
+      return "Manual focus is unavailable on this camera";
     var before = t;
     return openCamera().then(function () {
       var after = vtrack();
       if (after && after !== before && after.readyState === "live")
-        return x != null ? "Camera refocused (point focus is not exposed)" : "Camera refocused";
-      return "Focus is not exposed by this browser or camera";
+        return x != null ? "Camera refocused (point focus is unavailable here)" : "Camera refocused";
+      return "Lens focus is unavailable on this camera";
     });
   });
 }
@@ -2101,12 +3334,21 @@ function stepCamera(dir) {
   sel.selectedIndex = i;
   return openCamera().then(function () { return "Camera: " + sel.options[i].textContent; });
 }
+function setPause(want) {
+  C.paused = want;
+  var t = vtrack(); if (t) t.enabled = !want;
+  var ot = outVtrack(); if (ot && ot !== t) ot.enabled = !want;
+  var a = atrack(); if (a) a.enabled = !want && C.mic;
+  $("cHold").classList.toggle("on", want);
+  $("cHoldT").textContent = want ? "Resume" : "Hold";
+  pushState();
+}
 function setMic(want) {
   C.mic = want;
   $("cMic").classList.toggle("on", want);
   var a = atrack();
   if (want && !a) return openCamera();
-  if (a) a.enabled = want;
+  if (a) a.enabled = want && !C.paused;
   pushState();
   return Promise.resolve();
 }
@@ -2126,43 +3368,76 @@ function pushBattery() {
 
 function cameraSessionEnded(message) {
   if (C.ending) return;
-  C.ending = true; C.want = false;
-  clearTimeout(C.endT); camCloseConn();
+  C.ending = true;
+  C.want = false;
+  C.manual = true;
+  clearTimeout(C.retry);
+  clearTimeout(C.endT);
+  camCloseConn();
   if (C.bus) { C.bus.close(); C.bus = null; }
-  C.code = null; $("cStop").disabled = true;
-  $("camPanel").classList.add("show"); $("cStats").style.display = "none";
-  cWarn(""); cStatus("", message || "Session ended — enter a pairing code to reconnect");
+  C.link = null;
+  C.code = null;
+  $("cStop").disabled = true;
+  $("camPanel").classList.add("show");
+  $("cStats").style.display = "none";
+  cWarn("");
+  cStatus("", message || "Session ended — ready to connect again");
   C.ending = false;
 }
 function camCloseConn() {
-  clearInterval(C.beat); C.beat = 0; clearInterval(C.shout); C.shout = 0;
+  clearTimeout(C.routeT);
+  clearInterval(C.shout); C.shout = 0;
+  clearInterval(C.renego); C.renego = 0;
+  clearTimeout(C.negoT); C.pending = false;
   if (C.dc) { try { C.dc.close(); } catch (e) {} C.dc = null; }
   if (C.pc) { try { C.pc.close(); } catch (e) {} C.pc = null; }
-  C.connected = false; C.pend = [];
+  C.connected = false;
   clearInterval(C.statT); C.statT = 0;
 }
 function camStop() {
-  camBye(); C.want = false; C.ending = true;
-  clearTimeout(C.endT); camCloseConn();
+  camBye();
+  C.want = false;
+  C.ending = true;
+  clearTimeout(C.retry);
+  clearTimeout(C.endT);
+  camCloseConn();
   if (C.bus) { C.bus.close(); C.bus = null; }
+  C.link = null;
   stopDigitalZoom();
-  if (C.rawStream) C.rawStream.getTracks().forEach(function (track) { track.stop(); });
-  else if (C.stream) C.stream.getTracks().forEach(function (track) { track.stop(); });
+  if (C.rawStream) C.rawStream.getTracks().forEach(function (t) { t.stop(); });
+  else if (C.stream) C.stream.getTracks().forEach(function (t) { t.stop(); });
   C.rawStream = null; C.stream = null; C.zoom = 1; C.code = null;
-  $("local").srcObject = null; $("cStop").disabled = true;
-  $("camPanel").classList.add("show"); $("cStats").style.display = "none";
-  cStatus("", "Camera off"); C.ending = false;
+  $("local").srcObject = null;
+  $("cStop").disabled = true;
+  $("camPanel").classList.add("show");
+  $("cStats").style.display = "none";
+  cStatus("", "Camera off");
+  C.ending = false;
 }
 function camBye() {
   try { if (C.dc && C.dc.readyState === "open") C.dc.send(JSON.stringify({ t: "bye" })); } catch (e) {}
-  try { if (C.bus && C.code) C.bus.send("LEAVE", { connectionId: C.connId }, "tether-" + C.code); } catch (e) {}
+  try { if (C.link && C.code) C.link.send("LEAVE", { connectionId: C.connId }, "tether-" + C.code); } catch (e) {}
   try { if (C.pc) C.pc.close(); } catch (e) {}
 }
-window.addEventListener("pagehide", camBye);
-window.addEventListener("pageshow", function () {
-  if (role === "cam" && C.want && (!C.pc || C.pc.signalingState === "closed"))
-    cameraSessionEnded("Page restored — enter the pairing code again");
+function resumeCameraPage() {
+  if (C.resuming || !C.resumeAfterPage || !C.want || !C.code) return;
+  C.resuming = true;
+  C.resumeAfterPage = false;
+  var code = C.code;
+  camCloseConn();
+  if (C.bus) { C.bus.close(); C.bus = null; }
+  C.link = null;
+  var track = vtrack();
+  Promise.resolve(track && track.readyState === "live" ? null : openCamera()).then(function () {
+    C.resuming = false;
+    if (C.want) camConnect(code);
+  }, function () { C.resuming = false; });
+}
+window.addEventListener("pagehide", function () {
+  if (role === "cam" && C.want) C.resumeAfterPage = true;
+  camBye();
 });
+window.addEventListener("pageshow", resumeCameraPage);
 
 setInterval(function () {
   if (role !== "cam" || !C.pc || document.hidden) return;
@@ -2179,16 +3454,17 @@ setInterval(function () {
 
 /* --- camera wiring --- */
 on($("cConnect"), "click", function () { camConnect($("cCode").value); });
-on($("cCode"), "keydown", function (e) { if (e.key === "Enter") camConnect($("cCode").value); });
 on($("cStop"), "click", camStop);
-on($("cExit"), "click", function () { camStop(); show("start"); });
+on($("cExit"), "click", function () { stopScan(); camStop(); show("start"); });
 on($("cPanelBtn"), "click", function () { $("camPanel").classList.toggle("show"); });
 on($("cHelp"), "click", function () { openDlg("dlgHelp"); });
+on($("cCode"), "keydown", function (e) { if (e.key === "Enter") camConnect($("cCode").value); });
 on($("cLed"), "click", function () { setTorch(!C.torch).then(function (m) { if (m) toast(m); }); });
 on($("cFocus"), "click", function () {
   pulseFocusRing(.5, .5);
   doFocus().then(function (m) { if (m) toast(m); });
 });
+on($("cHold"), "click", function () { setPause(!C.paused); });
 on($("cMic"), "click", function () { setMic(!C.mic); });
 on($("cGrid"), "click", function () { $("camGrid").classList.toggle("on"); $("cGrid").classList.toggle("on"); });
 on($("cSnap"), "click", function () { grabStill($("local"), "tether-phone"); });
@@ -2206,6 +3482,11 @@ on($("cWake"), "click", function () {
 document.addEventListener("visibilitychange", function () {
   if (document.visibilityState === "visible" && $("cWake").classList.contains("on") && !C.wake && navigator.wakeLock) {
     navigator.wakeLock.request("screen").then(function (w) { C.wake = w; }).catch(function () {});
+  }
+  if (document.visibilityState === "visible" && role === "cam" && C.want &&
+      (!C.pc || C.pc.signalingState === "closed")) {
+    C.resumeAfterPage = true;
+    resumeCameraPage();
   }
 });
 on($("cPick"), "change", function () { if (C.stream) openCamera(); });
@@ -2240,13 +3521,95 @@ on($("camStage"), "click", function (e) {
 
 
 /* ==================================================================== */
+/* SCANNING THE PAIRING SQUARE                                          */
+/* ==================================================================== */
+var SCAN = { on: false, timer: 0, det: null, busy: false, cv: null, g: null, tries: 0 };
+
+function scanParse(txt) {
+  txt = String(txt || "");
+  var m = /TETHER-PAIR-V1:(\d{4})/.exec(txt) || /[?&]c=(\d{4})/.exec(txt) || /^\s*(\d{4})\s*$/.exec(txt);
+  return m ? m[1] : null;
+}
+
+function startScan() {
+  if (SCAN.on) return;
+  if (!C.stream) {
+    cStatus("wait", "Opening the camera…");
+    openCamera().then(function () { if (C.stream) startScan(); });
+    return;
+  }
+  SCAN.on = true; SCAN.tries = 0;
+  $("scanBox").classList.add("on");
+  $("cScan").classList.add("on");
+  cStatus("wait", "Looking for the square…");
+  if (window.BarcodeDetector) {
+    try { SCAN.det = new BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { SCAN.det = null; }
+  }
+  if (!SCAN.cv) { SCAN.cv = document.createElement("canvas"); SCAN.g = SCAN.cv.getContext("2d", { willReadFrequently: true }); }
+  clearInterval(SCAN.timer);
+  SCAN.timer = setInterval(scanTick, 140);
+}
+function stopScan() {
+  SCAN.on = false;
+  clearInterval(SCAN.timer); SCAN.timer = 0;
+  $("scanBox").classList.remove("on");
+  $("cScan").classList.remove("on");
+}
+function scanTick() {
+  var v = $("local");
+  if (!SCAN.on || SCAN.busy || !v.videoWidth) return;
+  SCAN.tries++;
+  if (SCAN.tries === 60) cStatus("wait", "Still looking — fill the frame with the square, hold it square on");
+  if (SCAN.det) {
+    SCAN.busy = true;
+    SCAN.det.detect(v).then(function (r) {
+      SCAN.busy = false;
+      for (var i = 0; r && i < r.length; i++) { var c = scanParse(r[i].rawValue); if (c) return scanHit(c); }
+    }, function () { SCAN.busy = false; SCAN.det = null; });
+    return;
+  }
+  var W = 480, H = Math.max(1, Math.round(v.videoHeight * W / v.videoWidth));
+  if (v.videoWidth < v.videoHeight) { H = 480; W = Math.max(1, Math.round(v.videoWidth * H / v.videoHeight)); }
+  SCAN.cv.width = W; SCAN.cv.height = H;
+  SCAN.g.drawImage(v, 0, 0, W, H);
+  var txt;
+  try { txt = qrDecodeImage(SCAN.g.getImageData(0, 0, W, H).data, W, H); } catch (e) { txt = null; }
+  var code = scanParse(txt);
+  if (code) scanHit(code);
+}
+function scanHit(code) {
+  stopScan();
+  try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {}
+  $("cCode").value = code;
+  toast("Code " + code + " — connecting");
+  camConnect(code);
+}
+on($("cScan"), "click", function () { if (SCAN.on) stopScan(); else startScan(); });
+on($("cScanStop"), "click", stopScan);
+
+/* ==================================================================== */
 /* CONNECTION CHECK                                                     */
 /* ==================================================================== */
 function dline(t) { $("diagBody").textContent += t + "\n"; }
+function probeRelay(spec) {
+  return new Promise(function (res) {
+    var t0 = Date.now(), done = false, L = null;
+    function fin(txt) { if (done) return; done = true; try { if (L) L.close(); } catch (e) {} res(txt); }
+    var to = setTimeout(function () { fin("unreachable, gave up after 8 s"); }, 8000);
+    var hooks = {
+      up: function () { clearTimeout(to); fin("reachable in " + (Date.now() - t0) + " ms"); },
+      down: function () {}, msg: function () {},
+      error: function (m) { clearTimeout(to); fin("refused: " + m); },
+      taken: function () { clearTimeout(to); fin("reachable"); }
+    };
+    try { L = spec.kind === "mqtt" ? MqttLink(spec, "tether-probe-" + rid(6), hooks) : PeerLink(spec, "tether-probe-" + rid(6), hooks); }
+    catch (e) { clearTimeout(to); fin("failed: " + e.message); }
+  });
+}
 function probeIce() {
   return new Promise(function (res) {
     var kinds = { host: 0, srflx: 0, relay: 0, prflx: 0 }, pc;
-    try { pc = new RTCPeerConnection(iceConf()); } catch (e) { res("could not start: " + e.message); return; }
+    try { pc = new RTCPeerConnection(iceConf(2)); } catch (e) { res("could not start: " + e.message); return; }
     try { pc.createDataChannel("probe"); } catch (e) {}
     pc.onicecandidate = function (e) {
       if (!e.candidate) return;
@@ -2257,7 +3620,7 @@ function probeIce() {
     setTimeout(function () {
       try { pc.close(); } catch (e) {}
       res("local " + kinds.host + " · public " + kinds.srflx + " · relayed " + kinds.relay +
-        "  (public and relayed candidates must stay at zero)");
+        (kinds.srflx ? "" : "  (STUN is blocked, only same-network pairing will work)"));
     }, 5000);
   });
 }
@@ -2265,25 +3628,37 @@ function runDiag() {
   openDlg("dlgDiag");
   $("diagBody").textContent = "";
   $("diagRun").disabled = true;
-  dline("Tether local connection check · " + new Date().toLocaleString());
+  dline("Tether connection check · " + new Date().toLocaleString());
   dline("page           : " + location.href);
   dline("browser        : " + navigator.userAgent);
   dline("secure context : " + (window.isSecureContext ? "yes" : "NO — the camera will be blocked, serve over https"));
-  dline("in a frame     : " + (window.top !== window.self ? "YES — open it in its own tab" : "no"));
+  dline("in a frame     : " + (window.top !== window.self ? "YES — open it in its own tab, frames block the camera" : "no"));
   dline("WebRTC         : " + (window.RTCPeerConnection ? "present" : "MISSING in this browser"));
-  dline("signaling      : online handshake only");
-  dline("media servers  : none (no STUN or TURN)");
   navigator.mediaDevices.enumerateDevices().then(function (devs) {
     var cams = devs.filter(function (d) { return d.kind === "videoinput"; });
     dline("cameras        : " + cams.length + (cams.length && cams[0].label ? " — " + cams.map(function (d) { return d.label; }).join(" / ") : " (names appear after permission)"));
   }, function (e) { dline("cameras        : " + e.message); }).then(function () {
     dline("");
-    dline("ICE candidates, five second local-only sample");
+    dline("pairing relays");
+    var specs = relaySpecs();
+    return specs.reduce(function (chain, sp) {
+      return chain.then(function () {
+        dline("  " + (sp.label + "              ").slice(0, 14) + ": testing…");
+        return probeRelay(sp).then(function (r) {
+          var lines = $("diagBody").textContent.split("\n");
+          lines[lines.length - 2] = "  " + (sp.label + "              ").slice(0, 14) + ": " + r;
+          $("diagBody").textContent = lines.join("\n");
+        });
+      });
+    }, Promise.resolve());
+  }).then(function () {
+    dline("");
+    dline("ice candidates, five second sample");
     return probeIce();
   }).then(function (r) {
     dline("  " + r);
     dline("");
-    dline("Only local host candidates are permitted. Both devices must use the same Wi-Fi.");
+    dline("If every relay is unreachable, no code can be exchanged on this network.");
     $("diagRun").disabled = false;
   });
 }
@@ -2296,18 +3671,39 @@ on($("diagCopy"), "click", function () { copyText($("diagBody").textContent); })
 /* ==================================================================== */
 function formFromCfg() {
   $("optBeep").checked = cfg.beep;
+  $("optLocal").checked = cfg.local;
+  $("optLanOnly").checked = cfg.lanOnly;
+  $("optRelayOnly").checked = cfg.relayOnly;
+  $("optRoute").value = cfg.route;
+  $("optTurn").value = cfg.turn;
+  $("optTurnU").value = cfg.turnU;
+  $("optTurnP").value = cfg.turnP;
+  $("optPeerHost").value = cfg.peerHost;
 }
 on($("optSave"), "click", function () {
   cfg.beep = $("optBeep").checked;
-  store.set("beep", cfg.beep);
+  cfg.local = $("optLocal").checked;
+  cfg.lanOnly = $("optLanOnly").checked;
+  cfg.relayOnly = $("optRelayOnly").checked;
+  cfg.route = $("optRoute").value;
+  cfg.turn = $("optTurn").value.trim();
+  cfg.turnU = $("optTurnU").value.trim();
+  cfg.turnP = $("optTurnP").value;
+  cfg.peerHost = ($("optPeerHost").value.trim() || "0.peerjs.com").replace(/^wss?:\/\//, "").replace(/\/.*$/, "");
+  Object.keys(cfg).forEach(function (k) { store.set(k, cfg[k]); });
   closeDlg();
   toast("Settings saved");
+  log("settings saved · relay=" + cfg.route + " localFirst=" + cfg.local);
+});
+on($("turnPreset"), "click", function () {
+  $("optTurn").value = "turn:staticauth.openrelay.metered.ca:80\nturn:staticauth.openrelay.metered.ca:443?transport=tcp\nturns:staticauth.openrelay.metered.ca:443?transport=tcp";
+  $("optTurnU").value = "openrelayproject";
+  $("optTurnP").value = "openrelayproject";
+  toast("Filled in — press Save, then run the connection check");
 });
 on($("optReset"), "click", function () {
-  cfg.beep = DEF.beep;
-  store.set("beep", DEF.beep);
+  Object.keys(DEF).forEach(function (k) { cfg[k] = DEF[k]; store.set(k, DEF[k]); });
   formFromCfg();
-  applyTone("soft");
   toast("Defaults restored");
 });
 
@@ -2319,6 +3715,24 @@ Array.prototype.forEach.call(document.querySelectorAll("[data-tone-set]"), funct
   on(b, "click", function () { applyTone(b.getAttribute("data-tone-set")); });
 });
 
+/* a plain readout of which pairing relays answered, so a blocked network is
+   visible instead of showing up as a pairing that simply never happens */
+setInterval(function () {
+  var el = role === "cam" ? $("cRelay") : $("vRelay");
+  var bus = role === "cam" ? C.bus : V.bus;
+  if (!el) return;
+  if (!bus) { el.textContent = "Pairing relays: idle"; el.classList.remove("bad"); return; }
+  var parts = bus.links.map(function (l) { return l.label + (l.isReady() ? " up" : " down"); });
+  var up = bus.ready().length;
+  el.innerHTML = "Pairing relays: <b>" + parts.join("</b> · <b>") + "</b>";
+  el.classList.toggle("bad", up === 0);
+  if (up === 0 && !bus.warned && Date.now() - (bus.born || 0) > 12000) {
+    bus.warned = true;
+    if (role === "cam") cWarn("No pairing relay answered from this phone. Try another relay under Settings.");
+    else vWarn("No pairing relay answered on this network. Try another relay under Settings.");
+  }
+}, 2000);
+
 formFromCfg();
 /* Keep the last working sender ceiling across mobile page restores. */
 (function restoreBitrate() {
@@ -2328,6 +3742,8 @@ formFromCfg();
 on($("pickViewer"), "click", function () { vNewCode(); });
 on($("pickCamera"), "click", function () {
   show("cam");
+  var last = store.get("lastCode", "");
+  if (last) $("cCode").value = last;
   cStatus("", "Camera off");
   openCamera();
 });
@@ -2343,12 +3759,57 @@ if (window.top !== window.self) {
     '<a href="' + location.href + '" target="_blank" rel="noopener">Open it in its own tab</a>.</div>');
 }
 
-show("start");
+(function readiness() {
+  var el = $("ready");
+  if (!el) return;
+  var bits = [];
+  var bad = false;
+  if (window.top !== window.self) { bits.push("<b>inside a frame</b> — open in its own tab"); bad = true; }
+  if (!window.isSecureContext && location.hostname !== "localhost") { bits.push("<b>not https</b> — the camera will be blocked"); bad = true; }
+  if (!window.RTCPeerConnection) { bits.push("<b>no WebRTC</b> in this browser"); bad = true; }
+  if (bad) {
+    el.innerHTML = bits.join("<br>");
+    el.classList.add("bad");
+    return;
+  }
+  el.innerHTML = "Page served over https. Testing the pairing relays…";
+  var specs = relaySpecs(), done = 0, ok = 0, names = [];
+  specs.forEach(function (sp) {
+    probeRelay(sp).then(function (r) {
+      done++;
+      var good = r.indexOf("reachable") === 0;
+      if (good) ok++;
+      names.push(sp.label + (good ? " up" : " blocked"));
+      if (done === specs.length) {
+        if (ok) el.innerHTML = "Ready. Pairing relays: <b>" + names.join("</b> · <b>") + "</b>";
+        else {
+          el.classList.add("bad");
+          el.innerHTML = "No pairing relay answered here: <b>" + names.join("</b> · <b>") + "</b>.<br>" +
+            "Pairing cannot start on this network. Pick another relay under Settings, or use a different connection.";
+        }
+      }
+    });
+  });
+})();
+
+(function route_() {
+  var q = new URLSearchParams(location.search);
+  var c = (q.get("c") || "").replace(/\D/g, "");
+  if (c.length === 4) {
+    show("cam");
+    $("cCode").value = c;
+    C.code = c;
+    cStatus("wait", "Code " + c + " — press Connect");
+    if (!secure()) cWarn("The camera needs an https page.");
+    return;
+  }
+  show("start");
+})();
 
 drawStrip();
 log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e9de99cf40932b',t:'MTc4NzMxNzczOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e8597b0febc9f3',t:'MTc4NzMwMTgwMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e9e4f4088b932b',t:'MTc4NzMxNzk5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
