@@ -198,6 +198,8 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .viewscan{margin:9px 0;padding:9px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r);text-align:center}
 .viewscan video{display:block;width:100%;max-height:210px;object-fit:contain;background:var(--matte);border-radius:5px}
 .viewscan .btn{margin-top:7px}
+.viewscan.armed{border-color:var(--acc);background:var(--acc-soft)}
+.viewscan.armed:before{content:"Computer camera armed for the phone answer";display:block;margin:0 0 8px;font-size:12.5px;font-weight:600;color:var(--acc-ink)}
 body.qrviewscanning{overflow:hidden}
 body.qrviewscanning .viewscan{position:fixed;inset:0;z-index:100;margin:0;padding:18px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;background:#111}
 body.qrviewscanning .viewscan video{width:100%;height:100%;max-height:none;object-fit:contain;background:#111}
@@ -605,7 +607,7 @@ body.live .hideonlive{display:none}
         </details>
         <div class="rowbtns"><button class="btn" id="cStop" disabled>Stop</button></div>
         <div id="cAnswerWrap" style="display:none">
-          <p class="pairnote"><b>2.</b> Show this animated answer QR to the viewing screen.</p>
+          <p class="pairnote"><b>2.</b> Hold this phone screen in front of the viewing computer’s camera. Pairing finishes automatically.</p>
           <div class="signalqr"><canvas id="cAnswerQr" width="320" height="320"></canvas><p id="cAnswerQrState">Creating answer…</p></div>
           <button class="btn sm" id="cAnswerClose">Show smaller</button>
           <details class="manualpair"><summary>Manual fallback: copy the answer</summary>
@@ -1281,7 +1283,9 @@ function startQrCarousel(key, canvas, text, kind, stateEl) {
       var frame = "TF1|" + kind + "|" + id + "|" + k.toString(36) + "|" + bytes.length.toString(36) + "|" + mode + "|" + token + "|" + bytesToUrl64(data);
       var targets = Array.isArray(canvas) ? canvas : [canvas];
       targets.forEach(function (target) { try { drawQR(target, frame); } catch (e) {} });
-      if (stateEl) stateEl.textContent = "Fountain QR — " + label + " · keep scanning";
+      if (stateEl) stateEl.textContent = kind === "A"
+        ? "Waiting for the viewing computer to read this answer…"
+        : "Animated offer — keep the phone scanner pointed here";
       at++;
     }
     paint();
@@ -1897,11 +1901,13 @@ function stopViewerAnswerScan() {
   stopActiveQrScan();
   document.body.classList.remove("qrviewscanning");
   $("vScanWrap").style.display = "none";
+  $("vScanWrap").classList.remove("armed");
   $("vScanVideo").srcObject = null;
 }
-function startViewerAnswerScan() {
+function startViewerAnswerScan(background) {
   stopViewerAnswerScan();
-  document.body.classList.add("qrviewscanning");
+  if (!background) document.body.classList.add("qrviewscanning");
+  $("vScanWrap").classList.toggle("armed", !!background);
   $("vScanWrap").style.display = "block";
   $("vScanState").textContent = "Opening this computer's camera…";
   $("vScanBar").style.width = "0%";
@@ -1934,7 +1940,7 @@ on($("vCopyOffer"), "click", function () {
   copyText($("vOffer").value);
 });
 on($("vUseAnswer"), "click", vUseLocalAnswer);
-on($("vScanAnswer"), "click", startViewerAnswerScan);
+on($("vScanAnswer"), "click", function () { startViewerAnswerScan(false); });
 on($("vScanStop"), "click", stopViewerAnswerScan);
 on($("vExit"), "click", function () { vTeardown(); show("start"); });
 on($("vSet"), "click", function () { openDlg("dlgSet"); });
@@ -3067,7 +3073,10 @@ formFromCfg();
   var saved = String(store.get("bitrate", 1500));
   if (Array.prototype.some.call($("cBr").options, function (o) { return o.value === saved; })) $("cBr").value = saved;
 })();
-on($("pickViewer"), "click", function () { vNewCode(); });
+on($("pickViewer"), "click", function () {
+  vNewCode();
+  startViewerAnswerScan(true);
+});
 on($("pickCamera"), "click", function () {
   show("cam");
   cStatus("", "Camera off");
@@ -3092,5 +3101,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e9a309ca8da580',t:'MTc4NzMxNTI5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e9ae2fbaa560b5',t:'MTc4NzMxNTc1NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
