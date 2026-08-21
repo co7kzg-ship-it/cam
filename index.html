@@ -191,12 +191,17 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .localpair .pairnote:first-child{margin-top:0}
 .signalbox{min-height:82px;max-height:180px;font-size:10.5px!important;line-height:1.35!important;word-break:break-all}
 .camlocalpair{padding-bottom:16px;border-bottom:1px solid var(--line-2);margin-bottom:16px}
-.signalqr{margin:8px 0;text-align:center;padding:10px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r)}
-.signalqr canvas{display:block;width:min(220px,100%);height:auto;aspect-ratio:1;margin:0 auto;background:#fff;image-rendering:pixelated}
+.signalqr{margin:8px 0;text-align:center;padding:6px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r)}
+.signalqr canvas{display:block;width:min(310px,100%);height:auto;aspect-ratio:1;margin:0 auto;background:#fff;image-rendering:pixelated}
 .signalqr p,.viewscan p{font-size:12.5px;color:var(--dim);margin-top:7px}
 .viewscan{margin:9px 0;padding:9px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r);text-align:center}
 .viewscan video{display:block;width:100%;max-height:210px;object-fit:contain;background:var(--matte);border-radius:5px}
 .viewscan .btn{margin-top:7px}
+body.qrviewscanning{overflow:hidden}
+body.qrviewscanning .viewscan{position:fixed;inset:0;z-index:100;margin:0;padding:18px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;background:#111}
+body.qrviewscanning .viewscan video{width:100%;height:100%;max-height:none;object-fit:contain;background:#111}
+body.qrviewscanning .viewscan p{position:absolute;left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom) + 72px);z-index:2;color:#fff;font-size:16px;font-weight:600;text-shadow:0 1px 4px #000}
+body.qrviewscanning .viewscan .btn{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 20px);z-index:2;background:#fff;color:#111;border-color:#fff}
 .manualpair{margin-top:9px;padding:8px 9px;background:var(--field);border:1px solid var(--line-2);border-radius:var(--r)}
 .manualpair summary{cursor:pointer;font-size:12.5px;color:var(--dim);user-select:none}
 .manualpair[open] summary{margin-bottom:8px}
@@ -244,10 +249,15 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 }
 .focusring.go{animation:fring .7s ease-out}
 @keyframes fring{0%{opacity:1;transform:scale(1.3)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
-.scanbox{position:absolute;inset:0;display:none;z-index:5;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(16,24,28,.48)}
+.scanbox{position:absolute;inset:0;display:none;z-index:5;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(16,24,28,.28)}
 .scanbox.on{display:flex}
-.scanframe{width:min(62vw,240px);height:min(62vw,240px);border:3px solid #fff;border-radius:10px;box-shadow:0 0 0 2000px rgba(16,24,28,.25)}
-.scanhint{color:#fff;font-size:15px;text-align:center;padding:0 24px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.scanframe{width:min(82vw,58dvh,460px);height:min(82vw,58dvh,460px);border:4px solid #fff;border-radius:14px;box-shadow:0 0 0 2000px rgba(16,24,28,.35)}
+.scanhint{color:#fff;font-size:16px;font-weight:600;text-align:center;padding:0 24px;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+body.qrscanning{overflow:hidden}
+body.qrscanning #camStage{position:fixed;inset:0;z-index:90;width:100vw;height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;background:#111}
+body.qrscanning #local{width:100%;height:100%;object-fit:contain}
+body.qrscanning .scanbox{z-index:91;padding:calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 24px)}
+body.qrscanning .scanbox .btn{position:relative;z-index:2;background:#fff;color:#111;border-color:#fff}
 .camdock{
   flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;
   background:var(--bar);border-top:1px solid var(--line);
@@ -984,7 +994,7 @@ function drawQR(cv, text) {
   var m = qrMatrix(text, "L") || qrMatrix(text, "M");
   if (!m) return;
   var n = m.length, quiet = 2, total = n + quiet * 2;
-  var scale = Math.max(2, Math.floor(208 / total));
+  var scale = Math.max(3, Math.floor(320 / total));
   cv.width = cv.height = total * scale;
   var g = cv.getContext("2d");
   g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
@@ -2193,11 +2203,13 @@ function toggleRecord() {
 
 function stopViewerAnswerScan() {
   stopActiveQrScan();
+  document.body.classList.remove("qrviewscanning");
   $("vScanWrap").style.display = "none";
   $("vScanVideo").srcObject = null;
 }
 function startViewerAnswerScan() {
   stopViewerAnswerScan();
+  document.body.classList.add("qrviewscanning");
   $("vScanWrap").style.display = "block";
   $("vScanState").textContent = "Opening this computer's camera…";
   navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "user" } }, audio: false }).then(function (stream) {
@@ -3168,17 +3180,22 @@ setInterval(function () {
 
 function stopPhoneOfferScan() {
   stopActiveQrScan();
+  document.body.classList.remove("qrscanning");
   $("scanBox").classList.remove("on");
+  if (role === "cam" && C.stream && !C.connected) cStatus("wait", "Camera ready");
 }
 function startPhoneOfferScan() {
   var go = C.stream ? Promise.resolve() : openCamera();
   go.then(function () {
     if (!C.stream) throw new Error("Camera unavailable");
+    document.body.classList.add("qrscanning");
     $("scanBox").classList.add("on");
-    $("cScanState").textContent = "Point the phone at the animated offer QR";
+    $("cScanState").textContent = "Fill the large square with the animated offer QR";
+    cStatus("wait", "Scanning the offer QR…");
     scanQrVideo($("local"), "O", null, function (n, total) {
       $("cScanState").textContent = "Reading offer QR — " + n + " of " + total + " blocks";
     }, function (text) {
+      document.body.classList.remove("qrscanning");
       $("scanBox").classList.remove("on");
       $("cOffer").value = text;
       try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {}
@@ -3384,5 +3401,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e974428a2dd06a',t:'MTc4NzMxMzM4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
