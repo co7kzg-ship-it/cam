@@ -158,10 +158,7 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .rotwrap{position:relative;flex:none}
 .frame{position:absolute;left:50%;top:50%;line-height:0;background:var(--matte);border-radius:var(--rp);overflow:hidden}
 #remote{display:block;width:100%;height:100%;background:var(--matte);object-fit:contain}
-.frame.stretch #remote{object-fit:fill}
-.frame.mirror #remote,.frame.mirror .freeze{transform:scaleX(-1)}
-.freeze{position:absolute;inset:0;width:100%;height:100%;display:none}
-.frame.frozen .freeze{display:block}
+.frame.mirror #remote{transform:scaleX(-1)}
 .tally{position:absolute;right:10px;top:10px;display:flex;gap:7px;pointer-events:none}
 .tally span{
   display:none;font:600 12px/1 var(--sans);padding:6px 9px;border-radius:20px;
@@ -338,7 +335,6 @@ body.live #pairSect .pairnote{margin-top:5px}
 <g id="i-gear"><path d="M6.7 2h2.6l.3 1.6 1.1.65 1.55-.55 1.3 2.25-1.2 1.07v1.26l1.2 1.07-1.3 2.25-1.55-.55-1.1.65-.3 1.6H6.7l-.3-1.6-1.1-.65-1.55.55-1.3-2.25 1.2-1.07V7.03l-1.2-1.07 1.3-2.25 1.55.55 1.1-.65z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.85" fill="none" stroke="currentColor" stroke-width="1.2"/></g>
 <g id="i-x"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.4"/></g>
 <g id="i-refresh"><path d="M13.2 8a5.2 5.2 0 1 1-1.65-3.8M13.2 2.3V5h-2.7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
-<g id="i-fps"><path d="M13.4 2.6C6.5 2.6 3.2 5.6 3.2 9.6c0 1.5.6 2.5.6 2.5s2.1-4.5 8-6.8c-3.3 2.3-6.3 4.2-7.3 7.8" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></g>
 <g id="i-save"><path d="M8 2v7.6M4.9 6.8 8 9.9l3.1-3.1M2.8 13.3h10.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-card"><path d="M3.6 2.4h5.6l3.2 3.2v8H3.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 4.9V3.3M8 4.9V3.3M10 5.5V4.1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></g>
 <g id="i-focus"><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.5v2.1M8 12.4v2.1M1.5 8h2.1M12.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
@@ -351,9 +347,7 @@ body.live #pairSect .pairnote{margin-top:5px}
 <g id="i-rec"><circle cx="8" cy="8" r="3.6" fill="currentColor"/><circle cx="8" cy="8" r="6.1" fill="none" stroke="currentColor" stroke-width="1.1"/></g>
 <g id="i-rotate"><path d="M4.2 4.4h6a2.9 2.9 0 0 1 0 5.8H6.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="m8.2 12.4-2.4-2.2 2.4-2.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-mirror"><path d="M8 1.7v12.6" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 2"/><path d="M6.5 4.3 2.6 8l3.9 3.7zM9.5 4.3 13.4 8l-3.9 3.7z" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></g>
-<g id="i-stretch"><path d="M1.8 8h12.4M4.4 5.4 1.8 8l2.6 2.6M11.6 5.4 14.2 8l-2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-mic"><rect x="6.1" y="1.7" width="3.8" height="7.6" rx="1.9" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3.7 8a4.3 4.3 0 0 0 8.6 0M8 12.3v2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
-<g id="i-pause"><path d="M5.7 3.6v8.8M10.3 3.6v8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></g>
 <g id="i-play"><path d="M5.2 3.4 12 8l-6.8 4.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></g>
 <g id="i-grid"><path d="M1.9 6.2h12.2M1.9 9.8h12.2M6.2 1.9v12.2M9.8 1.9v12.2" stroke="currentColor" stroke-width="1.1"/></g>
 <g id="i-eye"><path d="M1.6 8S4.2 3.9 8 3.9 14.4 8 14.4 8 11.8 12.1 8 12.1 1.6 8 1.6 8z" fill="none" stroke="currentColor" stroke-width="1.25"/><circle cx="8" cy="8" r="1.8" fill="none" stroke="currentColor" stroke-width="1.25"/></g>
@@ -435,10 +429,8 @@ body.live #pairSect .pairnote{margin-top:5px}
         <div class="rotwrap" id="rotwrap">
           <div class="frame" id="frame">
             <video id="remote" playsinline autoplay muted></video>
-            <canvas class="freeze" id="freeze"></canvas>
             <div class="tally">
               <span class="rec" id="tRec">Rec</span>
-              <span id="tPause">Held</span>
               <span id="tMute">No sound</span>
             </div>
             <div class="blank">
@@ -458,7 +450,6 @@ body.live #pairSect .pairnote{margin-top:5px}
           <option value="50">50%</option>
           <option value="25">25%</option>
         </select>
-        <button class="btn sq" id="vStretch" title="Stretch to the frame, ignore aspect ratio"><svg><use href="#i-stretch"/></svg></button>
         <button class="btn sq" id="vRotate" title="Rotate 90° (Shift+R)"><svg><use href="#i-rotate"/></svg></button>
         <button class="btn sq" id="vMirror" title="Mirror"><svg><use href="#i-mirror"/></svg></button>
         <span class="vrule"></span>
@@ -491,8 +482,6 @@ body.live #pairSect .pairnote{margin-top:5px}
           <button class="btn stack" id="rFocus"><svg><use href="#i-focus"/></svg>Autofocus</button>
           <button class="btn stack" id="rZout"><svg><use href="#i-zout"/></svg>Zoom out</button>
           <button class="btn stack" id="rZin"><svg><use href="#i-zin"/></svg>Zoom in</button>
-          <button class="btn stack" id="rFps"><svg><use href="#i-fps"/></svg>Limit fps</button>
-          <button class="btn stack" id="rHold"><svg><use href="#i-pause"/></svg>Hold</button>
           <button class="btn stack" id="rSd"><svg><use href="#i-card"/></svg>Photo on phone</button>
           <button class="btn stack" id="rMic"><svg><use href="#i-mic"/></svg>Microphone</button>
         </div>
@@ -577,7 +566,6 @@ body.live #pairSect .pairnote{margin-top:5px}
       <button class="btn stack" id="cSwap"><svg><use href="#i-swap"/></svg>Flip</button>
       <button class="btn stack" id="cFocus"><svg><use href="#i-focus"/></svg>Focus</button>
       <button class="btn stack" id="cMic"><svg><use href="#i-mic"/></svg>Mic</button>
-      <button class="btn stack" id="cHold"><svg><use href="#i-pause"/></svg><span id="cHoldT">Hold</span></button>
       <button class="btn stack" id="cGrid"><svg><use href="#i-grid"/></svg>Grid</button>
       <button class="btn stack" id="cSnap"><svg><use href="#i-save"/></svg>Photo</button>
       <button class="btn stack" id="cWake"><svg><use href="#i-eye"/></svg>Stay on</button>
@@ -668,7 +656,7 @@ body.live #pairSect .pairnote{margin-top:5px}
         handshake is done the two devices talk to each other directly.</p>
 
       <h3>Controlling the phone from the desktop</h3>
-      <p>LED, autofocus, zoom, frame rate, resolution and the microphone are all driven
+      <p>LED, autofocus, zoom, resolution and the microphone are all driven
         from the rail on the right. A control that the phone's camera cannot honour is switched off
         rather than left to fail silently.</p>
 
@@ -683,7 +671,7 @@ body.live #pairSect .pairnote{margin-top:5px}
       <h3>Keyboard</h3>
       <p class="keys">
         <b>F</b> fullscreen &nbsp; <b>S</b> save photo &nbsp; <b>R</b> record &nbsp; <b>L</b> LED &nbsp;
-        <b>A</b> autofocus &nbsp; <b>M</b> sound &nbsp; <b>H</b> hold &nbsp; <b>+ −</b> zoom &nbsp;
+        <b>A</b> autofocus &nbsp; <b>M</b> sound &nbsp; <b>+ −</b> zoom &nbsp;
         <b>0</b> reset view &nbsp; <b>⇧R</b> rotate
       </p>
     </div>
@@ -1854,7 +1842,7 @@ on(document, "keydown", function (e) { if (e.key === "Escape") closeDlg(); });
 var V = {
   code: null, bus: null, link: null, pc: null, dc: null, peer: null, connId: "",
   pend: [], stream: null, gotVideo: false, since: 0, upT: 0, statT: 0,
-  rot: 0, mirror: false, stretch: false, zoom: 100, cam: {}, rec: null, recBits: [],
+  rot: 0, mirror: false, zoom: 100, cam: {}, rec: null, recBits: [],
   cmdId: 0, acks: {}, lastBeat: 0, lastMedia: 0, badSince: 0, hist: []
 };
 
@@ -2076,7 +2064,7 @@ function vDropped() {
   railEnabled(false);
   V.gotVideo = false;
   document.body.classList.remove("live");
-  $("frame").classList.remove("hasvideo", "frozen");
+  $("frame").classList.remove("hasvideo");
   $("remote").srcObject = null;
   V.stream = null;
   clearInterval(V.statT); clearInterval(V.upT);
@@ -2098,7 +2086,7 @@ function vClose() {
   if (V.pc) { try { V.pc.close(); } catch (e) {} V.pc = null; }
   V.pend = []; V.gotVideo = false; V.stream = null;
   document.body.classList.remove("live");
-  $("frame").classList.remove("hasvideo", "frozen");
+  $("frame").classList.remove("hasvideo");
   $("remote").srcObject = null;
 }
 function vTeardown() {
@@ -2143,7 +2131,7 @@ function able(el, ok, why) {
   el.disabled = !ok;
   el.title = ok ? el.dataset.tip : why;
 }
-var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rFps", "rHold", "rSd", "rMic", "rRes", "rBr"];
+var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rSd", "rMic", "rRes", "rBr"];
 function railEnabled(on2) {
   RAIL.forEach(function (id) {
     var el = $(id);
@@ -2156,12 +2144,8 @@ function railEnabled(on2) {
 function vApplyState(s) {
   V.cam = s;
   $("rLed").classList.toggle("on", !!s.torch);
-  $("rFps").classList.toggle("on", s.fps === 15);
-  $("rHold").classList.toggle("on", !!s.paused);
   $("rMic").classList.toggle("on", !!s.mic);
-  $("tPause").classList.toggle("show", !!s.paused);
   $("tMute").classList.toggle("show", !s.mic);
-  freeze(!!s.paused);
   able($("rLed"), s.capTorch !== false, "This camera has no LED");
   if (s.capTorch == null) $("rLed").title = "Press to test the phone LED";
   able($("rZin"), s.capZoom !== false, "Zoom is unavailable");
@@ -2177,15 +2161,6 @@ function vApplyState(s) {
     V.audioHint = true;
     toast("The phone microphone is live — press the speaker to listen");
   }
-}
-function freeze(want) {
-  var f = $("frame"), v = $("remote"), cv = $("freeze");
-  if (want && v.videoWidth) {
-    cv.width = v.videoWidth; cv.height = v.videoHeight;
-    cv.getContext("2d").drawImage(v, 0, 0);
-    cv.style.width = "100%"; cv.style.height = "100%";
-    f.classList.add("frozen");
-  } else f.classList.remove("frozen");
 }
 
 /* --- geometry --- */
@@ -2210,7 +2185,6 @@ function fitVideo() {
   rw.style.width = (odd ? h : w) + "px";
   rw.style.height = (odd ? w : h) + "px";
   fr.classList.toggle("mirror", V.mirror);
-  fr.classList.toggle("stretch", V.stretch);
   $("vZoomT").textContent = V.zoom + "%";
 }
 window.addEventListener("resize", function () { if (role === "view") fitVideo(); });
@@ -2274,11 +2248,10 @@ on($("vFit"), "change", fitVideo);
 on($("vZoom"), "input", function () { V.zoom = +$("vZoom").value; fitVideo(); });
 on($("vRotate"), "click", function () { V.rot = (V.rot + 1) % 4; $("vRotate").classList.toggle("on", V.rot !== 0); fitVideo(); });
 on($("vMirror"), "click", function () { V.mirror = !V.mirror; $("vMirror").classList.toggle("on", V.mirror); fitVideo(); });
-on($("vStretch"), "click", function () { V.stretch = !V.stretch; $("vStretch").classList.toggle("on", V.stretch); fitVideo(); });
 on($("vReset"), "click", function () {
-  V.rot = 0; V.mirror = false; V.stretch = false; V.zoom = 100;
+  V.rot = 0; V.mirror = false; V.zoom = 100;
   $("vZoom").value = 100; $("vFit").value = "fit";
-  ["vRotate", "vMirror", "vStretch"].forEach(function (i) { $(i).classList.remove("on"); });
+  ["vRotate", "vMirror"].forEach(function (i) { $(i).classList.remove("on"); });
   fitVideo();
 });
 on($("vSnap"), "click", function () { grabStill($("remote"), "tether"); });
@@ -2310,8 +2283,6 @@ on($("rLed"), "click", function () { vCmd("torch", !V.cam.torch); });
 on($("rFocus"), "click", function () { vCmd("af"); });
 on($("rZin"), "click", function () { vCmd("zoomStep", 1); });
 on($("rZout"), "click", function () { vCmd("zoomStep", -1); });
-on($("rFps"), "click", function () { vCmd("fps", V.cam.fps === 15 ? 30 : 15); });
-on($("rHold"), "click", function () { vCmd("pause", !V.cam.paused); });
 on($("rSd"), "click", function () { vCmd("snap"); });
 on($("rMic"), "click", function () { vCmd("mic", !V.cam.mic); });
 on($("rRes"), "change", function () { vCmd("res", $("rRes").value); });
@@ -2329,7 +2300,6 @@ on(document, "keydown", function (e) {
   else if (k === "l") $("rLed").click();
   else if (k === "a") $("rFocus").click();
   else if (k === "m") $("vSound").click();
-  else if (k === "h") $("rHold").click();
   else if (k === "+" || k === "=") $("rZin").click();
   else if (k === "-") $("rZout").click();
   else if (k === "0") $("vReset").click();
@@ -2343,7 +2313,7 @@ on(document, "keydown", function (e) {
 var C = {
   code: null, bus: null, link: null, pc: null, dc: null, stream: null, rawStream: null, digital: null, want: false,
   facing: store.get("facing", "environment"), devId: store.get("devId", ""),
-  torch: false, mic: false, paused: false, zoom: 1, caps: {}, cams: 1,
+  torch: false, mic: false, zoom: 1, caps: {}, cams: 1,
   connId: "", stage: null, climbed: 0, shout: 0, renego: 0, beat: 0, negoT: 0,
   pending: false, retry: 0, statT: 0, wake: null, connected: false, lastPong: 0, restarts: 0,
   ending: false, endT: 0, resumeAfterPage: false, resuming: false
@@ -2371,7 +2341,6 @@ function atrack() {
   var s = C.rawStream || C.stream;
   return s && s.getAudioTracks()[0];
 }
-function outVtrack() { return C.stream && C.stream.getVideoTracks()[0]; }
 function secure() { return window.isSecureContext || location.hostname === "localhost"; }
 
 function seedPick() {
@@ -2521,9 +2490,12 @@ function detectTorch(t) {
 function paintTorch() {
   var st = C.caps.torch;
   /* Capability reports are frequently wrong until after the first torch
-     request. Keep the button usable and let the real constraint call decide. */
-  $("cLed").disabled = !vtrack();
-  $("cLed").title = st === false ? "LED was not advertised — tap to try anyway" : st == null ? "Tap to test this camera's LED" : "";
+     request. Keep the button usable and let the real constraint call decide;
+     a press without a running camera answers with a toast instead of nothing. */
+  $("cLed").disabled = false;
+  $("cLed").title = !vtrack() ? "Starts with the camera"
+    : st === false ? "LED was not advertised — tap to try anyway"
+    : st == null ? "Tap to test this camera's LED" : "";
   $("cLed").classList.toggle("on", !!C.torch);
 }
 var capT = [];
@@ -2640,25 +2612,6 @@ function limitOfferBitrate(desc) {
   }
   return { type: desc.type, sdp: sections.join("") };
 }
-/* The sender caps its encoder from the REMOTE description: the bandwidth
-   line must live in the viewer's answer that the phone receives. Putting
-   b= in the phone's own offer only decorates the wire, so the answer is
-   patched here just before setRemoteDescription. */
-function limitAnswerBitrate(desc) {
-  if (!desc || !desc.sdp) return desc;
-  var kbps = +$("cBr").value;
-  var sections = desc.sdp.split(/(?=m=)/);
-  for (var i = 0; i < sections.length; i++) {
-    if (!/^m=video\s/m.test(sections[i])) continue;
-    sections[i] = sections[i].replace(/^b=(?:AS|TIAS):.*\r?\n/gm, "");
-    if (kbps) {
-      var line = "b=TIAS:" + (kbps * 1000) + "\r\nb=AS:" + kbps + "\r\n";
-      if (/^c=.*\r?$/m.test(sections[i])) sections[i] = sections[i].replace(/^(c=.*\r?\n)/m, "$1" + line);
-      else sections[i] = sections[i].replace(/^(m=.*\r?\n)/m, "$1" + line);
-    }
-  }
-  return { type: desc.type, sdp: sections.join("") };
-}
 function applyBitrate(renegotiateNow) {
   var kbps = +$("cBr").value;
   store.set("bitrate", kbps);
@@ -2672,13 +2625,17 @@ function applyBitrate(renegotiateNow) {
     if (!sender.getParameters || !sender.setParameters) return Promise.resolve(false);
     var p;
     try { p = sender.getParameters(); } catch (e) { return Promise.resolve(false); }
-    /* encodings stay empty until the first negotiation finishes — report that
-       so the retry below can revisit once the answer has been processed */
-    if (!p.encodings || !p.encodings.length) return Promise.resolve(null);
+    if (!p.encodings || !p.encodings.length) {
+      /* Some engines report no encodings until the first answer; a single
+         entry is what setParameters needs to carry maxBitrate. */
+      try { p.encodings = [{}]; } catch (e) { return Promise.resolve(false); }
+    }
     p.encodings.forEach(function (enc) {
       if (kbps) enc.maxBitrate = kbps * 1000;
       else delete enc.maxBitrate;
     });
+    if ("degradationPreference" in p || typeof p.degradationPreference !== "undefined")
+      p.degradationPreference = "maintain-framerate";
     return sender.setParameters(p).then(function () {
       var got;
       try { got = sender.getParameters(); } catch (e) { got = null; }
@@ -2690,22 +2647,7 @@ function applyBitrate(renegotiateNow) {
     });
   });
   return Promise.all(jobs).then(function (r) {
-    var hasVideoSender = jobs.length > 0;
-    var waitingOnNegotiation = hasVideoSender && r.some(function (x) { return x === null; });
-    var liveApplied = r.some(function (x) { return x === true; });
-    if (waitingOnNegotiation) {
-      /* Retry a few times while the offer/answer exchange completes, then the
-         patched answer in camSignal applies the ceiling for good. */
-      C.brTries = (C.brTries || 0) + 1;
-      if (C.brTries < 8) {
-        clearTimeout(C.brT);
-        C.brT = setTimeout(function () {
-          if (C.pc && C.pc.signalingState !== "closed") applyBitrate(false);
-        }, 700);
-      }
-    } else if (liveApplied || !hasVideoSender || !kbps) {
-      C.brTries = 0;
-    }
+    var liveApplied = r.some(Boolean);
     pushState();
     /* A fresh offer carries b=TIAS/b=AS too, covering engines that do not
        implement sender.setParameters. */
@@ -2713,14 +2655,14 @@ function applyBitrate(renegotiateNow) {
       setTimeout(function () { if (C.pc && C.connected) renegotiate(C.pc); }, 0);
     }
     if (!kbps) return "Automatic bitrate";
-    return (liveApplied ? "Ceiling set to " : waitingOnNegotiation ? "Ceiling armed, applies on connect — " : "Ceiling queued at ") + (kbps / 1000) + " Mbit/s";
+    return (liveApplied ? "Ceiling set to " : "Ceiling queued at ") + (kbps / 1000) + " Mbit/s";
   });
 }
 function pushState() {
   if (!C.dc || C.dc.readyState !== "open") return;
   try {
     C.dc.send(JSON.stringify({
-      t: "state", torch: C.torch, paused: C.paused, zoom: C.zoom,
+      t: "state", torch: C.torch, zoom: C.zoom,
       mic: !!(atrack() && atrack().enabled),
       fps: +$("cFps").value, res: $("cRes").value, bitrate: +$("cBr").value,
       /* Unknown capability reports stay pressable. Zoom has a software
@@ -2834,7 +2776,6 @@ function camOffer() {
       cWarn("");
       $("camPanel").classList.remove("show");
       pushState();
-      applyBitrate(false);
     } else if (st === "failed") {
       C.connected = false;
       $("camPanel").classList.add("show");
@@ -2984,10 +2925,7 @@ function camSignal(m, link) {
     if (link) C.link = link;
     clearInterval(C.shout); C.shout = 0;
     clearInterval(C.renego); C.renego = 0;
-    C.pc.setRemoteDescription(limitAnswerBitrate(m.payload.sdp)).then(function () {
-      /* Sender parameters only populate once negotiation has run. */
-      C.brTries = 0;
-      applyBitrate(false);
+    C.pc.setRemoteDescription(m.payload.sdp).then(function () {
       if (!C.connected) { cStatus("wait", "Answered — finding a route"); routeWatch(); }
     }).catch(function (e) { log("[camera] answer: " + e.message); });
     return;
@@ -3010,6 +2948,9 @@ function camWireDC(ch) {
   ch.onopen = function () {
     log("[camera] control channel open");
     pushState(); pushBattery();
+    /* A ceiling chosen before the connection existed is only queued; senders
+       exist now, so put it to work immediately. */
+    applyBitrate(false);
     C.lastPong = Date.now();
     clearInterval(C.beat);
     C.beat = setInterval(function () {
@@ -3037,23 +2978,29 @@ function camWireDC(ch) {
 
 function handleCmd(k, v, id) {
   var job;
-  if (k === "torch") job = setTorch(!!v);
-  else if (k === "af") { pulseFocusRing(.5, .5); job = doFocus(); }
-  else if (k === "zoomStep") job = stepZoom(v);
-  else if (k === "zoomSet") job = setZoom(v);
-  else if (k === "fps") job = setFps(v).then(function () { return v + " fps on the phone"; });
-  else if (k === "res") job = setRes(v).then(function () { return "Size " + String(v).replace("x", " × "); });
-  else if (k === "pause") { setPause(!!v); job = Promise.resolve(v ? "Camera held" : "Camera resumed"); }
-  else if (k === "snap") { grabStill($("local"), "tether-phone"); job = Promise.resolve("Photo saved on the phone"); }
-  else if (k === "mic") job = setMic(!!v).then(function () { return v ? "Microphone on" : "Microphone off"; });
-  else if (k === "camStep") job = stepCamera(v);
-  else if (k === "bitrate") { $("cBr").value = String(v); job = applyBitrate(true); }
-  else job = Promise.resolve("");
-  Promise.resolve(job).then(function (msg) {
+  try {
+    if (k === "torch") job = setTorch(!!v);
+    else if (k === "af") { pulseFocusRing(.5, .5); job = doFocus(); }
+    else if (k === "zoomStep") job = stepZoom(v);
+    else if (k === "zoomSet") job = setZoom(v);
+    else if (k === "res") job = setRes(v).then(function () { return "Size " + String(v).replace("x", " × "); });
+    else if (k === "snap") { grabStill($("local"), "tether-phone"); job = Promise.resolve("Photo saved on the phone"); }
+    else if (k === "mic") job = setMic(!!v).then(function () { return v ? "Microphone on" : "Microphone off"; });
+    else if (k === "camStep") job = stepCamera(v);
+    else if (k === "bitrate") { $("cBr").value = String(v); job = applyBitrate(true); }
+    else job = Promise.resolve("");
+  } catch (e) {
+    job = Promise.reject(e);
+  }
+  function ack(msg) {
     if (id && C.dc && C.dc.readyState === "open") {
       try { C.dc.send(JSON.stringify({ t: "ack", id: id, msg: msg || "" })); } catch (e) {}
     }
     pushState();
+  }
+  Promise.resolve(job).then(function (msg) { ack(msg); }, function (e) {
+    log("[camera] cmd " + k + ": " + (e && (e.name || e.message)));
+    ack(e && (e.message || e.name) ? String(e.message || e.name) : "That control failed");
   });
 }
 
@@ -3125,55 +3072,46 @@ function startDigitalZoom() {
 }
 
 function setTorch(want) {
-  if (want && C.paused) setPause(false);
   function applyToCurrentTrack(switched) {
     var t = vtrack();
-    if (!t || !t.applyConstraints) return Promise.resolve("LED is not available on this camera");
-    var caps = {}, st0 = {};
+    if (!t || !t.applyConstraints) return Promise.resolve("No camera is running yet");
+    var supported = {}, caps = {};
+    try { supported = navigator.mediaDevices.getSupportedConstraints ? navigator.mediaDevices.getSupportedConstraints() : {}; } catch (e) {}
     try { caps = t.getCapabilities ? (t.getCapabilities() || {}) : {}; } catch (e) {}
-    try { st0 = t.getSettings ? (t.getSettings() || {}) : {}; } catch (e) {}
-    /* Only per-track evidence is trusted. navigator.mediaDevices
-       .getSupportedConstraints() lists "torch" even on desktops, where every
-       webcam silently ignores the request — that is why the button used to
-       claim success while nothing lit up. */
-    var trackExposes = caps.torch === true || "torch" in st0;
+    var advertised = caps.torch === true || supported.torch === true || C.caps.torch === true;
     var attempts = [
       { advanced: [{ torch: want }] },
-      { advanced: [{ torch: { exact: want } }] },
-      { torch: { exact: want } }
+      { torch: want },
+      { torch: { ideal: want } },
+      { advanced: [{ torch: { exact: want } }] }
     ];
     var i = 0, wasEnabled = t.enabled;
     if (want && !wasEnabled) t.enabled = true;
 
-    function confirmed() {
+    function inspect() {
       var st = {};
       try { st = t.getSettings ? (t.getSettings() || {}) : {}; } catch (e) {}
       if ("torch" in st) return !!st.torch === want;
-      /* Some Android builds apply the torch but omit it from settings; when
-         the track itself advertised the capability, a resolved request is
-         proof enough. Silent tracks that never advertised it say no. */
-      return caps.torch === true;
+      /* Some Android builds apply torch correctly but omit it from settings;
+         an advertised capability plus a resolved constraint is sufficient. */
+      return advertised || !want;
     }
     function next() {
       if (i >= attempts.length) return Promise.resolve(false);
       var q = attempts[i++];
       return t.applyConstraints(q).then(function () {
         return new Promise(function (resolve) {
-          setTimeout(function () { resolve(confirmed()); }, 120);
+          setTimeout(function () { resolve(inspect()); }, 100);
         }).then(function (ok) { return ok ? true : next(); });
-      }, function () { return next(); });
+      }, next);
     }
     return next().then(function (ok) {
-      if (C.paused) t.enabled = false;
-      else if (!wasEnabled && !want) t.enabled = false;
-      if (ok) C.caps.torch = true;
+      if (!wasEnabled && !want) t.enabled = false;
       C.torch = !!(want && ok);
+      if (ok) C.caps.torch = true;
       paintTorch(); pushState();
-      if (ok) return (switched ? "Rear camera · " : "") + (want ? "LED on" : "LED off");
-      if (!want) return "LED off";
-      return trackExposes
-        ? "The camera refused the LED request"
-        : "This camera does not expose an LED to the browser";
+      if (!ok) return want ? "LED is not exposed by this browser or camera" : "LED off";
+      return (switched ? "Rear camera · " : "") + (want ? "LED on" : "LED off");
     });
   }
 
@@ -3205,28 +3143,26 @@ function pulseFocusRing(x, y) {
 function doFocus(x, y) {
   var t = vtrack();
   if (!t || !t.applyConstraints) return Promise.resolve("No camera is running");
-  var caps = {};
+  var caps = {}, supported = {};
   try { caps = t.getCapabilities ? (t.getCapabilities() || {}) : {}; } catch (e) {}
-  /* Only the track's own capability list is trusted — the engine-wide list
-     from getSupportedConstraints() claims focus support on desktop webcams
-     that simply ignore these requests, which made the button lie. */
+  try { supported = navigator.mediaDevices.getSupportedConstraints ? navigator.mediaDevices.getSupportedConstraints() : {}; } catch (e) {}
   var reported = Array.isArray(caps.focusMode) ? caps.focusMode.slice() : (caps.focusMode ? [caps.focusMode] : []);
-  var poiOk = caps.pointsOfInterest === true || Array.isArray(caps.pointsOfInterest);
-  var attempts = [];
-  if (x != null && y != null && poiOk) {
-    /* Point focus first when the track says it understands points; modes it
-       advertised are attached so the lens actually re-meters on the spot. */
-    var poiModes = reported.length ? reported.slice() : ["single-shot", ""];
-    poiModes.forEach(function (mode) {
-      var q = { pointsOfInterest: [{ x: x, y: y }] };
-      if (mode) q.focusMode = mode;
-      attempts.push({ q: { advanced: [q] }, mode: mode, poi: true });
-    });
-  }
-  ["single-shot", "continuous"].forEach(function (mode) {
-    if (reported.indexOf(mode) < 0) return;
-    attempts.push({ q: { advanced: [{ focusMode: mode }] }, mode: mode });
+  var modes = [];
+  ["single-shot", "continuous"].forEach(function (m) {
+    if (!reported.length || reported.indexOf(m) >= 0) modes.push(m);
   });
+  var attempts = [];
+  modes.forEach(function (mode) {
+    var q = { focusMode: mode };
+    if (x != null && y != null) q.pointsOfInterest = [{ x: x, y: y }];
+    attempts.push({ q: { advanced: [q] }, mode: mode });
+    attempts.push({ q: q, mode: mode });
+  });
+  if (x != null && y != null) {
+    var point = { pointsOfInterest: [{ x: x, y: y }] };
+    attempts.push({ q: { advanced: [point] }, mode: "" });
+    attempts.push({ q: point, mode: "" });
+  }
   var i = 0;
   function next() {
     if (i >= attempts.length) return Promise.resolve(false);
@@ -3234,12 +3170,11 @@ function doFocus(x, y) {
     return t.applyConstraints(a.q).then(function () {
       var st = {};
       try { st = t.getSettings ? (t.getSettings() || {}) : {}; } catch (e) {}
-      /* single-shot may return to continuous immediately after the lens
-         moves, so a track-advertised mode on a resolved request also counts;
-         a settings echo is accepted whenever the browser provides one. */
-      var ok = (a.mode && st.focusMode === a.mode) ||
-        (a.mode && reported.indexOf(a.mode) >= 0) ||
-        (a.poi && poiOk && !a.mode);
+      var advertised = a.mode ? (reported.indexOf(a.mode) >= 0 || supported.focusMode === true)
+        : supported.pointsOfInterest === true;
+      /* single-shot may return to continuous immediately after the lens moves,
+         so capability support also counts as a successful focus request. */
+      var ok = advertised || (a.mode && st.focusMode === a.mode);
       return ok ? true : next();
     }, next);
   }
@@ -3255,19 +3190,13 @@ function doFocus(x, y) {
     }
     /* Browsers such as Safari do not expose lens controls. Reopening the
        physical track makes the camera perform its normal acquisition focus,
-       so the button still has a useful, visible effect on those phones — and
-       on a webcam with a fixed lens the message now says so honestly. */
-    var capCount = 0;
-    try { capCount = Object.keys(caps).length; } catch (e) {}
-    var phoneLike = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || "");
-    if (!phoneLike && capCount > 6)
-      return "Manual focus is unavailable on this camera";
+       so the button still has a useful, visible effect on those phones. */
     var before = t;
     return openCamera().then(function () {
       var after = vtrack();
       if (after && after !== before && after.readyState === "live")
-        return x != null ? "Camera refocused (point focus is unavailable here)" : "Camera refocused";
-      return "Lens focus is unavailable on this camera";
+        return x != null ? "Camera refocused (point focus is not exposed)" : "Camera refocused";
+      return "Focus is not exposed by this browser or camera";
     });
   });
 }
@@ -3334,21 +3263,12 @@ function stepCamera(dir) {
   sel.selectedIndex = i;
   return openCamera().then(function () { return "Camera: " + sel.options[i].textContent; });
 }
-function setPause(want) {
-  C.paused = want;
-  var t = vtrack(); if (t) t.enabled = !want;
-  var ot = outVtrack(); if (ot && ot !== t) ot.enabled = !want;
-  var a = atrack(); if (a) a.enabled = !want && C.mic;
-  $("cHold").classList.toggle("on", want);
-  $("cHoldT").textContent = want ? "Resume" : "Hold";
-  pushState();
-}
 function setMic(want) {
   C.mic = want;
   $("cMic").classList.toggle("on", want);
   var a = atrack();
   if (want && !a) return openCamera();
-  if (a) a.enabled = want && !C.paused;
+  if (a) a.enabled = want;
   pushState();
   return Promise.resolve();
 }
@@ -3459,12 +3379,13 @@ on($("cExit"), "click", function () { stopScan(); camStop(); show("start"); });
 on($("cPanelBtn"), "click", function () { $("camPanel").classList.toggle("show"); });
 on($("cHelp"), "click", function () { openDlg("dlgHelp"); });
 on($("cCode"), "keydown", function (e) { if (e.key === "Enter") camConnect($("cCode").value); });
-on($("cLed"), "click", function () { setTorch(!C.torch).then(function (m) { if (m) toast(m); }); });
+on($("cLed"), "click", function () {
+  setTorch(!C.torch).then(function (m) { if (m) toast(m); }, function (e) { toast("LED failed: " + (e && (e.message || e.name))); });
+});
 on($("cFocus"), "click", function () {
   pulseFocusRing(.5, .5);
-  doFocus().then(function (m) { if (m) toast(m); });
+  doFocus().then(function (m) { if (m) toast(m); }, function (e) { toast("Focus failed: " + (e && (e.message || e.name))); });
 });
-on($("cHold"), "click", function () { setPause(!C.paused); });
 on($("cMic"), "click", function () { setMic(!C.mic); });
 on($("cGrid"), "click", function () { $("camGrid").classList.toggle("on"); $("cGrid").classList.toggle("on"); });
 on($("cSnap"), "click", function () { grabStill($("local"), "tether-phone"); });
@@ -3493,7 +3414,9 @@ on($("cPick"), "change", function () { if (C.stream) openCamera(); });
 on($("cRes"), "change", function () { if (C.stream) setRes($("cRes").value); });
 on($("cFps"), "change", function () { if (C.stream) setFps($("cFps").value); });
 on($("cBr"), "change", function () {
-  applyBitrate(true).then(function (m) { if (m) toast(m); });
+  applyBitrate(true).then(function (m) { if (m) toast(m); }, function (e) {
+    toast("Ceiling failed: " + (e && (e.message || e.name)));
+  });
 });
 on($("cZoom"), "input", function () { setZoom(+$("cZoom").value); });
 on($("cEv"), "input", function () {
@@ -3811,5 +3734,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e8597b0febc9f3',t:'MTc4NzMwMTgwMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e9e4f4088b932b',t:'MTc4NzMxNzk5OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e8597b0febc9f3',t:'MTc4NzMwMTgwMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
