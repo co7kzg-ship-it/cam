@@ -125,7 +125,8 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 
 /* ---------- start ---------- */
 .startwrap{flex:1 1 auto;padding:clamp(26px,7vh,68px) 22px 48px}
-.startcol{max-width:720px;margin-left:clamp(0px,7vw,120px)}
+.startcol{max-width:720px;margin:0 auto}
+@media (min-width:1100px){.startcol{margin:0 0 0 clamp(0px,7vw,120px)}}
 .startcol h1{font:600 31px/1.22 var(--sans);letter-spacing:-.021em;max-width:21ch}
 .startcol .lede{margin-top:16px;color:var(--ink-2);max-width:56ch;font-size:16px}
 .picker{margin:32px 0 0;padding:0;list-style:none}
@@ -136,14 +137,9 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
   padding:16px 18px;cursor:pointer;color:inherit;transition:border-color .15s,background .15s;
 }
 .role:hover{border-color:var(--acc);background:var(--field)}
-.role .rt{font:600 16.5px/1.3 var(--sans)}
-.role .rd{color:var(--ink-2);font-size:14.5px;grid-column:1}
-.role .arw{grid-row:1/3;align-self:center;color:var(--acc);font-size:20px}
-.joinrow{
-  display:flex;gap:10px;align-items:center;padding:16px 18px;flex-wrap:wrap;
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--rp);
-}
-.joinrow .lab{margin:0}
+.role .rt{grid-area:1 / 1 / 2 / 2;font:600 16.5px/1.3 var(--sans)}
+.role .rd{grid-area:2 / 1 / 3 / 2;color:var(--ink-2);font-size:14.5px}
+.role .arw{grid-area:1 / 2 / 3 / 3;align-self:center;color:var(--acc);font-size:20px}
 .codein{
   width:132px;height:46px;font:600 22px/1 var(--sans);letter-spacing:.3em;
   text-indent:.3em;text-align:center;
@@ -189,7 +185,7 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .tally .rec{background:var(--hot)}
 .blank{
   position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:8px;color:#f2f5f7;text-align:center;padding:22px;
+  gap:8px;color:#f2f5f7;text-align:center;padding:22px;line-height:1.45;
 }
 .blank .t{font:600 16px/1.3 var(--sans)}
 .blank .s{font-size:14px;color:#dfe6ea;max-width:36ch}
@@ -265,6 +261,17 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 }
 .focusring.go{animation:fring .7s ease-out}
 @keyframes fring{0%{opacity:1;transform:scale(1.3)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+.scanbox{
+  position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;background:rgba(16,24,28,.45);
+}
+.scanbox.on{display:flex}
+.scanframe{
+  width:min(62vw,240px);height:min(62vw,240px);border:3px solid #fff;border-radius:10px;
+  box-shadow:0 0 0 2000px rgba(16,24,28,.25);
+}
+.scanhint{color:#fff;font-size:15px;text-align:center;padding:0 24px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.orline{font-size:13.5px;color:var(--dim);align-self:center}
 .camdock{
   flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px;
   background:var(--bar);border-top:1px solid var(--line);
@@ -373,6 +380,7 @@ body.live #pairSect .pairnote{margin-top:5px}
 <g id="i-copy"><rect x="2.4" y="2.4" width="7.6" height="7.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.6 13.6h8v-8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></g>
 <g id="i-link"><path d="M6.7 9.3a2.7 2.7 0 0 0 3.9 0l1.9-1.9a2.75 2.75 0 0 0-3.9-3.9l-.8.8" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><path d="M9.3 6.7a2.7 2.7 0 0 0-3.9 0L3.5 8.6a2.75 2.75 0 0 0 3.9 3.9l.8-.8" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></g>
 <g id="i-batt"><rect x="1.6" y="4.7" width="10.8" height="6.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M13.8 7.1v1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></g>
+<g id="i-scan"><path d="M2.4 5.6V2.4h3.2M13.6 5.6V2.4h-3.2M2.4 10.4v3.2h3.2M13.6 10.4v3.2h-3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M2.4 8h11.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></g>
 <g id="i-prev"><path d="M9.8 3.4 5.2 8l4.6 4.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-next"><path d="M6.2 3.4 10.8 8l-4.6 4.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></g>
 </defs></svg>
@@ -396,23 +404,16 @@ body.live #pairSect .pairnote{margin-top:5px}
         <li>
           <button class="role" id="pickViewer" type="button">
             <span class="rt">Watch here</span>
-            <span class="rd">Puts a four-digit code and a QR on this screen for the phone to open.</span>
+            <span class="rd">Shows a square for the phone to scan, and a four-digit code as a fallback.</span>
             <span class="arw">→</span>
           </button>
         </li>
         <li>
           <button class="role" id="pickCamera" type="button">
             <span class="rt">Send this camera</span>
-            <span class="rd">Streams this device's camera to a screen that is already waiting.</span>
+            <span class="rd">Scans the square on the other screen, then streams this camera to it.</span>
             <span class="arw">→</span>
           </button>
-        </li>
-        <li>
-          <div class="joinrow">
-            <label class="lab" for="joinCode" style="align-self:center">Already have a code</label>
-            <input class="inp codein" id="joinCode" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
-            <button class="btn tall pri" id="joinGo" type="button">Join as camera</button>
-          </div>
         </li>
       </ul>
 
@@ -420,7 +421,7 @@ body.live #pairSect .pairnote{margin-top:5px}
 
       <dl class="facts">
         <div><dt>The video</dt><dd>Goes straight from the phone to this browser across your Wi-Fi. It is never uploaded, and by default the app refuses any route that leaves the local network.</dd></div>
-        <div><dt>The code</dt><dd>Only the four-digit handshake passes through a public relay, and it carries no picture or sound. Offline pairing skips even that.</dd></div>
+        <div><dt>The code</dt><dd>Only the four-digit handshake passes through a public relay, and it carries no picture or sound.</dd></div>
         <div><dt>Needs</dt><dd>An https page (GitHub Pages qualifies) and a recent Chrome, Edge, Firefox or Safari on both ends.</dd></div>
       </dl>
     </div>
@@ -464,7 +465,7 @@ body.live #pairSect .pairnote{margin-top:5px}
             </div>
             <div class="blank">
               <span class="t">No camera yet</span>
-              <span class="s">Scan the code on the right with a phone, or open the link there.</span>
+              <span class="s">Open this page on the phone, tap “Scan the square”, and point it at the code on this screen.</span>
             </div>
           </div>
         </div>
@@ -499,19 +500,13 @@ body.live #pairSect .pairnote{margin-top:5px}
           <div class="qrbox"><canvas id="qr" width="104" height="104"></canvas></div>
           <div style="min-width:0">
             <div class="codebig" id="pairCode">----</div>
-            <div class="pairnote" id="pairNote">Waiting for a camera.</div>
+            <div class="pairnote" id="pairNote">Open this page on the phone, tap <b>Scan the square</b>, and point it here.</div>
           </div>
         </div>
-        <div class="urlline" id="pairUrl">—</div>
         <div class="relayline" id="vRelay">Pairing relays: opening…</div>
         <div class="lanrow" id="lanRow" style="display:none">
           <span id="lanState"></span>
           <button class="btn sm" id="lanFix">Publish local address</button>
-        </div>
-        <div class="rowbtns">
-          <button class="btn sm" id="cpLink"><svg><use href="#i-link"/></svg>Copy link</button>
-          <button class="btn sm" id="cpCode"><svg><use href="#i-copy"/></svg>Copy code</button>
-          <button class="btn sm" id="vManual">Offline pairing</button>
         </div>
       </div>
 
@@ -600,6 +595,11 @@ body.live #pairSect .pairnote{margin-top:5px}
       <div class="gridlines" id="camGrid"></div>
       <div class="focusring" id="focusRing"></div>
       <div class="osd" id="camOsd"></div>
+      <div class="scanbox" id="scanBox">
+        <div class="scanframe"></div>
+        <p class="scanhint">Point at the square on the computer screen</p>
+        <button class="btn sm" id="cScanStop">Cancel</button>
+      </div>
     </div>
 
     <div class="camdock">
@@ -615,14 +615,11 @@ body.live #pairSect .pairnote{margin-top:5px}
 
     <div class="campanel show" id="camPanel">
       <div class="connrow">
-        <div>
-          <label class="lab" for="cCode">Code from the screen</label>
-          <input class="inp codein" id="cCode" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
-        </div>
-        <button class="btn tall pri" id="cConnect">Connect</button>
+        <button class="btn tall pri" id="cScan"><svg><use href="#i-scan"/></svg>Scan the square</button>
+        <span class="orline">or type the four digits</span>
+        <input class="inp codein" id="cCode" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+        <button class="btn tall" id="cConnect">Connect</button>
         <button class="btn tall" id="cStop" disabled>Stop</button>
-        <span class="grow"></span>
-        <button class="btn" id="cManual">Offline pairing</button>
       </div>
       <div class="relayline" id="cRelay" style="margin:-4px 0 12px">Pairing relays: idle</div>
 
@@ -710,12 +707,9 @@ body.live #pairSect .pairnote{margin-top:5px}
         <b>allow local network access</b>, <b>LAN bypass</b> or <b>split tunnelling</b> — with that on, pairing
         behaves as if the VPN were not there. With it off the tunnel swallows local traffic and no direct
         route exists. Then either:</p>
-      <ul>
-        <li>use <b>Offline pairing</b>, which swaps the handshake by copy and paste and needs no server at all, or</li>
-        <li>enter a TURN relay under <b>Settings</b> — with a full tunnel that is the only path left.</li>
-      </ul>
-      <p>If the status line says <b>paired, but no route</b>, the code and the relays did their job and only
-        the video path is blocked; that is the case the two options above fix.</p>
+      <p>If the status line says <b>paired, but no route</b>, the code did its job and only the video path is
+        blocked. Switch local network access on in the VPN app, or turn off <b>keep the video on this Wi-Fi</b>
+        in Settings so it can go the long way round.</p>
       <p>Chrome also hides the local address behind an mDNS name until the page holds a media
         permission. The desktop asks for the microphone once for that reason and stops the track
         immediately; it is never recorded or sent.</p>
@@ -787,31 +781,6 @@ body.live #pairSect .pairnote{margin-top:5px}
         <span class="grow"></span>
         <button class="btn" id="optDiag">Run a connection check</button>
       </div>
-    </div>
-  </div>
-
-  <div class="dlg" id="dlgManual">
-    <header>Offline pairing<span class="grow"></span><button class="btn sm close">Close</button></header>
-    <div class="body">
-      <p id="manIntro">No server takes part in this. Move the two blocks of text between the devices by
-        any means you like — a note app, a chat window, a shared clipboard.</p>
-      <div id="manA">
-        <h3 id="manALab">Step 1</h3>
-        <textarea class="inp" id="manOut" rows="5" readonly placeholder="press Generate"></textarea>
-        <div class="rowbtns">
-          <button class="btn sm" id="manGen">Generate</button>
-          <button class="btn sm" id="manCopy"><svg><use href="#i-copy"/></svg>Copy</button>
-        </div>
-      </div>
-      <div id="manB" style="margin-top:16px">
-        <h3 id="manBLab">Step 2</h3>
-        <textarea class="inp" id="manIn" rows="5" placeholder="paste here"></textarea>
-        <div class="rowbtns">
-          <button class="btn sm pri" id="manApply">Apply</button>
-          <button class="btn sm" id="manPaste">Paste from clipboard</button>
-        </div>
-      </div>
-      <p class="note" id="manNote"></p>
     </div>
   </div>
 
@@ -1109,6 +1078,513 @@ function drawQR(cv, text) {
     if (m[r][c]) g.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
 }
 
+/* ---- QR reader: binarize, locate, sample, read. No error correction:
+   a frame whose codewords do not re-encode identically is dropped and the
+   next frame is tried, which is safer than guessing at a blurred module. ---- */
+function qrDist(a, b) { return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
+
+function qrBinarize(data, w, h) {
+  var gray = new Uint8Array(w * h), i, p;
+  for (i = 0; i < w * h; i++) {
+    p = i << 2;
+    gray[i] = (data[p] * 77 + data[p + 1] * 150 + data[p + 2] * 29) >> 8;
+  }
+  var BS = 8, bw = Math.max(1, w >> 3), bh = Math.max(1, h >> 3);
+  var avg = new Float32Array(bw * bh);
+  for (var by = 0; by < bh; by++) for (var bx = 0; bx < bw; bx++) {
+    var sum = 0, mn = 255, mx = 0, n = 0;
+    for (var y = 0; y < BS; y++) {
+      var yy = by * BS + y; if (yy >= h) break;
+      for (var x = 0; x < BS; x++) {
+        var xx = bx * BS + x; if (xx >= w) break;
+        var g = gray[yy * w + xx]; sum += g; n++;
+        if (g < mn) mn = g;
+        if (g > mx) mx = g;
+      }
+    }
+    var a;
+    if (mx - mn > 24) a = sum / n;
+    else {
+      /* a block with no contrast is usually paper, but inside a large dark
+         module it is not, so fall back to what the neighbours decided */
+      a = mn / 2;
+      if (by > 0 && bx > 0) {
+        var nb = (avg[(by - 1) * bw + bx] + 2 * avg[by * bw + bx - 1] + avg[(by - 1) * bw + bx - 1]) / 4;
+        if (mn < nb) a = nb;
+      }
+    }
+    avg[by * bw + bx] = a;
+  }
+  var bits = new Uint8Array(w * h);
+  for (var y2 = 0; y2 < h; y2++) {
+    var by2 = Math.min(bh - 1, y2 >> 3);
+    for (var x2 = 0; x2 < w; x2++) {
+      var bx2 = Math.min(bw - 1, x2 >> 3), s = 0, c = 0;
+      for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+        var ny = by2 + dy, nx = bx2 + dx;
+        if (ny < 0 || nx < 0 || ny >= bh || nx >= bw) continue;
+        s += avg[ny * bw + nx]; c++;
+      }
+      bits[y2 * w + x2] = gray[y2 * w + x2] < s / c ? 1 : 0;
+    }
+  }
+  return bits;
+}
+
+function qrFinders(bits, w, h) {
+  var out = [];
+  function ratio(r) {
+    var total = r[0] + r[1] + r[2] + r[3] + r[4];
+    if (total < 7) return 0;
+    var mod = total / 7, tol = mod * 0.6;
+    return Math.abs(mod - r[0]) < tol && Math.abs(mod - r[1]) < tol &&
+           Math.abs(3 * mod - r[2]) < 3 * tol && Math.abs(mod - r[3]) < tol &&
+           Math.abs(mod - r[4]) < tol ? mod : 0;
+  }
+  function get(x, y) { return (x < 0 || y < 0 || x >= w || y >= h) ? 0 : bits[y * w + x]; }
+  function vcheck(cx, cy, mod) {
+    var r = [0, 0, 0, 0, 0], y = cy;
+    while (y >= 0 && get(cx, y)) { r[2]++; y--; }
+    while (y >= 0 && !get(cx, y) && r[1] <= mod * 3) { r[1]++; y--; }
+    while (y >= 0 && get(cx, y) && r[0] <= mod * 3) { r[0]++; y--; }
+    y = cy + 1;
+    while (y < h && get(cx, y)) { r[2]++; y++; }
+    while (y < h && !get(cx, y) && r[3] <= mod * 3) { r[3]++; y++; }
+    while (y < h && get(cx, y) && r[4] <= mod * 3) { r[4]++; y++; }
+    if (!ratio(r)) return -1;
+    return y - r[4] - r[3] - r[2] / 2;
+  }
+  for (var y = 0; y < h; y += 2) {
+    var run = [0, 0, 0, 0, 0], cur = 0, x;
+    for (x = 0; x < w; x++) {
+      var b = bits[y * w + x];
+      if (b === cur) run[4]++;
+      else {
+        if (cur === 1) {
+          var mod = ratio(run);
+          if (mod) {
+            var cx = x - run[4] - run[3] - run[2] / 2;
+            var cy = vcheck(Math.round(cx), y, mod);
+            if (cy >= 0) out.push({ x: cx, y: cy, m: mod });
+          }
+        }
+        run[0] = run[1]; run[1] = run[2]; run[2] = run[3]; run[3] = run[4];
+        run[4] = 1; cur = b;
+      }
+    }
+    if (cur === 1) {
+      var mod2 = ratio(run);
+      if (mod2) {
+        var cx2 = x - run[4] - run[3] - run[2] / 2;
+        var cy2 = vcheck(Math.round(cx2), y, mod2);
+        if (cy2 >= 0) out.push({ x: cx2, y: cy2, m: mod2 });
+      }
+    }
+  }
+  var merged = [];
+  out.forEach(function (p) {
+    for (var i = 0; i < merged.length; i++) {
+      var q = merged[i];
+      if (Math.abs(q.x - p.x) < q.m * 2 && Math.abs(q.y - p.y) < q.m * 2) {
+        q.x = (q.x * q.n + p.x) / (q.n + 1);
+        q.y = (q.y * q.n + p.y) / (q.n + 1);
+        q.m = (q.m * q.n + p.m) / (q.n + 1);
+        q.n++;
+        return;
+      }
+    }
+    merged.push({ x: p.x, y: p.y, m: p.m, n: 1 });
+  });
+  return merged.filter(function (p) { return p.n >= 2; });
+}
+
+function qrTriple(pts) {
+  var best = null, bestScore = 1e9;
+  for (var a = 0; a < pts.length; a++)
+    for (var b = a + 1; b < pts.length; b++)
+      for (var c = b + 1; c < pts.length; c++) {
+        var P = [pts[a], pts[b], pts[c]];
+        var d = [qrDist(P[1], P[2]), qrDist(P[0], P[2]), qrDist(P[0], P[1])];
+        var hi = d[0] > d[1] ? (d[0] > d[2] ? 0 : 2) : (d[1] > d[2] ? 1 : 2);
+        var tl = P[hi], o1 = P[(hi + 1) % 3], o2 = P[(hi + 2) % 3];
+        var l1 = qrDist(tl, o1), l2 = qrDist(tl, o2), hyp = qrDist(o1, o2);
+        if (!l1 || !l2 || !hyp) continue;
+        var sq = Math.abs(l1 - l2) / Math.max(l1, l2);
+        var right = Math.abs(hyp - Math.sqrt(l1 * l1 + l2 * l2)) / hyp;
+        var msz = (Math.abs(P[0].m - P[1].m) + Math.abs(P[1].m - P[2].m)) / Math.max(1, P[0].m);
+        var score = sq * 2 + right * 3 + msz;
+        if (score < bestScore && sq < .4 && right < .3) {
+          bestScore = score;
+          var v1 = { x: o1.x - tl.x, y: o1.y - tl.y }, v2 = { x: o2.x - tl.x, y: o2.y - tl.y };
+          best = (v1.x * v2.y - v1.y * v2.x) > 0 ? { tl: tl, tr: o1, bl: o2 } : { tl: tl, tr: o2, bl: o1 };
+        }
+      }
+  return best;
+}
+
+
+/* ---- perspective transform, ported from the standard four-point method,
+   so a phone held at an angle still samples the grid correctly ---- */
+function ptSquareToQuad(x0, y0, x1, y1, x2, y2, x3, y3) {
+  var dx3 = x0 - x1 + x2 - x3, dy3 = y0 - y1 + y2 - y3;
+  if (dx3 === 0 && dy3 === 0) return [x1 - x0, x2 - x1, x0, y1 - y0, y2 - y1, y0, 0, 0, 1];
+  var dx1 = x1 - x2, dx2 = x3 - x2, dy1 = y1 - y2, dy2 = y3 - y2;
+  var den = dx1 * dy2 - dx2 * dy1;
+  if (!den) return null;
+  var a13 = (dx3 * dy2 - dx2 * dy3) / den, a23 = (dx1 * dy3 - dx3 * dy1) / den;
+  return [x1 - x0 + a13 * x1, x3 - x0 + a23 * x3, x0,
+          y1 - y0 + a13 * y1, y3 - y0 + a23 * y3, y0,
+          a13, a23, 1];
+}
+function ptAdjoint(m) {
+  /* m = [a11,a21,a31, a12,a22,a32, a13,a23,a33] */
+  return [m[4] * m[8] - m[7] * m[5],
+          m[7] * m[2] - m[1] * m[8],
+          m[1] * m[5] - m[4] * m[2],
+          m[6] * m[5] - m[3] * m[8],
+          m[0] * m[8] - m[6] * m[2],
+          m[3] * m[2] - m[0] * m[5],
+          m[3] * m[7] - m[6] * m[4],
+          m[6] * m[1] - m[0] * m[7],
+          m[0] * m[4] - m[3] * m[1]];
+}
+function ptTimes(a, b) {
+  return [a[0]*b[0]+a[1]*b[3]+a[2]*b[6], a[0]*b[1]+a[1]*b[4]+a[2]*b[7], a[0]*b[2]+a[1]*b[5]+a[2]*b[8],
+          a[3]*b[0]+a[4]*b[3]+a[5]*b[6], a[3]*b[1]+a[4]*b[4]+a[5]*b[7], a[3]*b[2]+a[4]*b[5]+a[5]*b[8],
+          a[6]*b[0]+a[7]*b[3]+a[8]*b[6], a[6]*b[1]+a[7]*b[4]+a[8]*b[7], a[6]*b[2]+a[7]*b[5]+a[8]*b[8]];
+}
+function ptQuadToQuad(s, d) {
+  var sq = ptSquareToQuad(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]);
+  var dq = ptSquareToQuad(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7]);
+  if (!sq || !dq) return null;
+  return ptTimes(dq, ptAdjoint(sq));
+}
+function ptApply(m, x, y) {
+  var den = m[6] * x + m[7] * y + m[8];
+  if (!den) return null;
+  return { x: (m[0] * x + m[1] * y + m[2]) / den, y: (m[3] * x + m[4] * y + m[5]) / den };
+}
+
+/* look for the small alignment square near the estimated spot. Candidates
+   from a cheap run scan are then checked against the full 5 by 5 shape, which
+   stops the search locking onto an ordinary dark data module. */
+function qrAlignShape(bits, w, h, cx, cy, m) {
+  var want = [[1,1,1,1,1],[1,0,0,0,1],[1,0,1,0,1],[1,0,0,0,1],[1,1,1,1,1]];
+  var wrong = 0;
+  for (var r = 0; r < 5; r++) for (var c = 0; c < 5; c++) {
+    var x = Math.round(cx + (c - 2) * m), y = Math.round(cy + (r - 2) * m);
+    var v = (x < 0 || y < 0 || x >= w || y >= h) ? 0 : bits[y * w + x];
+    if (v !== want[r][c]) { wrong++; if (wrong > 2) return false; }
+  }
+  return true;
+}
+function qrFindAlign(bits, w, h, ex, ey, mod, reach) {
+  var win = Math.max(5, Math.round(mod * (reach || 4)));
+  var x0 = Math.max(0, Math.round(ex - win)), x1 = Math.min(w - 1, Math.round(ex + win));
+  var y0 = Math.max(0, Math.round(ey - win)), y1 = Math.min(h - 1, Math.round(ey + win));
+  var scales = [1, .85, 1.15, .7, 1.3];
+  var best = null, bestD = 1e9;
+  for (var y = y0; y <= y1; y++) {
+    for (var x = x0; x <= x1; x++) {
+      if (!bits[y * w + x]) continue;                 /* centre must be dark */
+      var d = (x - ex) * (x - ex) + (y - ey) * (y - ey);
+      if (d >= bestD) continue;
+      for (var si = 0; si < scales.length; si++) {
+        if (qrAlignShape(bits, w, h, x, y, mod * scales[si])) { bestD = d; best = { x: x, y: y }; break; }
+      }
+    }
+  }
+  return best;
+}
+
+function qrReserved(ver) {
+  var size = 17 + ver * 4, i, j;
+  var ALIGN = { 1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30], 6: [6, 34],
+                7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50] };
+  var rsv = [];
+  for (i = 0; i < size; i++) rsv.push(new Uint8Array(size));
+  function mark(r, c) { if (r >= 0 && c >= 0 && r < size && c < size) rsv[r][c] = 1; }
+  function block(r, c, n) { for (var a = 0; a < n; a++) for (var b = 0; b < n; b++) mark(r + a, c + b); }
+  block(0, 0, 8); block(0, size - 8, 8); block(size - 8, 0, 8);
+  for (i = 0; i < size; i++) { mark(6, i); mark(i, 6); }
+  var ac = ALIGN[ver] || [];
+  for (i = 0; i < ac.length; i++) for (j = 0; j < ac.length; j++) {
+    var ar = ac[i], acc = ac[j];
+    if ((ar <= 8 && acc <= 8) || (ar <= 8 && acc >= size - 9) || (ar >= size - 9 && acc <= 8)) continue;
+    block(ar - 2, acc - 2, 5);
+  }
+  for (i = 0; i < 9; i++) { mark(8, i); mark(i, 8); }
+  for (i = 0; i < 8; i++) { mark(8, size - 1 - i); mark(size - 1 - i, 8); }
+  if (ver >= 7) for (i = 0; i < 6; i++) for (j = 0; j < 3; j++) { mark(i, size - 11 + j); mark(size - 11 + j, i); }
+  return rsv;
+}
+
+function qrMaskFn(k, r, c) {
+  switch (k) {
+    case 0: return (r + c) % 2 === 0;
+    case 1: return r % 2 === 0;
+    case 2: return c % 3 === 0;
+    case 3: return (r + c) % 3 === 0;
+    case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
+    case 5: return ((r * c) % 2) + ((r * c) % 3) === 0;
+    case 6: return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0;
+    default: return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0;
+  }
+}
+
+function qrFormat(word) {
+  var best = -1, bestD = 99;
+  for (var d = 0; d < 32; d++) {
+    var r = d;
+    for (var k = 0; k < 10; k++) r = (r << 1) ^ (((r >>> 9) & 1) * 0x537);
+    var v = ((d << 10) | (r & 0x3FF)) ^ 0x5412;
+    var diff = 0, x = v ^ word;
+    while (x) { diff += x & 1; x >>>= 1; }
+    if (diff < bestD) { bestD = diff; best = d; }
+  }
+  if (bestD > 3) return null;
+  return { ecl: ["M", "L", "H", "Q"][best >> 3], mask: best & 7 };
+}
+
+function qrReadGrid(sample, dim) {
+  var f = 0, i;
+  for (i = 0; i <= 5; i++) f |= sample(i, 8) << i;
+  f |= sample(7, 8) << 6;
+  f |= sample(8, 8) << 7;
+  f |= sample(8, 7) << 8;
+  for (i = 9; i < 15; i++) f |= sample(8, 14 - i) << i;
+  var fmt = qrFormat(f);
+  if (!fmt) {
+    f = 0;
+    for (i = 0; i < 8; i++) f |= sample(8, dim - 1 - i) << i;
+    for (i = 8; i < 15; i++) f |= sample(dim - 15 + i, 8) << i;
+    fmt = qrFormat(f);
+    if (!fmt) return null;
+  }
+  var ver = (dim - 17) / 4, rsv = qrReserved(ver);
+  var bytes = [], bit = 0, cur = 0, up = true;
+  for (var col = dim - 1; col > 0; col -= 2) {
+    if (col === 6) col = 5;
+    for (var rn = 0; rn < dim; rn++) {
+      var row = up ? dim - 1 - rn : rn;
+      for (var sc = 0; sc < 2; sc++) {
+        var cx = col - sc;
+        if (rsv[row][cx]) continue;
+        var b = sample(row, cx) ^ (qrMaskFn(fmt.mask, row, cx) ? 1 : 0);
+        cur = (cur << 1) | b;
+        if (++bit === 8) { bytes.push(cur); cur = 0; bit = 0; }
+      }
+    }
+    up = !up;
+  }
+  return { ecl: fmt.ecl, ver: ver, codewords: bytes };
+}
+
+
+/* ---- Reed-Solomon over GF(256), the QR field. Corrects up to ecLen/2
+   wrong codewords per block, which is what makes a blurred or slightly
+   glared frame still readable. ---- */
+var QR_EXP = null, QR_LOG = null;
+function qrGF() {
+  if (QR_EXP) return;
+  QR_EXP = new Uint8Array(512); QR_LOG = new Uint8Array(256);
+  var x = 1;
+  for (var i = 0; i < 255; i++) { QR_EXP[i] = x; QR_LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; }
+  for (i = 255; i < 512; i++) QR_EXP[i] = QR_EXP[i - 255];
+}
+function gmul(a, b) { if (!a || !b) return 0; qrGF(); return QR_EXP[QR_LOG[a] + QR_LOG[b]]; }
+function gdiv(a, b) { if (!a) return 0; qrGF(); return QR_EXP[(QR_LOG[a] + 255 - QR_LOG[b]) % 255]; }
+function gpow(n) { qrGF(); return QR_EXP[((n % 255) + 255) % 255]; }
+function gpolyMul(p, q) {
+  var r = new Array(p.length + q.length - 1).fill(0);
+  for (var i = 0; i < p.length; i++) for (var j = 0; j < q.length; j++) r[i + j] ^= gmul(p[i], q[j]);
+  return r;
+}
+function gpolyEval(p, x) {
+  var y = p[0];
+  for (var i = 1; i < p.length; i++) y = gmul(y, x) ^ p[i];
+  return y;
+}
+function qrPolyScale(p, x) { return p.map(function (v) { return gmul(v, x); }); }
+function qrPolyAdd(p, q) {
+  var r = new Array(Math.max(p.length, q.length)).fill(0), i;
+  for (i = 0; i < p.length; i++) r[i + r.length - p.length] = p[i];
+  for (i = 0; i < q.length; i++) r[i + r.length - q.length] ^= q[i];
+  return r;
+}
+function rsDecode(msg, nsym) {
+  qrGF();
+  var i, j;
+  var synd = [0], bad = false;
+  for (i = 0; i < nsym; i++) { var sv = gpolyEval(msg, gpow(i)); synd.push(sv); if (sv) bad = true; }
+  if (!bad) return msg.slice();
+  var errLoc = [1], oldLoc = [1];
+  for (i = 0; i < nsym; i++) {
+    var K = i + 1, delta = synd[K];
+    for (j = 1; j < errLoc.length; j++) delta ^= gmul(errLoc[errLoc.length - 1 - j], synd[K - j]);
+    oldLoc = oldLoc.concat([0]);
+    if (delta !== 0) {
+      if (oldLoc.length > errLoc.length) {
+        var neu = qrPolyScale(oldLoc, delta);
+        oldLoc = qrPolyScale(errLoc, gdiv(1, delta));
+        errLoc = neu;
+      }
+      errLoc = qrPolyAdd(errLoc, qrPolyScale(oldLoc, delta));
+    }
+  }
+  while (errLoc.length && errLoc[0] === 0) errLoc.shift();
+  var nerr = errLoc.length - 1;
+  if (nerr === 0 || nerr * 2 > nsym) return null;
+  /* the locator vanishes at negative powers: root a^-k means the error sits
+     k codewords from the end */
+  var pos = [], coefPos = [];
+  for (i = 0; i < msg.length; i++) if (gpolyEval(errLoc, gpow(-i)) === 0) { coefPos.push(i); pos.push(msg.length - 1 - i); }
+  if (pos.length !== nerr) return null;
+  /* Forney, with polynomials indexed lowest degree first */
+  var lam = errLoc.slice().reverse();
+  if (lam[0] !== 1) { var inv0 = gdiv(1, lam[0]); lam = lam.map(function (v) { return gmul(v, inv0); }); }
+  var S = [];
+  for (i = 0; i < nsym; i++) S.push(synd[i + 1]);
+  var omega = new Array(nsym).fill(0);
+  for (i = 0; i < S.length; i++) for (j = 0; j < lam.length; j++)
+    if (i + j < nsym) omega[i + j] ^= gmul(S[i], lam[j]);
+  var lamp = [];
+  for (i = 1; i < lam.length; i++) lamp.push(i % 2 ? lam[i] : 0);
+  function evalLow(poly, x) {
+    var y = 0, xp = 1;
+    for (var k = 0; k < poly.length; k++) { y ^= gmul(poly[k], xp); xp = gmul(xp, x); }
+    return y;
+  }
+  var out = msg.slice();
+  for (i = 0; i < coefPos.length; i++) {
+    var X = gpow(coefPos[i]), Xinv = gpow(-coefPos[i]);
+    var den = evalLow(lamp, Xinv);
+    if (!den) return null;
+    out[msg.length - 1 - coefPos[i]] ^= gdiv(gmul(X, evalLow(omega, Xinv)), den);
+  }
+  for (i = 0; i < nsym; i++) if (gpolyEval(out, gpow(i)) !== 0) return null;
+  return out;
+}
+
+var QR_SPEC = {
+  L: { 1:[7,[[1,19]]],2:[10,[[1,34]]],3:[15,[[1,55]]],4:[20,[[1,80]]],5:[26,[[1,108]]],
+       6:[18,[[2,68]]],7:[20,[[2,78]]],8:[24,[[2,97]]],9:[30,[[2,116]]],10:[18,[[2,68],[2,69]]] },
+  M: { 1:[10,[[1,16]]],2:[16,[[1,28]]],3:[26,[[1,44]]],4:[18,[[2,32]]],5:[24,[[2,43]]],
+       6:[16,[[4,27]]],7:[18,[[4,31]]],8:[22,[[2,38],[2,39]]],9:[22,[[3,36],[2,37]]],10:[26,[[4,43],[1,44]]] }
+};
+
+function qrPayload(res) {
+  var spec = QR_SPEC[res.ecl] && QR_SPEC[res.ecl][res.ver];
+  if (!spec) return null;
+  var ecLen = spec[0], sizes = [];
+  spec[1].forEach(function (g) { for (var i = 0; i < g[0]; i++) sizes.push(g[1]); });
+  var nb = sizes.length, dataTotal = sizes.reduce(function (a, b) { return a + b; }, 0);
+  if (res.codewords.length < dataTotal + nb * ecLen) return null;
+  var i, b;
+  var dBlocks = sizes.map(function () { return []; });
+  var eBlocks = sizes.map(function () { return []; });
+  var maxLen = Math.max.apply(null, sizes), k = 0;
+  for (i = 0; i < maxLen; i++) for (b = 0; b < nb; b++) if (i < sizes[b]) dBlocks[b].push(res.codewords[k++]);
+  for (i = 0; i < ecLen; i++) for (b = 0; b < nb; b++) eBlocks[b].push(res.codewords[k++]);
+  var data = [];
+  for (b = 0; b < nb; b++) {
+    var fixed = rsDecode(dBlocks[b].concat(eBlocks[b]), ecLen);
+    if (!fixed) return null;
+    data = data.concat(fixed.slice(0, sizes[b]));
+  }
+  var pos = 0;
+  function take(n) {
+    var v = 0;
+    for (var i2 = 0; i2 < n; i2++) {
+      v = (v << 1) | ((data[pos >> 3] >>> (7 - (pos & 7))) & 1);
+      pos++;
+    }
+    return v;
+  }
+  if (take(4) !== 4) return null;
+  var len = take(res.ver < 10 ? 8 : 16);
+  if (len < 1 || len > data.length - 2) return null;
+  var out = [];
+  for (var j = 0; j < len; j++) out.push(take(8));
+  return out;
+}
+
+function qrBytesToText(b) {
+  var s = "";
+  for (var i = 0; i < b.length; i++) s += "%" + ("0" + b[i].toString(16)).slice(-2);
+  try { return decodeURIComponent(s); } catch (e) { return null; }
+}
+
+function qrDecodeImage(data, w, h) {
+  var bits = qrBinarize(data, w, h);
+  var pts = qrFinders(bits, w, h);
+  if (pts.length < 3) return null;
+  var t = qrTriple(pts);
+  if (!t) return null;
+  var mod = (t.tl.m + t.tr.m + t.bl.m) / 3;
+  if (mod < 1.5) return null;
+  var dimX = Math.round(qrDist(t.tl, t.tr) / mod) + 7;
+  var dimY = Math.round(qrDist(t.tl, t.bl) / mod) + 7;
+  var est = Math.round((dimX + dimY) / 2);
+  est -= ((est - 17) % 4 + 4) % 4;
+  /* the size estimate can be one version out when the phone is tilted, and a
+     wrong grid simply fails the checksum, so a few sizes are tried in turn */
+  var tries = [est, est - 4, est + 4, est - 8, est + 8];
+  for (var ti = 0; ti < tries.length; ti++) {
+    var dim = tries[ti];
+    if (dim < 21 || dim > 57) continue;
+    var span = dim - 7;
+    var ux = (t.tr.x - t.tl.x) / span, uy = (t.tr.y - t.tl.y) / span;
+    var vx = (t.bl.x - t.tl.x) / span, vy = (t.bl.y - t.tl.y) / span;
+    var ox = t.tl.x - 3.5 * ux - 3.5 * vx, oy = t.tl.y - 3.5 * uy - 3.5 * vy;
+    var forms = [null];
+    if (dim >= 25) {
+      var ax = ox + (dim - 6.5) * ux + (dim - 6.5) * vx;
+      var ay = oy + (dim - 6.5) * uy + (dim - 6.5) * vy;
+      var al = qrFindAlign(bits, w, h, ax, ay, mod, 4) || qrFindAlign(bits, w, h, ax, ay, mod, 8);
+      var src = [3.5, 3.5, dim - 3.5, 3.5, dim - 6.5, dim - 6.5, 3.5, dim - 3.5];
+      if (al) {
+        var xf = ptQuadToQuad(src, [t.tl.x, t.tl.y, t.tr.x, t.tr.y, al.x, al.y, t.bl.x, t.bl.y]);
+        if (xf) forms = [xf, null];
+      }
+    }
+    for (var fi = 0; fi < forms.length; fi++) {
+      var out = qrTryGrid(bits, w, h, dim, forms[fi], ox, oy, ux, uy, vx, vy, mod);
+      if (out) return out;
+    }
+  }
+  return null;
+}
+
+function qrTryGrid(bits, w, h, dim, xf, ox, oy, ux, uy, vx, vy, mod) {
+  function sample(r, c) {
+    var x, y;
+    if (xf) {
+      var q = ptApply(xf, c + .5, r + .5);
+      if (!q) return 0;
+      x = q.x; y = q.y;
+    } else {
+      x = ox + (c + .5) * ux + (r + .5) * vx;
+      y = oy + (c + .5) * uy + (r + .5) * vy;
+    }
+    var xi = Math.round(x), yi = Math.round(y);
+    if (xi < 0 || yi < 0 || xi >= w || yi >= h) return 0;
+    if (mod < 3.5) return bits[yi * w + xi];
+    var s = 0, n = 0;
+    for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+      var X = xi + dx, Y = yi + dy;
+      if (X < 0 || Y < 0 || X >= w || Y >= h) continue;
+      s += bits[Y * w + X]; n++;
+    }
+    return s * 2 > n ? 1 : 0;
+  }
+  var res = qrReadGrid(sample, dim);
+  if (!res) return null;
+  var pl = qrPayload(res);
+  if (!pl) return null;
+  return qrBytesToText(pl);
+}
+
 /* ------------------------------------------------------------------ */
 /* settings                                                            */
 /* ------------------------------------------------------------------ */
@@ -1120,11 +1596,15 @@ Object.keys(DEF).forEach(function (k) { cfg[k] = store.get(k, DEF[k]); });
 /* Three rungs. 0 keeps everything inside the local network, which is the
    rung that survives a VPN and needs no internet at all. 1 adds STUN so two
    routers can find each other. 2 adds a relay you supply yourself. */
+/* lanOnly is the promise that the picture never leaves the Wi-Fi: no STUN,
+   no relay, and every candidate that is not a local address is dropped before
+   it is offered or accepted. If that finds no route at all the session gives
+   up on the promise rather than on the connection, and says so. */
+var relaxLan = false;
+function lanActive() { return cfg.lanOnly && !relaxLan; }
+
 function iceConf(stage) {
-  /* lanOnly is the promise that the picture never leaves the Wi-Fi: no STUN,
-     no relay, and every candidate that is not a local address is dropped
-     before it is offered or accepted. */
-  if (cfg.lanOnly) return { iceServers: [], iceCandidatePoolSize: 0, bundlePolicy: "max-bundle" };
+  if (lanActive()) return { iceServers: [], iceCandidatePoolSize: 0, bundlePolicy: "max-bundle" };
   var list = [];
   if (stage >= 1) {
     list.push({ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] });
@@ -1148,7 +1628,7 @@ function isHostCand(c) {
 }
 /* keep only local candidates in a description we are about to send */
 function trimSdp(sdp) {
-  if (!cfg.lanOnly) return sdp;
+  if (!lanActive()) return sdp;
   return sdp.split(/\r?\n/).filter(function (l) {
     return !(/^a=candidate:/.test(l) && !/ typ host/.test(l));
   }).join("\r\n");
@@ -1356,51 +1836,6 @@ function Bus(id, cb) {
 }
 
 /* ------------------------------------------------------------------ */
-/* offline pairing: pack a description into copyable text              */
-/* ------------------------------------------------------------------ */
-function b64(u8) {
-  var s = "", i;
-  for (i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
-  return btoa(s).replace(/=+$/, "");
-}
-function unb64(s) {
-  var bin = atob(s.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/"));
-  var u = new Uint8Array(bin.length), i;
-  for (i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-  return u;
-}
-function pack(obj) {
-  var bytes = new TextEncoder().encode(JSON.stringify(obj));
-  if (!window.CompressionStream) return Promise.resolve("TR1" + b64(bytes));
-  try {
-    var cs = new CompressionStream("deflate-raw");
-    var w = cs.writable.getWriter(); w.write(bytes); w.close();
-    return new Response(cs.readable).arrayBuffer().then(function (buf) { return "TD1" + b64(new Uint8Array(buf)); },
-      function () { return "TR1" + b64(bytes); });
-  } catch (e) { return Promise.resolve("TR1" + b64(bytes)); }
-}
-function unpack(text) {
-  text = String(text || "").trim();
-  var tag = text.slice(0, 3), body = text.slice(3);
-  if (tag !== "TR1" && tag !== "TD1") return Promise.reject(new Error("That is not a Tether pairing block"));
-  var u = unb64(body);
-  if (tag === "TR1") return Promise.resolve(JSON.parse(new TextDecoder().decode(u)));
-  var ds = new DecompressionStream("deflate-raw");
-  var w = ds.writable.getWriter(); w.write(u); w.close();
-  return new Response(ds.readable).arrayBuffer().then(function (b) { return JSON.parse(new TextDecoder().decode(b)); });
-}
-function gathered(pc) {
-  return new Promise(function (res) {
-    if (pc.iceGatheringState === "complete") return res();
-    var done = false;
-    var t = setTimeout(fin, 3500);
-    function fin() { if (done) return; done = true; clearTimeout(t); pc.removeEventListener("icegatheringstatechange", chk); res(); }
-    function chk() { if (pc.iceGatheringState === "complete") fin(); }
-    pc.addEventListener("icegatheringstatechange", chk);
-  });
-}
-
-/* ------------------------------------------------------------------ */
 /* stats                                                               */
 /* ------------------------------------------------------------------ */
 function sampler(getPc, inbound, paint) {
@@ -1475,7 +1910,7 @@ function show(which) {
   if (which === "view") setTimeout(fitVideo, 20);
 }
 function openDlg(id) {
-  ["dlgHelp", "dlgSet", "dlgManual", "dlgDiag", "dlgLog"].forEach(function (d) { $(d).classList.remove("show"); });
+  ["dlgHelp", "dlgSet", "dlgDiag", "dlgLog"].forEach(function (d) { $(d).classList.remove("show"); });
   $(id).classList.add("show");
   $("veil").classList.add("show");
 }
@@ -1504,7 +1939,7 @@ function vWarn(t) {
   if (!t) { w.classList.remove("show"); w.textContent = ""; return; }
   w.textContent = t; w.classList.add("show");
 }
-function joinURL(code) { return location.origin + location.pathname + "?c=" + code; }
+function pairText(code) { return "TETHER-PAIR-V1:" + code; }
 
 function vNewCode() { vStart(String(1000 + Math.floor(Math.random() * 9000))); }
 
@@ -1527,14 +1962,14 @@ function lanCheck(prompt) {
 
 function vStart(code) {
   vTeardown();
+  relaxLan = false;
   V.code = code;
   $("vCodeTxt").textContent = code;
   $("pairCode").textContent = code;
-  var url = joinURL(code);
-  $("pairUrl").textContent = url;
-  try { drawQR($("qr"), url); } catch (e) { log("qr: " + e.message); }
-  $("pairNote").textContent = "Waiting for a camera.";
+  try { drawQR($("qr"), pairText(code)); } catch (e) { log("qr: " + e.message); }
+  $("pairNote").innerHTML = "Open this page on the phone, tap <b>Scan the square</b>, and point it here.";
   vStatus("wait", "Opening the code…");
+  railEnabled(false);
   lanCheck(cfg.askLan && !V.asked);
   V.bus = Bus("tether-" + code, {
     up: function () {
@@ -1545,7 +1980,7 @@ function vStart(code) {
     down: function () {
       if (V.bus && !V.bus.ready().length && !V.gotVideo) {
         vStatus("bad", "No pairing relay is reachable");
-        vWarn("No pairing relay could be reached. Check this machine's connection, or pair offline.");
+        vWarn("No pairing relay could be reached from this machine.");
       }
     },
     taken: function () { log("code already in use, choosing another"); vNewCode(); },
@@ -1559,7 +1994,7 @@ function vSignal(m, link) {
   if (m.type === "CANDIDATE") {
     var c = m.payload && m.payload.candidate;
     if (!c) return;
-    if (cfg.lanOnly && c.candidate && !isHostCand(c)) return;
+    if (lanActive() && c.candidate && !isHostCand(c)) return;
     if (V.pc && V.pc.remoteDescription) V.pc.addIceCandidate(c).catch(function () {});
     else V.pend.push(c);
     return;
@@ -1578,13 +2013,14 @@ function vAnswer(src, payload, link) {
   if (!same) { vClose(); V.peer = src; }
   V.connId = connId || V.connId || "tc_" + rid(6);
   var stage = (payload && typeof payload.stage === "number") ? payload.stage : 1;
+  if (stage >= 1 && lanActive()) { relaxLan = true; log("[screen] the phone left Wi-Fi-only mode, following"); }
   var pc = same ? V.pc : new RTCPeerConnection(iceConf(stage));
 
   if (!same) {
     V.pc = pc;
     pc.onicecandidate = function (e) {
       if (!e.candidate || !V.link) return;
-      if (cfg.lanOnly && !isHostCand(e.candidate)) return;
+      if (lanActive() && !isHostCand(e.candidate)) return;
       V.link.send("CANDIDATE", candMsg(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, V.connId), src);
     };
     pc.ontrack = function (e) {
@@ -1635,28 +2071,28 @@ function vRouteWatch() {
     var st = V.pc.iceConnectionState;
     if (st === "connected" || st === "completed") return;
     vStatus("bad", "Paired, but no video route between the devices");
-    if (cfg.lanOnly) {
+    if (lanActive()) {
       vWarn("The phone reached this screen, so pairing works — but no route inside the Wi-Fi. Either the two " +
         "devices are on different networks, the router keeps its clients apart, or the VPN blocks local " +
         (ipOpen ? "traffic. " : "traffic and this screen has not published its local address. ") +
-        "Turn off “keep the video on this Wi-Fi” in Settings to let it go over the internet instead.");
+        "Trying the long way round now.");
       return;
     }
     vWarn("The phone reached this screen, so the code works — the two devices just cannot pass video. " +
       "This is what a VPN that blocks local network access does. Allow local network access in the VPN app " +
       (ipOpen ? "" : "and press “Publish local address” on the right, ") +
-      "then press the refresh button. Offline pairing avoids the problem completely.");
+      "then press the refresh button above.");
   }, 11000);
 }
 
 function vLive() {
   if (V.gotVideo) return;
   clearTimeout(V.routeT);
+  railEnabled(true);
   V.gotVideo = true;
   document.body.classList.add("live");
   $("frame").classList.add("hasvideo");
   $("pairNote").textContent = "Connected.";
-  if ($("dlgManual").classList.contains("show")) closeDlg();
   V.since = Date.now(); V.lastBeat = V.lastMedia = Date.now();
   vStatus("live", "Live");
   tick("up");
@@ -1725,6 +2161,7 @@ setInterval(function () {
 
 function vDropped() {
   if (!V.gotVideo) return;
+  railEnabled(false);
   V.gotVideo = false;
   document.body.classList.remove("live");
   $("frame").classList.remove("hasvideo", "frozen");
@@ -1738,6 +2175,7 @@ function vDropped() {
 
 function vClose() {
   clearTimeout(V.routeT);
+  railEnabled(false);
   clearInterval(V.statT); clearInterval(V.upT);
   Object.keys(V.acks).forEach(function (k) { clearTimeout(V.acks[k]); delete V.acks[k]; });
   if (V.dc) { try { V.dc.close(); } catch (e) {} V.dc = null; }
@@ -1781,6 +2219,16 @@ function able(el, ok, why) {
   el.disabled = !ok;
   el.title = ok ? el.dataset.tip : why;
 }
+var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rPrev", "rNext", "rFps", "rHold", "rSd", "rMic", "rRes", "rBr"];
+function railEnabled(on2) {
+  RAIL.forEach(function (id) {
+    var el = $(id);
+    if (!el) return;
+    el.disabled = !on2;
+    if (!on2) el.classList.remove("on");
+  });
+}
+
 function vApplyState(s) {
   V.cam = s;
   $("rLed").classList.toggle("on", !!s.torch);
@@ -1918,8 +2366,6 @@ on($("vHelp"), "click", function () { openDlg("dlgHelp"); });
 on($("vLog"), "click", function () { openDlg("dlgLog"); });
 on($("cLog"), "click", function () { openDlg("dlgLog"); });
 on($("logCopy"), "click", function () { copyText(logs.join("\n")); });
-on($("cpLink"), "click", function () { copyText(joinURL(V.code)); });
-on($("cpCode"), "click", function () { copyText(V.code || ""); });
 
 on($("vFit"), "change", fitVideo);
 on($("vZoom"), "input", function () { V.zoom = +$("vZoom").value; fitVideo(); });
@@ -2261,6 +2707,7 @@ function camConnect(code) {
   code = String(code || "").replace(/\D/g, "");
   if (code.length !== 4) { cWarn("Type the four digits shown on the screen."); return; }
   cWarn("");
+  stopScan();
   C.code = code; C.want = true; C.manual = false;
   C.stage = cfg.local ? 0 : 1;
   store.set("lastCode", code);
@@ -2292,7 +2739,7 @@ function camConnect(code) {
 }
 
 function climb() {
-  if (cfg.lanOnly) return false;
+  if (lanActive()) return false;
   if (C.stage >= 2) return false;
   if (Date.now() - C.climbed < 3000) return true;
   C.climbed = Date.now();
@@ -2320,7 +2767,7 @@ function camOffer() {
 
   pc.onicecandidate = function (e) {
     if (!e.candidate) return;
-    if (cfg.lanOnly && !isHostCand(e.candidate)) return;
+    if (lanActive() && !isHostCand(e.candidate)) return;
     var body = candMsg(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, C.connId);
     var dst = "tether-" + C.code;
     if (C.link) C.link.send("CANDIDATE", body, dst);
@@ -2341,7 +2788,7 @@ function camOffer() {
       if (climb()) restartIce(true);
       else {
         cStatus("bad", "No usable route to that screen");
-        cWarn("No route between the devices. On a full-tunnel VPN this needs offline pairing or your own TURN relay.");
+        cWarn("No route between the devices. On a full-tunnel VPN this needs your own TURN relay.");
         later(4000);
       }
     } else if (st === "disconnected") {
@@ -2377,6 +2824,16 @@ function routeWatch(second) {
     /* still checking on the first pass means a pair may yet come good, so it
        gets one more grace period before the ladder is climbed */
     if (st === "checking" && !second) { routeWatch(true); return; }
+    if (lanActive()) {
+      relaxLan = true;
+      C.stage = 1;
+      cStatus("wait", "No route inside the Wi-Fi — trying the long way round");
+      cWarn("No direct route on this Wi-Fi, so the video is being routed through the internet instead. " +
+        "To keep it local, switch local network access on in the VPN app, or put both devices on the same router.");
+      camOffer();
+      routeWatch();
+      return;
+    }
     if (climb()) { restartIce(false); routeWatch(); return; }
     cStatus("bad", "Paired, but no video route to that screen");
     cWarn("The code worked, the video path did not. Allow local network access in the VPN app, put both " +
@@ -2466,7 +2923,7 @@ function camSignal(m, link) {
   }
   if (m.type === "CANDIDATE") {
     var c = m.payload && m.payload.candidate;
-    if (cfg.lanOnly && c && c.candidate && !isHostCand(c)) return;
+    if (lanActive() && c && c.candidate && !isHostCand(c)) return;
     if (c && C.pc) C.pc.addIceCandidate(c).catch(function () {});
     return;
   }
@@ -2660,7 +3117,7 @@ setInterval(function () {
 /* --- camera wiring --- */
 on($("cConnect"), "click", function () { camConnect($("cCode").value); });
 on($("cStop"), "click", camStop);
-on($("cExit"), "click", function () { camStop(); show("start"); });
+on($("cExit"), "click", function () { stopScan(); camStop(); show("start"); });
 on($("cPanelBtn"), "click", function () { $("camPanel").classList.toggle("show"); });
 on($("cHelp"), "click", function () { openDlg("dlgHelp"); });
 on($("cCode"), "keydown", function (e) { if (e.key === "Enter") camConnect($("cCode").value); });
@@ -2708,118 +3165,73 @@ on($("camStage"), "click", function (e) {
   doFocus(x, y);
 });
 
+
 /* ==================================================================== */
-/* OFFLINE PAIRING                                                      */
+/* SCANNING THE PAIRING SQUARE                                          */
 /* ==================================================================== */
-var manPc = null;
-function openManual() {
-  var isCam = role === "cam";
-  $("manALab").textContent = isCam ? "Step 1 — generate this phone's block, send it to the screen"
-                                   : "Step 1 — paste the block from the phone";
-  $("manBLab").textContent = isCam ? "Step 2 — paste the screen's reply here"
-                                   : "Step 2 — send this reply back to the phone";
-  $("manGen").style.display = isCam ? "" : "none";
-  $("manCopy").style.display = "";
-  $("manOut").placeholder = isCam ? "press Generate" : "the reply appears here";
-  $("manIn").value = "";
-  $("manOut").value = "";
-  $("manNote").textContent = isCam
-    ? "Generating asks the camera for a snapshot of its network paths, which takes a moment."
-    : "Paste, press Apply, then copy the reply back to the phone.";
-  if (!isCam) {
-    /* the screen shows the two panels the other way round */
-    $("manA").parentNode.insertBefore($("manB"), $("manA"));
-  } else {
-    $("manA").parentNode.insertBefore($("manA"), $("manB"));
-  }
-  openDlg("dlgManual");
+var SCAN = { on: false, timer: 0, det: null, busy: false, cv: null, g: null, tries: 0 };
+
+function scanParse(txt) {
+  txt = String(txt || "");
+  var m = /TETHER-PAIR-V1:(\d{4})/.exec(txt) || /[?&]c=(\d{4})/.exec(txt) || /^\s*(\d{4})\s*$/.exec(txt);
+  return m ? m[1] : null;
 }
-on($("vManual"), "click", openManual);
-on($("cManual"), "click", openManual);
-on($("manCopy"), "click", function () { if ($("manOut").value) copyText($("manOut").value); else toast("Nothing to copy yet"); });
-on($("manPaste"), "click", function () {
-  if (!navigator.clipboard || !navigator.clipboard.readText) { toast("Paste it by hand"); return; }
-  navigator.clipboard.readText().then(function (t) { $("manIn").value = t; }, function () { toast("Paste it by hand"); });
-});
 
-on($("manGen"), "click", function () {
-  var go = C.stream ? Promise.resolve() : openCamera();
-  $("manGen").disabled = true;
-  $("manOut").value = "working…";
-  go.then(function () {
-    if (!C.stream) throw new Error("the camera is not running");
-    C.want = true; C.manual = true;
-    camCloseConn();
-    C.connId = "tc_" + rid(8);
-    var pc = new RTCPeerConnection(iceConf(cfg.turn ? 2 : 1));
-    C.pc = pc; manPc = pc;
-    camWireDC(pc.createDataChannel("ctl", { ordered: true }));
-    C.stream.getTracks().forEach(function (t) { pc.addTrack(t, C.stream); });
-    pc.oniceconnectionstatechange = function () {
-      var st = pc.iceConnectionState;
-      log("[camera] ice " + st);
-      if (st === "connected" || st === "completed") {
-        C.connected = true;
-        cStatus("live", "Streaming, paired offline");
-        $("camPanel").classList.remove("show");
-        closeDlg(); pushState();
-      } else if (st === "failed") { C.connected = false; cStatus("bad", "Offline pairing found no route"); }
-    };
-    applyBitrate();
-    return pc.createOffer().then(function (o) { return pc.setLocalDescription(o); })
-      .then(function () { return gathered(pc); })
-      .then(function () { return pack({ r: "cam", sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }); });
-  }).then(function (txt) {
-    $("manOut").value = txt;
-    $("manGen").disabled = false;
-    if (!C.connected) cStatus("wait", "Waiting for the screen's reply");
-  }).catch(function (e) {
-    $("manOut").value = "";
-    $("manGen").disabled = false;
-    toast("Could not generate: " + e.message);
-  });
-});
-
-on($("manApply"), "click", function () {
-  var txt = $("manIn").value.trim();
-  if (!txt) { toast("Paste the block first"); return; }
-  unpack(txt).then(function (obj) {
-    if (role === "cam") {
-      if (obj.r !== "screen" || !C.pc) throw new Error("that is the wrong half of the pair");
-      return C.pc.setRemoteDescription(obj.sdp).then(function () {
-        toast("Reply accepted, connecting");
-        cStatus("wait", "Connecting…");
-      });
-    }
-    if (obj.r !== "cam") throw new Error("that is the wrong half of the pair");
-    vClose();
-    var pc = new RTCPeerConnection(iceConf(cfg.turn ? 2 : 1));
-    V.pc = pc; V.connId = "manual";
-    pc.ontrack = function (e) {
-      var v = $("remote");
-      if (!V.stream) { V.stream = new MediaStream(); v.srcObject = V.stream; }
-      if (V.stream.getTracks().indexOf(e.track) < 0) V.stream.addTrack(e.track);
-      v.play().catch(function () {});
-      if (e.track.kind === "video") vLive();
-    };
-    pc.ondatachannel = function (e) { vWireDC(e.channel); };
-    pc.oniceconnectionstatechange = function () {
-      log("[screen] ice " + pc.iceConnectionState);
-      if (pc.iceConnectionState === "failed") { vStatus("bad", "Offline pairing found no route"); vDropped(); }
-    };
-    return pc.setRemoteDescription(obj.sdp)
-      .then(function () { return pc.createAnswer(); })
-      .then(function (a) { return pc.setLocalDescription(a); })
-      .then(function () { return gathered(pc); })
-      .then(function () { return pack({ r: "screen", sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } }); })
-      .then(function (txt2) {
-        $("manOut").value = txt2;
-        $("manNote").textContent = "Send this reply back to the phone and paste it there.";
-        if (!V.gotVideo) vStatus("wait", "Reply ready — send it to the phone");
-        toast("Reply ready below");
-      });
-  }).catch(function (e) { toast(e.message || "That block could not be read"); });
-});
+function startScan() {
+  if (SCAN.on) return;
+  if (!C.stream) {
+    cStatus("wait", "Opening the camera…");
+    openCamera().then(function () { if (C.stream) startScan(); });
+    return;
+  }
+  SCAN.on = true; SCAN.tries = 0;
+  $("scanBox").classList.add("on");
+  $("cScan").classList.add("on");
+  cStatus("wait", "Looking for the square…");
+  if (window.BarcodeDetector) {
+    try { SCAN.det = new BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { SCAN.det = null; }
+  }
+  if (!SCAN.cv) { SCAN.cv = document.createElement("canvas"); SCAN.g = SCAN.cv.getContext("2d", { willReadFrequently: true }); }
+  clearInterval(SCAN.timer);
+  SCAN.timer = setInterval(scanTick, 140);
+}
+function stopScan() {
+  SCAN.on = false;
+  clearInterval(SCAN.timer); SCAN.timer = 0;
+  $("scanBox").classList.remove("on");
+  $("cScan").classList.remove("on");
+}
+function scanTick() {
+  var v = $("local");
+  if (!SCAN.on || SCAN.busy || !v.videoWidth) return;
+  SCAN.tries++;
+  if (SCAN.tries === 60) cStatus("wait", "Still looking — fill the frame with the square, hold it square on");
+  if (SCAN.det) {
+    SCAN.busy = true;
+    SCAN.det.detect(v).then(function (r) {
+      SCAN.busy = false;
+      for (var i = 0; r && i < r.length; i++) { var c = scanParse(r[i].rawValue); if (c) return scanHit(c); }
+    }, function () { SCAN.busy = false; SCAN.det = null; });
+    return;
+  }
+  var W = 480, H = Math.max(1, Math.round(v.videoHeight * W / v.videoWidth));
+  if (v.videoWidth < v.videoHeight) { H = 480; W = Math.max(1, Math.round(v.videoWidth * H / v.videoHeight)); }
+  SCAN.cv.width = W; SCAN.cv.height = H;
+  SCAN.g.drawImage(v, 0, 0, W, H);
+  var txt;
+  try { txt = qrDecodeImage(SCAN.g.getImageData(0, 0, W, H).data, W, H); } catch (e) { txt = null; }
+  var code = scanParse(txt);
+  if (code) scanHit(code);
+}
+function scanHit(code) {
+  stopScan();
+  try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {}
+  $("cCode").value = code;
+  toast("Code " + code + " — connecting");
+  camConnect(code);
+}
+on($("cScan"), "click", function () { if (SCAN.on) stopScan(); else startScan(); });
+on($("cScanStop"), "click", stopScan);
 
 /* ==================================================================== */
 /* CONNECTION CHECK                                                     */
@@ -2897,7 +3309,7 @@ function runDiag() {
   }).then(function (r) {
     dline("  " + r);
     dline("");
-    dline("If every relay is unreachable, use offline pairing instead.");
+    dline("If every relay is unreachable, no code can be exchanged on this network.");
     $("diagRun").disabled = false;
   });
 }
@@ -2978,8 +3390,8 @@ setInterval(function () {
   el.classList.toggle("bad", up === 0);
   if (up === 0 && !bus.warned && Date.now() - (bus.born || 0) > 12000) {
     bus.warned = true;
-    if (role === "cam") cWarn("No pairing relay answered from this phone. Use offline pairing, or change the relay in Settings.");
-    else vWarn("No pairing relay answered on this network. Use offline pairing, or change the relay in Settings.");
+    if (role === "cam") cWarn("No pairing relay answered from this phone. Try another relay under Settings.");
+    else vWarn("No pairing relay answered on this network. Try another relay under Settings.");
   }
 }, 2000);
 
@@ -2992,14 +3404,6 @@ on($("pickCamera"), "click", function () {
   cStatus("", "Camera off");
   openCamera();
 });
-on($("joinGo"), "click", function () {
-  var c = ($("joinCode").value || "").replace(/\D/g, "");
-  if (c.length !== 4) { toast("Four digits, please"); return; }
-  show("cam");
-  $("cCode").value = c;
-  camConnect(c);
-});
-on($("joinCode"), "keydown", function (e) { if (e.key === "Enter") $("joinGo").click(); });
 on($("startHelp"), "click", function () { openDlg("dlgHelp"); });
 
 if (!window.RTCPeerConnection) {
@@ -3038,7 +3442,7 @@ if (window.top !== window.self) {
         else {
           el.classList.add("bad");
           el.innerHTML = "No pairing relay answered here: <b>" + names.join("</b> · <b>") + "</b>.<br>" +
-            "Codes will not work on this network. Use <b>Offline pairing</b>, or pick another relay under Settings.";
+            "Pairing cannot start on this network. Pick another relay under Settings, or use a different connection.";
         }
       }
     });
@@ -3064,5 +3468,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e56f586cc63793',t:'MTc4NzI3MTIzOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
