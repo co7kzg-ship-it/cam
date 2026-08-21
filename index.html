@@ -188,34 +188,11 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .sect > h2{font:600 13px/1 var(--sans);color:var(--dim);margin:0 0 11px;display:flex;align-items:center;gap:10px}
 .sect > h2 .grow{display:none}
 .pairnote{font-size:14px;color:var(--ink-2);margin-top:9px}
+.codebig{font:700 32px/1.2 var(--sans);letter-spacing:.12em;margin-top:8px}
+.orline{font-size:13px;color:var(--dim);align-self:center}
 .localpair .pairnote{margin:14px 0 7px;line-height:1.45}
 .localpair .pairnote:first-child{margin-top:0}
-.signalbox{min-height:82px;max-height:180px;font-size:10.5px!important;line-height:1.35!important;word-break:break-all}
 .camlocalpair{padding-bottom:16px;border-bottom:1px solid var(--line-2);margin-bottom:16px}
-.signalqr{margin:8px 0;text-align:center;padding:6px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r)}
-.signalqr canvas{display:block;width:min(310px,100%);height:auto;aspect-ratio:1;margin:0 auto;background:#fff;image-rendering:pixelated}
-.signalqr p,.viewscan p{font-size:12.5px;color:var(--dim);margin-top:7px}
-.viewscan{margin:9px 0;padding:9px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r);text-align:center}
-.viewscan video{display:block;width:100%;max-height:210px;object-fit:contain;background:var(--matte);border-radius:5px}
-.viewscan .btn{margin-top:7px}
-.viewscan.armed{border-color:var(--acc);background:var(--acc-soft)}
-.viewscan.armed:before{content:"Computer camera armed for the phone answer";display:block;margin:0 0 8px;font-size:12.5px;font-weight:600;color:var(--acc-ink)}
-body.qrviewscanning{overflow:hidden}
-body.qrviewscanning .viewscan{position:fixed;inset:0;z-index:100;margin:0;padding:18px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;background:#111}
-body.qrviewscanning .viewscan video{width:100%;height:100%;max-height:none;object-fit:contain;background:#111}
-body.qrviewscanning .viewscan #vScanState{position:absolute;left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom) + 112px);z-index:2;color:#fff;font-size:16px;font-weight:600;text-shadow:0 1px 4px #000}
-body.qrviewscanning .viewscan .scanprogress{position:absolute;left:9%;right:9%;bottom:calc(env(safe-area-inset-bottom) + 89px);width:82%}
-body.qrviewscanning .viewscan .scancount{position:absolute;left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom) + 58px);margin:0;color:#fff}
-body.qrviewscanning .viewscan .btn{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:2;background:#fff;color:#111;border-color:#fff}
-.manualpair{margin-top:9px;padding:8px 9px;background:var(--field);border:1px solid var(--line-2);border-radius:var(--r)}
-.manualpair summary{cursor:pointer;font-size:12.5px;color:var(--dim);user-select:none}
-.manualpair[open] summary{margin-bottom:8px}
-body.answerqrfull{overflow:hidden}
-body.answerqrfull #cAnswerWrap{position:fixed;inset:0;z-index:100;display:flex!important;flex-direction:column;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 18px);background:var(--panel)}
-body.answerqrfull #cAnswerWrap>.pairnote{font-size:17px;font-weight:600;text-align:center}
-body.answerqrfull #cAnswerWrap .signalqr{width:min(86vw,620px);margin:12px auto}
-body.answerqrfull #cAnswerWrap .signalqr canvas{width:min(78vw,68dvh,560px)}
-body.answerqrfull #cAnswerWrap .manualpair{display:none}
 .rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ctlgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .ctlgrid .full{grid-column:1/-1}
@@ -391,14 +368,14 @@ body.live .hideonlive{display:none}
         <li>
           <button class="role" id="pickViewer" type="button">
             <span class="rt">Watch here</span>
-            <span class="rd">Shows an animated local WebRTC offer QR for the phone to scan.</span>
+            <span class="rd">Shows one QR code for the phone to scan.</span>
             <span class="arw">→</span>
           </button>
         </li>
         <li>
           <button class="role" id="pickCamera" type="button">
             <span class="rt">Send this camera</span>
-            <span class="rd">Scans the offer QR, then shows an answer QR for the viewing screen to scan.</span>
+            <span class="rd">Scans the screen QR and connects the camera automatically.</span>
             <span class="arw">→</span>
           </button>
         </li>
@@ -406,8 +383,8 @@ body.live .hideonlive{display:none}
 
       <dl class="facts">
         <div><dt>The video</dt><dd>Goes straight from the phone to this browser across your Wi-Fi. It is never uploaded, and by default the app refuses any route that leaves the local network.</dd></div>
-        <div><dt>The pairing</dt><dd>You transfer the offer and answer yourself. No cloud, signaling server, STUN or TURN service is contacted.</dd></div>
-        <div><dt>Needs</dt><dd>The page already open on both devices, the same local Wi-Fi, and a recent browser. Internet can be disconnected before pairing.</dd></div>
+        <div><dt>The pairing</dt><dd>The QR starts a short signaling handshake. The camera stream itself remains direct on local Wi-Fi.</dd></div>
+        <div><dt>Needs</dt><dd>Both devices on the same Wi-Fi and a recent Chrome, Edge, Firefox or Safari.</dd></div>
       </dl>
     </div>
   </div>
@@ -426,7 +403,7 @@ body.live .hideonlive{display:none}
     <span class="ro onlylive" id="roRtt">—</span>
     <span class="grow"></span>
     <span class="ro onlylive" id="roBatt" title="Phone battery">—</span>
-    <button class="btn quiet sq" id="vNew" title="Create a new local offer"><svg><use href="#i-refresh"/></svg></button>
+    <button class="btn quiet sq" id="vNew" title="Create a new pairing code"><svg><use href="#i-refresh"/></svg></button>
     <button class="btn quiet sq" id="vSet" title="Settings"><svg><use href="#i-gear"/></svg></button>
     <button class="btn quiet sq" id="vHelp" title="Help"><svg><use href="#i-info"/></svg></button>
     <button class="btn quiet sq" id="vExit" title="Leave"><svg><use href="#i-x"/></svg></button>
@@ -445,9 +422,9 @@ body.live .hideonlive{display:none}
               <span id="tMute">No sound</span>
             </div>
             <div class="blank">
-              <canvas id="vOfferQrLarge" class="offerqr-large" width="320" height="320" aria-label="Large animated offer QR"></canvas>
-              <span class="t">Scan this animated offer QR with the phone</span>
-              <span class="s" id="vOfferQrState">Preparing fountain stream…</span>
+              <canvas id="vOfferQrLarge" class="offerqr-large" width="320" height="320" aria-label="Pairing QR code"></canvas>
+              <span class="t">Scan this QR with the phone</span>
+              <span class="s" id="vOfferQrState">Creating pairing code…</span>
             </div>
           </div>
         </div>
@@ -476,27 +453,9 @@ body.live .hideonlive{display:none}
 
     <aside class="rail">
       <div class="sect" id="pairSect">
-        <h2>Local pairing<span class="grow"></span></h2>
-        <div class="localpair">
-          <p class="pairnote" id="pairNote"><b>1.</b> Let the phone scan this animated offer QR.</p>
-          <details class="manualpair"><summary>Manual fallback: copy the offer</summary>
-            <textarea class="inp mono signalbox" id="vOffer" rows="3" readonly aria-label="Local WebRTC offer"></textarea>
-            <div class="rowbtns"><button class="btn sm" id="vCopyOffer">Copy offer</button></div>
-          </details>
-          <p class="pairnote"><b>2.</b> Scan the animated answer QR shown by the phone.</p>
-          <div class="rowbtns"><button class="btn sm pri" id="vScanAnswer">Scan phone answer</button></div>
-          <div class="viewscan" id="vScanWrap" style="display:none">
-            <video id="vScanVideo" playsinline autoplay muted></video>
-            <p id="vScanState">Opening this computer's camera…</p>
-            <div class="scanprogress"><span id="vScanBar"></span></div>
-            <p class="scancount" id="vScanCount">Decoded 0 blocks</p>
-            <button class="btn sm" id="vScanStop">Cancel scan</button>
-          </div>
-          <details class="manualpair"><summary>Manual fallback: paste the answer</summary>
-            <textarea class="inp mono signalbox" id="vAnswer" rows="3" placeholder="Paste the phone answer here" aria-label="Phone WebRTC answer"></textarea>
-            <div class="rowbtns"><button class="btn sm" id="vUseAnswer">Use pasted answer</button></div>
-          </details>
-        </div>
+        <h2>Pairing<span class="grow"></span></h2>
+        <p class="pairnote" id="pairNote">Scan the large QR in the middle with the phone.</p>
+        <div class="codebig" id="pairCode">----</div>
       </div>
 
       <div class="sect">
@@ -580,9 +539,9 @@ body.live .hideonlive{display:none}
       <div class="focusring" id="focusRing"></div>
       <div class="scanbox" id="scanBox">
         <div class="scanframe"></div>
-        <p class="scanhint" id="cScanState">Point the phone at the animated offer QR</p>
+        <p class="scanhint" id="cScanState">Point the phone at the pairing QR</p>
         <div class="scanprogress"><span id="cScanBar"></span></div>
-        <p class="scancount" id="cScanCount">Decoded 0 blocks</p>
+        <p class="scancount" id="cScanCount">Searching for the code…</p>
         <button class="btn sm" id="cScanStop">Cancel</button>
       </div>
     </div>
@@ -599,21 +558,13 @@ body.live .hideonlive{display:none}
 
     <div class="campanel show" id="camPanel">
       <div class="localpair camlocalpair">
-        <p class="pairnote"><b>1.</b> Scan the animated offer QR on the viewing screen.</p>
-        <div class="rowbtns"><button class="btn pri" id="cScanOffer">Scan screen offer</button></div>
-        <details class="manualpair"><summary>Manual fallback: paste the offer</summary>
-          <textarea class="inp mono signalbox" id="cOffer" rows="3" placeholder="Paste the screen offer here" aria-label="Screen WebRTC offer"></textarea>
-          <div class="rowbtns"><button class="btn" id="cConnect">Use pasted offer</button></div>
-        </details>
-        <div class="rowbtns"><button class="btn" id="cStop" disabled>Stop</button></div>
-        <div id="cAnswerWrap" style="display:none">
-          <p class="pairnote"><b>2.</b> Hold this phone screen in front of the viewing computer’s camera. Pairing finishes automatically.</p>
-          <div class="signalqr"><canvas id="cAnswerQr" width="320" height="320"></canvas><p id="cAnswerQrState">Creating answer…</p></div>
-          <button class="btn sm" id="cAnswerClose">Show smaller</button>
-          <details class="manualpair"><summary>Manual fallback: copy the answer</summary>
-            <textarea class="inp mono signalbox" id="cAnswer" rows="3" readonly aria-label="Phone WebRTC answer"></textarea>
-            <div class="rowbtns"><button class="btn" id="cCopyAnswer">Copy answer</button></div>
-          </details>
+        <p class="pairnote">Scan the QR shown in the middle of the viewing screen.</p>
+        <div class="rowbtns">
+          <button class="btn pri" id="cScanOffer">Scan screen QR</button>
+          <span class="orline">or enter the four digits</span>
+          <input class="inp codein" id="cCode" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+          <button class="btn" id="cConnect">Connect</button>
+          <button class="btn" id="cStop" disabled>Stop</button>
         </div>
       </div>
 
@@ -682,14 +633,13 @@ body.live .hideonlive{display:none}
   <div class="dlg" id="dlgHelp">
     <header>How Tether works<span class="grow"></span><button class="btn sm close">Close</button></header>
     <div class="body">
-      <h3>Offline local pairing</h3>
+      <h3>Pairing</h3>
       <ol>
-        <li>On the viewing screen choose <b>Watch here</b>; it displays an animated offer QR.</li>
-        <li>On the phone choose <b>Send this camera</b> and scan the offer QR.</li>
-        <li>The phone displays an animated answer QR. On the viewing screen press <b>Scan phone answer</b> and point its camera at the phone.</li>
+        <li>On the viewing screen choose <b>Watch here</b>.</li>
+        <li>On the phone choose <b>Send this camera</b> and scan the QR once.</li>
+        <li>The phone connects and its camera appears automatically.</li>
       </ol>
-      <p>The offer and answer are transferred by you. The app never contacts a cloud signaling,
-        STUN or TURN server. Media is accepted only over host candidates on the local Wi-Fi.</p>
+      <p>The short signaling handshake is automatic. Video and audio still travel directly between the devices on local Wi-Fi.</p>
 
       <h3>Controlling the phone from the desktop</h3>
       <p>LED, autofocus, zoom, resolution and the microphone are all driven
@@ -698,8 +648,7 @@ body.live .hideonlive{display:none}
 
       <h3>Local network requirement</h3>
       <p>Both devices must be on the same Wi-Fi, and the router must allow devices to reach each other.
-        If a VPN is active, enable its <b>local network access</b> or <b>LAN bypass</b> option. There is no
-        internet fallback by design.</p>
+        If a VPN is active, enable its <b>local network access</b> or <b>LAN bypass</b> option.</p>
       <h3>Keyboard</h3>
       <p class="keys">
         <b>F</b> fullscreen &nbsp; <b>S</b> save photo &nbsp; <b>R</b> record &nbsp; <b>L</b> LED &nbsp;
@@ -853,8 +802,8 @@ break;case "inversionMode":switch(c){case "original":Y="dontInvert";break;case "
    Tether
    viewer  : answers, shows the picture, drives the phone over a datachannel
    camera  : offers, owns the media, obeys commands
-   pairing : offline offer/answer transfer by copy and paste; no server,
-             cloud signaling, STUN or TURN connection
+   pairing : one short online handshake; media remains local WebRTC with
+             no STUN or TURN media relay
    ===================================================================== */
 
 var $ = function (id) { return document.getElementById(id); };
@@ -1120,233 +1069,76 @@ function drawQR(cv, text) {
 }
 
 /* ------------------------------------------------------------------ */
-/* local-only WebRTC signaling                                         */
-/* ------------------------------------------------------------------ */
+/* cloud handshake, local-only media path */
 var DEF = { beep: false };
 var cfg = {};
 Object.keys(DEF).forEach(function (k) { cfg[k] = store.get(k, DEF[k]); });
 
-/* No STUN and no TURN: the browser can gather host candidates only. */
+/* Empty ICE server list guarantees that media can use host candidates only:
+   signaling is online, but camera/audio remain on the local network. */
 function iceConf() {
   return { iceServers: [], iceCandidatePoolSize: 0, bundlePolicy: "max-bundle" };
 }
-function bytesToUrl64(bytes) {
-  var out = "";
-  for (var i = 0; i < bytes.length; i += 0x8000)
-    out += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  return btoa(out).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+function descMsg(desc, connId) {
+  return { sdp: { type: desc.type, sdp: desc.sdp }, type: "media", connectionId: connId, browser: "web", metadata: null };
 }
-function url64ToBytes(text) {
-  var b64 = text.replace(/-/g, "+").replace(/_/g, "/");
-  while (b64.length % 4) b64 += "=";
-  var bin = atob(b64), out = new Uint8Array(bin.length);
-  for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
+function candMsg(candidate, connId) {
+  return { candidate: candidate, type: "media", connectionId: connId };
 }
-function packSignal(desc) {
-  var raw = JSON.stringify({ v: 1, type: desc.type, sdp: desc.sdp });
-  var bytes = new TextEncoder().encode(raw);
-  if (window.CompressionStream) {
-    try {
-      var stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip"));
-      return new Response(stream).arrayBuffer().then(function (buf) {
-        return "TETHER-LOCAL-G1." + bytesToUrl64(new Uint8Array(buf));
-      });
-    } catch (e) {}
-  }
-  return Promise.resolve("TETHER-LOCAL-1." + bytesToUrl64(bytes));
-}
-function unpackSignal(text, expected) {
-  text = String(text || "").trim();
-  if (text.charAt(0) === "{") {
-    try {
-      var direct = JSON.parse(text);
-      if (!direct || direct.v !== 1 || direct.type !== expected || !direct.sdp) throw new Error();
-      return Promise.resolve({ type: direct.type, sdp: direct.sdp });
-    } catch (e) { return Promise.reject(new Error("That pairing text is not valid")); }
-  }
-  var gzip = text.indexOf("TETHER-LOCAL-G1.") === 0;
-  if (gzip) text = text.slice(16);
-  else if (text.indexOf("TETHER-LOCAL-1.") === 0) text = text.slice(15);
-  var bytes;
-  try { bytes = url64ToBytes(text); }
-  catch (e) { return Promise.reject(new Error("That pairing text is not valid")); }
-  var decoded;
-  if (gzip) {
-    if (!window.DecompressionStream) return Promise.reject(new Error("This browser cannot decode the compressed QR. Use a newer browser."));
-    try {
-      decoded = new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer()
-        .then(function (buf) { return new Uint8Array(buf); });
-    } catch (e) { return Promise.reject(new Error("The QR data could not be decompressed")); }
-  } else decoded = Promise.resolve(bytes);
-  return decoded.then(function (data) {
-    var raw;
-    try { raw = JSON.parse(new TextDecoder().decode(data)); }
-    catch (e) { throw new Error("That pairing text is not valid"); }
-    if (!raw || raw.v !== 1 || raw.type !== expected || !raw.sdp) throw new Error("Expected a local " + expected);
-    return { type: raw.type, sdp: raw.sdp };
-  });
-}
-function gatherLocalDescription(pc, desc) {
-  return pc.setLocalDescription(desc).then(function () {
-    if (pc.iceGatheringState === "complete") return pc.localDescription;
-    return new Promise(function (resolve) {
-      var done = false;
-      function finish() {
-        if (done) return;
-        done = true;
-        pc.removeEventListener("icegatheringstatechange", check);
-        resolve(pc.localDescription);
+function PeerLink(id, cb) {
+  var ws = null, heartbeat = 0, retryT = 0, tries = 0, dead = false, ready = false;
+  function open() {
+    if (dead) return;
+    var url = "wss://0.peerjs.com:443/peerjs?key=peerjs&id=" + encodeURIComponent(id) +
+      "&token=" + Math.random().toString(36).slice(2) + "&version=1.5.4";
+    try { ws = new WebSocket(url); } catch (e) { retry(); return; }
+    ws.onmessage = function (event) {
+      var message;
+      try { message = JSON.parse(event.data); } catch (e) { return; }
+      if (message.type === "OPEN") {
+        ready = true; tries = 0;
+        clearInterval(heartbeat);
+        heartbeat = setInterval(function () { try { ws.send('{"type":"HEARTBEAT"}'); } catch (e) {} }, 10000);
+        if (cb.up) cb.up();
+        return;
       }
-      function check() { if (pc.iceGatheringState === "complete") finish(); }
-      pc.addEventListener("icegatheringstatechange", check);
-      setTimeout(finish, 5000);
-    });
-  });
-}
-
-/* Multi-part animated QR transport. WebRTC descriptions are compressed,
-   split into small QR frames and reassembled by either device's camera. */
-var QR_CAROUSELS = {};
-var FOUNTAIN_BLOCK = 90;
-function signalDigest(text) {
-  var bytes = new TextEncoder().encode(text);
-  if (window.crypto && window.crypto.subtle) {
-    return window.crypto.subtle.digest("SHA-256", bytes).then(function (buf) {
-      return bytesToUrl64(new Uint8Array(buf).subarray(0, 12));
-    });
-  }
-  var h = 2166136261;
-  for (var i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return Promise.resolve((h >>> 0).toString(36));
-}
-function fountainPrng(x) {
-  /* Non-linear 32-bit avalanche. A linear xorshift caps repair rank at 32,
-     which makes handshakes with more than 32 blocks impossible to recover. */
-  x >>>= 0;
-  x ^= x >>> 16;
-  x = Math.imul(x, 0x7feb352d);
-  x ^= x >>> 15;
-  x = Math.imul(x, 0x846ca68b);
-  x ^= x >>> 16;
-  return x >>> 0;
-}
-function fountainMask(k, seed) {
-  var x = seed >>> 0, mask = 0n;
-  for (var i = 0; i < k; i++) {
-    x = fountainPrng(x || (0x6d2b79f5 ^ i));
-    if (x & 0x80000000) mask |= 1n << BigInt(i);
-  }
-  if (!mask) mask = 1n << BigInt((x >>> 0) % k);
-  return mask;
-}
-function fountainXor(dst, src) {
-  for (var i = 0; i < dst.length; i++) dst[i] ^= src[i];
-}
-function stopQrCarousel(key) {
-  var q = QR_CAROUSELS[key];
-  if (q) clearInterval(q.timer);
-  delete QR_CAROUSELS[key];
-}
-function startQrCarousel(key, canvas, text, kind, stateEl) {
-  stopQrCarousel(key);
-  var bytes = new TextEncoder().encode(text);
-  var k = Math.max(1, Math.ceil(bytes.length / FOUNTAIN_BLOCK));
-  var blocks = [];
-  for (var i = 0; i < k; i++) {
-    var block = new Uint8Array(FOUNTAIN_BLOCK);
-    block.set(bytes.subarray(i * FOUNTAIN_BLOCK, Math.min(bytes.length, (i + 1) * FOUNTAIN_BLOCK)));
-    blocks.push(block);
-  }
-  var state = { timer: 0, cancelled: false };
-  QR_CAROUSELS[key] = state;
-  signalDigest(text).then(function (id) {
-    if (QR_CAROUSELS[key] !== state || state.cancelled) return;
-    var at = 0, sourceAt = 0, repairAt = 0;
-    function paint() {
-      if (state.cancelled) return;
-      var mode, token, data = new Uint8Array(FOUNTAIN_BLOCK), mask, label;
-      /* Interleave source and repair frames from the beginning. A receiver
-         never has to wait for a complete source pass before repairs help. */
-      if (sourceAt < k && at % 2 === 0) {
-        mode = "S"; token = sourceAt.toString(36); data.set(blocks[sourceAt]);
-        label = "source block " + (sourceAt + 1) + " of " + k;
-        sourceAt++;
-      } else {
-        mode = "R"; repairAt++;
-        var seed = (Math.imul(repairAt >>> 0, 2654435761) ^ 0xa5a5a5a5) >>> 0;
-        token = seed.toString(36); mask = fountainMask(k, seed);
-        for (var j = 0; j < k; j++) if (mask & (1n << BigInt(j))) fountainXor(data, blocks[j]);
-        label = "repair block " + repairAt;
+      if (message.type === "ID-TAKEN") {
+        dead = true; try { ws.close(); } catch (e) {}
+        if (cb.taken) cb.taken();
+        return;
       }
-      var frame = "TF1|" + kind + "|" + id + "|" + k.toString(36) + "|" + bytes.length.toString(36) + "|" + mode + "|" + token + "|" + bytesToUrl64(data);
-      var targets = Array.isArray(canvas) ? canvas : [canvas];
-      targets.forEach(function (target) { try { drawQR(target, frame); } catch (e) {} });
-      if (stateEl) stateEl.textContent = kind === "A"
-        ? "Waiting for the viewing computer to read this answer…"
-        : "Animated offer — keep the phone scanner pointed here";
-      at++;
-    }
-    paint();
-    /* User-selected optical transfer speed: ten fountain frames per second. */
-    state.timer = setInterval(paint, 100);
-  });
-}
-function makeQrCollector(kind, progress, complete) {
-  var id = "", k = 0, length = 0, rows = [], rank = 0, verifying = false;
-  function reset(nid, nk, nlen) {
-    id = nid; k = nk; length = nlen; rows = new Array(k); rank = 0; verifying = false;
-  }
-  return function (text) {
-    var m = /^TF1\|([OA])\|([A-Za-z0-9_-]+)\|([a-z0-9]+)\|([a-z0-9]+)\|([SR])\|([a-z0-9]+)\|([A-Za-z0-9_-]+)$/.exec(String(text || ""));
-    if (!m || m[1] !== kind || verifying) return;
-    var nk = parseInt(m[3], 36), nlen = parseInt(m[4], 36);
-    if (!nk || nk > 512 || !nlen || nlen > nk * FOUNTAIN_BLOCK) return;
-    if (id !== m[2] || k !== nk || length !== nlen) reset(m[2], nk, nlen);
-    var data;
-    try { data = url64ToBytes(m[7]); } catch (e) { return; }
-    if (data.length !== FOUNTAIN_BLOCK) return;
-    var mask;
-    if (m[5] === "S") {
-      var index = parseInt(m[6], 36);
-      if (index < 0 || index >= k) return;
-      mask = 1n << BigInt(index);
-    } else {
-      var seed = parseInt(m[6], 36) >>> 0;
-      mask = fountainMask(k, seed);
-    }
-    data = new Uint8Array(data);
-    for (var i = 0; i < k; i++) {
-      var bit = 1n << BigInt(i);
-      if (!(mask & bit)) continue;
-      if (rows[i]) {
-        mask ^= rows[i].mask;
-        fountainXor(data, rows[i].data);
-      } else {
-        rows[i] = { mask: mask, data: data };
-        rank++;
-        if (progress) progress(rank, k);
-        break;
+      if (message.type === "ERROR") {
+        if (cb.error) cb.error((message.payload && message.payload.msg) || "signaling error");
+        return;
       }
+      if (cb.message) cb.message(message);
+    };
+    ws.onclose = function () {
+      ready = false; clearInterval(heartbeat);
+      if (!dead) { if (cb.down) cb.down(); retry(); }
+    };
+    ws.onerror = function () {};
+  }
+  function retry() {
+    if (dead) return;
+    clearTimeout(retryT); tries++;
+    retryT = setTimeout(open, Math.min(1200 * Math.pow(1.7, tries), 15000));
+  }
+  open();
+  return {
+    send: function (type, payload, destination) {
+      if (!ws || ws.readyState !== 1) return false;
+      try { ws.send(JSON.stringify({ type: type, payload: payload, dst: destination })); return true; }
+      catch (e) { return false; }
+    },
+    isReady: function () { return ready; },
+    close: function () {
+      dead = true; clearTimeout(retryT); clearInterval(heartbeat);
+      try { if (ws) ws.close(); } catch (e) {}
     }
-    if (rank !== k) return;
-    verifying = true;
-    var solved = new Array(k);
-    for (var r = k - 1; r >= 0; r--) {
-      var value = new Uint8Array(rows[r].data);
-      for (var c = r + 1; c < k; c++)
-        if (rows[r].mask & (1n << BigInt(c))) fountainXor(value, solved[c]);
-      solved[r] = value;
-    }
-    var joined = new Uint8Array(k * FOUNTAIN_BLOCK);
-    for (var q = 0; q < k; q++) joined.set(solved[q], q * FOUNTAIN_BLOCK);
-    var result = new TextDecoder().decode(joined.subarray(0, length));
-    signalDigest(result).then(function (check) {
-      if (check === id) complete(result);
-      else reset("", 0, 0);
-    });
   };
 }
+
 var QR_WORKER_READY = null, QR_WORKER_ID = 0;
 function qrWorkerSelfTestImage() {
   var text = "TETHER-QR-SELFTEST", matrix = qrMatrix(text, "M"), quiet = 4, scale = 5;
@@ -1407,42 +1199,34 @@ function stopActiveQrScan() {
   if (ACTIVE_SCAN.ownStream) ACTIVE_SCAN.ownStream.getTracks().forEach(function (t) { t.stop(); });
   ACTIVE_SCAN = null;
 }
-function scanQrVideo(video, kind, ownStream, progress, complete) {
+function scanQrVideo(video, ownStream, complete) {
   stopActiveQrScan();
   var cv = document.createElement("canvas"), g = cv.getContext("2d", { willReadFrequently: true });
   var detector = null, qrWorker = null;
   var state = { stopped: false, timer: 0, busy: false, ownStream: ownStream || null };
-  function status(text) {
-    var el = kind === "O" ? $("cScanState") : $("vScanState");
-    if (el) el.textContent = text;
-  }
   if (window.BarcodeDetector) {
     try { detector = new BarcodeDetector({ formats: ["qr_code"] }); } catch (e) {}
   }
-  status("Loading compact QR decoder…");
+  $("cScanState").textContent = "Loading QR scanner…";
   ensureQrWorker().then(function (worker) {
     if (state.stopped) return;
     qrWorker = worker;
-    status("Scanner ready — fill the guide with the QR");
+    $("cScanState").textContent = "Scanner ready — fill the guide with the QR";
   }, function (e) {
     if (state.stopped) return;
-    status(detector ? "Native QR scanner active — hold steady" : "QR scanner unavailable — use the manual fallback");
+    $("cScanState").textContent = detector ? "Native QR scanner active" : "QR scanner unavailable — enter the four digits";
     log("QR decoder: " + (e && (e.message || e)));
   });
-  var collect = makeQrCollector(kind, progress, function (text) {
+  function accept(text) {
+    var match = /TETHER-CLOUD-1:(\d{4})/.exec(String(text || ""));
+    if (!match) return;
+    $("cScanBar").style.width = "100%";
+    $("cScanCount").textContent = "Code found";
     stopActiveQrScan();
-    complete(text);
-  });
-  ACTIVE_SCAN = state;
-  function next(ms) { if (!state.stopped) state.timer = setTimeout(tick, ms == null ? 90 : ms); }
-  function feedRows(rows) {
-    for (var i = 0; rows && i < rows.length; i++) {
-      if (!rows[i] || rows[i].isValid === false) continue;
-      var text = rows[i].rawValue || rows[i].text || "";
-      if (!text && rows[i].bytes) try { text = new TextDecoder().decode(rows[i].bytes); } catch (e) {}
-      if (text) collect(text);
-    }
+    complete(match[1]);
   }
+  ACTIVE_SCAN = state;
+  function next(ms) { if (!state.stopped) state.timer = setTimeout(tick, ms == null ? 100 : ms); }
   function captureSquare() {
     var vw = video.videoWidth, vh = video.videoHeight, side = Math.floor(.9 * Math.min(vw, vh));
     var sx = Math.floor((vw - side) / 2), sy = Math.floor((vh - side) / 2), size = Math.min(720, side);
@@ -1452,27 +1236,26 @@ function scanQrVideo(video, kind, ownStream, progress, complete) {
     return g.getImageData(0, 0, size, size);
   }
   function tick() {
-    if (state.stopped || state.busy || !video.videoWidth) { next(120); return; }
+    if (state.stopped || state.busy || !video.videoWidth) { next(100); return; }
     state.busy = true;
     if (qrWorker) {
       var image;
       try { image = captureSquare(); } catch (e) { image = null; }
-      if (!image) { state.busy = false; next(120); return; }
+      if (!image) { state.busy = false; next(); return; }
       decodeWithQrWorker(qrWorker, image).then(function (text) {
-        state.busy = false;
-        if (text) collect(text);
-        next();
-      }, function () { state.busy = false; next(160); });
+        state.busy = false; if (text) accept(text); next();
+      }, function () { state.busy = false; next(150); });
       return;
     }
     if (detector) {
       detector.detect(video).then(function (rows) {
-        state.busy = false; feedRows(rows); next();
+        state.busy = false;
+        for (var i = 0; rows && i < rows.length; i++) accept(rows[i].rawValue);
+        next();
       }, function () { state.busy = false; detector = null; next(); });
       return;
     }
-    state.busy = false;
-    next(500);
+    state.busy = false; next(500);
   }
   tick();
 }
@@ -1558,113 +1341,102 @@ on(document, "keydown", function (e) { if (e.key === "Escape") closeDlg(); });
 /* VIEWER                                                               */
 /* ==================================================================== */
 var V = {
-  pc: null, dc: null, stream: null, gotVideo: false, since: 0, upT: 0, statT: 0,
+  code: null, bus: null, pc: null, dc: null, stream: null, peer: null, connId: "", pend: [],
+  gotVideo: false, since: 0, upT: 0, statT: 0,
   rot: 0, mirror: false, zoom: 100, cam: {}, rec: null, recBits: [],
   cmdId: 0, acks: {}, lastBeat: 0, lastMedia: 0, badSince: 0, hist: [], routeT: 0
 };
-
 function vStatus(kind, text) {
   $("vDot").className = "dot " + (kind || "") + (kind === "wait" ? " pulse" : "");
   $("vMsg").textContent = text;
   if (text) log("[screen] " + text);
 }
-function vWarn(t) {
-  var w = $("vWarn");
-  if (!t) { w.classList.remove("show"); w.textContent = ""; return; }
-  w.textContent = t; w.classList.add("show");
+function vWarn(text) {
+  var warning = $("vWarn");
+  if (!text) { warning.classList.remove("show"); warning.textContent = ""; return; }
+  warning.textContent = text; warning.classList.add("show");
 }
-function vNewCode() { vStartLocal(); }
-
-function wireViewerPc(pc) {
-  pc.ontrack = function (e) {
-    var v = $("remote");
-    if (!V.stream) { V.stream = new MediaStream(); v.srcObject = V.stream; }
-    if (V.stream.getTracks().indexOf(e.track) < 0) V.stream.addTrack(e.track);
-    if (v.srcObject !== V.stream) v.srcObject = V.stream;
-    e.track.onended = function () { try { V.stream.removeTrack(e.track); } catch (err) {} };
-    v.play().catch(function () {});
-    try { if (e.receiver && "jitterBufferTarget" in e.receiver) e.receiver.jitterBufferTarget = 0; } catch (err) {}
-    if (e.track.kind === "video") vLive();
+function vNewCode() { vStartCloud(String(1000 + Math.floor(Math.random() * 9000))); }
+function wireViewerPc(pc, phoneId) {
+  pc.onicecandidate = function (event) {
+    if (!event.candidate || !V.bus) return;
+    V.bus.send("CANDIDATE", candMsg(event.candidate.toJSON ? event.candidate.toJSON() : event.candidate, V.connId), phoneId);
   };
+  pc.ontrack = function (event) {
+    var video = $("remote");
+    if (!V.stream) { V.stream = new MediaStream(); video.srcObject = V.stream; }
+    if (V.stream.getTracks().indexOf(event.track) < 0) V.stream.addTrack(event.track);
+    video.srcObject = V.stream; video.play().catch(function () {});
+    try { if (event.receiver && "jitterBufferTarget" in event.receiver) event.receiver.jitterBufferTarget = 0; } catch (e) {}
+    if (event.track.kind === "video") vLive();
+  };
+  pc.ondatachannel = function (event) { vWireDC(event.channel); };
   pc.oniceconnectionstatechange = function () {
-    var st = pc.iceConnectionState;
-    log("[screen] local ICE " + st);
-    if (st === "connected" || st === "completed") {
-      vWarn("");
-      if (V.gotVideo) vStatus("live", "Live on local Wi-Fi");
-    } else if (st === "failed") {
+    var state = pc.iceConnectionState;
+    log("[screen] local ICE " + state);
+    if (state === "connected" || state === "completed") {
+      vWarn(""); if (V.gotVideo) vStatus("live", "Live on local Wi-Fi");
+    } else if (state === "failed") {
       vStatus("bad", "No local Wi-Fi route to the phone");
-      vWarn("Local pairing was exchanged, but the devices cannot reach each other. Use the same Wi-Fi and disable router client isolation or VPN blocking.");
+      vWarn("Pairing succeeded, but the devices cannot reach each other locally. Check Wi-Fi client isolation and VPN LAN access.");
       vDropped();
-    } else if (st === "disconnected") vStatus("wait", "Local link interrupted");
+    } else if (state === "disconnected") vStatus("wait", "Local link interrupted");
   };
   pc.onconnectionstatechange = function () {
     if (pc.connectionState === "failed" || pc.connectionState === "closed") vDropped();
   };
 }
-function vStartLocal() {
+function vStartCloud(code) {
   vTeardown();
-  show("view");
-  railEnabled(false);
-  vWarn("");
-  $("vOffer").value = "";
-  $("vAnswer").value = "";
-  $("pairNote").innerHTML = "<b>1.</b> Creating a local offer…";
-  vStatus("wait", "Creating a local Wi-Fi offer…");
-  var pc;
-  try { pc = new RTCPeerConnection(iceConf()); }
-  catch (e) { vStatus("bad", "Could not start WebRTC"); vWarn(e.message); return; }
-  V.pc = pc;
-  wireViewerPc(pc);
-  vWireDC(pc.createDataChannel("ctl", { ordered: true }));
-  try {
-    pc.addTransceiver("video", { direction: "recvonly" });
-    pc.addTransceiver("audio", { direction: "recvonly" });
-  } catch (e) {}
-  pc.createOffer().then(function (offer) {
-    return gatherLocalDescription(pc, offer);
-  }).then(function (desc) {
-    if (V.pc !== pc) return null;
-    return packSignal(desc);
-  }).then(function (text) {
-    if (!text || V.pc !== pc) return;
-    $("vOffer").value = text;
-    startQrCarousel("offer", $("vOfferQrLarge"), text, "O", $("vOfferQrState"));
-    $("pairNote").innerHTML = "<b>1.</b> Let the phone scan this animated offer QR.";
-    vStatus("wait", "Offer QR ready — scan it with the phone");
-  }).catch(function (e) {
-    vStatus("bad", "Could not create the local offer");
-    vWarn(e.message || String(e));
+  V.code = code;
+  show("view"); railEnabled(false); vWarn("");
+  $("pairCode").textContent = code;
+  $("pairNote").textContent = "Scan the large QR in the middle with the phone.";
+  $("vOfferQrState").textContent = "Code " + code + " — waiting for the phone";
+  drawQR($("vOfferQrLarge"), "TETHER-CLOUD-1:" + code);
+  vStatus("wait", "Opening pairing code " + code + "…");
+  V.bus = PeerLink("tether-" + code, {
+    up: function () { vStatus("wait", "Ready — scan code " + code + " with the phone"); },
+    down: function () { if (!V.gotVideo) vStatus("wait", "Restoring the pairing connection…"); },
+    taken: function () { vNewCode(); },
+    error: function (message) { vWarn(message); },
+    message: vSignal
   });
 }
-function vUseLocalAnswer(text) {
-  stopViewerAnswerScan();
-  if (!V.pc) { toast("Create a local offer first"); return; }
-  var source = typeof text === "string" ? text : $("vAnswer").value;
-  vStatus("wait", "Applying the phone answer…");
-  unpackSignal(source, "answer").then(function (answer) {
-    $("vAnswer").value = source;
-    return V.pc.setRemoteDescription(answer);
-  }).then(function () {
-    $("pairNote").textContent = "Answer accepted. Connecting directly over local Wi-Fi…";
-    vStatus("wait", "Finding the phone on local Wi-Fi…");
-    clearTimeout(V.routeT);
-    V.routeT = setTimeout(function () {
-      if (!V.gotVideo && V.pc) {
-        vStatus("bad", "No local Wi-Fi route to the phone");
-        vWarn("Both devices must be on the same Wi-Fi. Disable VPN LAN blocking and router client isolation, then create a new offer.");
-      }
-    }, 12000);
+function vSignal(message) {
+  if (message.type === "OFFER") { vAnswer(message.src, message.payload); return; }
+  if (message.type === "CANDIDATE") {
+    var candidate = message.payload && message.payload.candidate;
+    if (!candidate) return;
+    if (V.pc && V.pc.remoteDescription) V.pc.addIceCandidate(candidate).catch(function () {});
+    else V.pend.push(candidate);
+    return;
+  }
+  if (message.type === "LEAVE" && message.src === V.peer) vDropped();
+}
+function vAnswer(phoneId, payload) {
+  vClose();
+  V.peer = phoneId;
+  V.connId = payload.connectionId || ("tc_" + Math.random().toString(36).slice(2, 10));
+  var pc = new RTCPeerConnection(iceConf());
+  V.pc = pc;
+  wireViewerPc(pc, phoneId);
+  pc.setRemoteDescription(payload.sdp).then(function () {
+    var pending = V.pend.slice(); V.pend = [];
+    pending.forEach(function (candidate) { pc.addIceCandidate(candidate).catch(function () {}); });
+    return pc.createAnswer();
+  }).then(function (answer) { return pc.setLocalDescription(answer); }).then(function () {
+    if (V.bus) V.bus.send("ANSWER", descMsg(pc.localDescription, V.connId), phoneId);
+    $("pairNote").textContent = "Phone found. Connecting on local Wi-Fi…";
+    vStatus("wait", "Phone found — opening the local video path…");
   }).catch(function (e) {
-    vStatus("bad", "The phone answer was rejected");
-    vWarn(e.message || String(e));
+    vStatus("bad", "Could not answer the phone"); vWarn(e.message || String(e));
   });
 }
 
 function vLive() {
   if (V.gotVideo) return;
   clearTimeout(V.routeT);
-  stopQrCarousel("offer");
   railEnabled(true);
   V.gotVideo = true;
   document.body.classList.add("live");
@@ -1745,18 +1517,17 @@ function vDropped() {
   $("remote").srcObject = null;
   V.stream = null;
   clearInterval(V.statT); clearInterval(V.upT);
-  $("pairNote").textContent = "The local camera connection ended. Create a new offer to pair again.";
-  vStatus("wait", "Camera gone — create a new local offer");
+  $("pairNote").textContent = "The camera disconnected. Scan the same code to reconnect.";
+  vStatus("wait", "Camera disconnected — still listening on " + V.code);
   tick("down");
 }
 
 function vSendBye() {
   try { if (V.dc && V.dc.readyState === "open") V.dc.send(JSON.stringify({ t: "bye" })); } catch (e) {}
+  try { if (V.bus && V.peer) V.bus.send("LEAVE", { connectionId: V.connId }, V.peer); } catch (e) {}
 }
 function vClose() {
   clearTimeout(V.routeT);
-  stopQrCarousel("offer");
-  stopViewerAnswerScan();
   railEnabled(false);
   clearInterval(V.statT); clearInterval(V.upT);
   Object.keys(V.acks).forEach(function (k) { clearTimeout(V.acks[k]); delete V.acks[k]; });
@@ -1770,7 +1541,8 @@ function vClose() {
 function vTeardown() {
   vSendBye();
   vClose();
-  V.hist = [];
+  if (V.bus) { V.bus.close(); V.bus = null; }
+  V.peer = null; V.hist = [];
 }
 
 function vWireDC(ch) {
@@ -1783,8 +1555,8 @@ function vWireDC(ch) {
     if (m.t === "bye") {
       var hadVideo = V.gotVideo;
       vClose();
-      $("pairNote").textContent = "The camera stopped. Create a new local offer to pair again.";
-      vStatus("wait", "Camera stopped");
+      $("pairNote").textContent = "The camera stopped. Scan the same code to reconnect.";
+      vStatus("wait", "Camera stopped — still listening on " + V.code);
       if (hadVideo) tick("down");
       return;
     }
@@ -1911,51 +1683,8 @@ function toggleRecord() {
   log("[screen] recording");
 }
 
-function stopViewerAnswerScan() {
-  stopActiveQrScan();
-  document.body.classList.remove("qrviewscanning");
-  $("vScanWrap").style.display = "none";
-  $("vScanWrap").classList.remove("armed");
-  $("vScanVideo").srcObject = null;
-}
-function startViewerAnswerScan(background) {
-  stopViewerAnswerScan();
-  if (!background) document.body.classList.add("qrviewscanning");
-  $("vScanWrap").classList.toggle("armed", !!background);
-  $("vScanWrap").style.display = "block";
-  $("vScanState").textContent = "Opening this computer's camera…";
-  $("vScanBar").style.width = "0%";
-  $("vScanCount").textContent = "Decoded 0 blocks";
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "user" } }, audio: false }).then(function (stream) {
-    var video = $("vScanVideo");
-    video.srcObject = stream;
-    return video.play().catch(function () {}).then(function () {
-      scanQrVideo(video, "A", stream, function (n, total) {
-        $("vScanState").textContent = "Reading fountain answer QR — hold steady";
-        $("vScanBar").style.width = Math.round(n * 100 / total) + "%";
-        $("vScanCount").textContent = "Decoded " + n + " of " + total + " blocks";
-      }, function (text) {
-        $("vScanWrap").style.display = "none";
-        $("vScanState").textContent = "Answer QR complete";
-        vUseLocalAnswer(text);
-      });
-    });
-  }).catch(function (e) {
-    stopViewerAnswerScan();
-    if (!background) toast("Could not open this computer's camera — use the manual answer fallback");
-    log("[screen] answer scanner: " + (e && (e.name || e.message)));
-  });
-}
-
 /* --- viewer wiring --- */
-on($("vNew"), "click", function () { vNewCode(); toast("New local offer"); });
-on($("vCopyOffer"), "click", function () {
-  if (!$("vOffer").value) { toast("The local offer is still being created"); return; }
-  copyText($("vOffer").value);
-});
-on($("vUseAnswer"), "click", vUseLocalAnswer);
-on($("vScanAnswer"), "click", function () { startViewerAnswerScan(false); });
-on($("vScanStop"), "click", stopViewerAnswerScan);
+on($("vNew"), "click", function () { vNewCode(); toast("New pairing code"); });
 on($("vExit"), "click", function () { vTeardown(); show("start"); });
 on($("vSet"), "click", function () { openDlg("dlgSet"); });
 on($("vHelp"), "click", function () { openDlg("dlgHelp"); });
@@ -2030,17 +1759,17 @@ on(document, "keydown", function (e) {
 /* CAMERA                                                               */
 /* ==================================================================== */
 var C = {
-  pc: null, dc: null, stream: null, rawStream: null, digital: null, want: false,
+  code: null, bus: null, pc: null, dc: null, stream: null, rawStream: null, digital: null, want: false,
   facing: store.get("facing", "environment"), devId: store.get("devId", ""),
   torch: false, mic: false, zoom: 1, caps: {}, cams: 1,
   statT: 0, wake: null, connected: false, lastPong: 0, beat: 0,
-  ending: false, endT: 0, answerReady: false
+  ending: false, endT: 0, connId: "", pend: [], shout: 0
 };
 
 function cStatus(kind, text) {
   $("cDot").className = "dot " + (kind || "") + (kind === "wait" ? " pulse" : "");
   $("cMsg").textContent = text;
-  $("cChip").textContent = C.connected ? "local Wi-Fi" : C.answerReady ? "answer ready" : "not connected";
+  $("cChip").textContent = C.connected ? "local Wi-Fi" : C.code ? "code " + C.code : "not connected";
   if (text) log("[camera] " + text);
 }
 function cWarn(t) {
@@ -2409,88 +2138,89 @@ function setRes(v) {
   }, function () { return openCamera(); });
 }
 
-/* --- local offer / answer pairing --- */
+/* --- automatic signaling, local camera path --- */
 function wireCameraPc(pc) {
-  pc.ondatachannel = function (e) { camWireDC(e.channel); };
+  pc.onicecandidate = function (event) {
+    if (!event.candidate || !C.bus || !C.code) return;
+    C.bus.send("CANDIDATE", candMsg(event.candidate.toJSON ? event.candidate.toJSON() : event.candidate, C.connId), "tether-" + C.code);
+  };
   pc.oniceconnectionstatechange = function () {
-    var st = pc.iceConnectionState;
-    log("[camera] local ICE " + st);
-    if (st === "connected" || st === "completed") {
-      C.connected = true; C.lastPong = Date.now();
-      document.body.classList.remove("answerqrfull");
-      stopQrCarousel("answer");
-      cStatus("live", "Streaming over local Wi-Fi");
-      cWarn("");
-      $("camPanel").classList.remove("show");
-      pushState();
-    } else if (st === "failed") {
-      C.connected = false;
-      $("camPanel").classList.add("show");
-      cStatus("bad", "No local route to the viewing screen");
-      cWarn("Both devices must be on the same Wi-Fi. Disable VPN LAN blocking and router client isolation, then make a new offer on the screen.");
-    } else if (st === "disconnected") {
-      C.connected = false;
-      $("camPanel").classList.add("show");
-      cStatus("wait", "Local link interrupted — pair again if it does not return");
+    var state = pc.iceConnectionState;
+    log("[camera] local ICE " + state);
+    if (state === "connected" || state === "completed") {
+      C.connected = true; C.lastPong = Date.now(); clearInterval(C.shout); C.shout = 0;
+      cStatus("live", "Streaming over local Wi-Fi"); cWarn("");
+      $("camPanel").classList.remove("show"); pushState();
+    } else if (state === "failed") {
+      C.connected = false; $("camPanel").classList.add("show");
+      cStatus("bad", "No local Wi-Fi route to the viewing screen");
+      cWarn("Pairing worked, but the devices cannot reach each other locally. Check Wi-Fi client isolation and VPN LAN access.");
+    } else if (state === "disconnected") {
+      C.connected = false; cStatus("wait", "Local link interrupted");
     }
   };
   pc.onconnectionstatechange = function () {
-    if (C.pc !== pc) return;
-    if (pc.connectionState === "failed" || pc.connectionState === "closed") {
-      C.connected = false;
-      $("camPanel").classList.add("show");
-    }
+    if (C.pc === pc && (pc.connectionState === "failed" || pc.connectionState === "closed")) C.connected = false;
   };
 }
-function camConnect(offerText) {
-  stopPhoneOfferScan();
-  cWarn("");
-  C.want = true; C.ending = false; C.answerReady = false;
-  clearTimeout(C.endT);
-  stopQrCarousel("answer");
-  document.body.classList.remove("answerqrfull");
-  $("cAnswerWrap").style.display = "none";
-  $("cAnswer").value = "";
-  $("cStop").disabled = false;
-  cStatus("wait", "Reading the local offer…");
-  var offer;
-  unpackSignal(offerText, "offer").then(function (parsed) {
-    offer = parsed;
-    $("cOffer").value = offerText;
-    cStatus("wait", "Opening the local camera…");
-    return C.stream ? null : openCamera();
-  }).then(function () {
+function camConnect(code) {
+  code = String(code || "").replace(/\D/g, "");
+  if (code.length !== 4) { cWarn("Enter the four digits shown on the viewing screen."); return; }
+  stopPhoneOfferScan(); cWarn("");
+  C.code = code; C.want = true; C.ending = false; C.pend = [];
+  $("cCode").value = code; $("cStop").disabled = false;
+  cStatus("wait", "Opening the camera…");
+  var go = C.stream ? Promise.resolve() : openCamera();
+  go.then(function () {
     if (!C.stream) throw new Error("The camera is not available");
-    camCloseConn();
-    C.want = true;
-    var pc = new RTCPeerConnection(iceConf());
-    C.pc = pc;
-    wireCameraPc(pc);
-    return pc.setRemoteDescription(offer).then(function () {
-      C.stream.getTracks().forEach(function (t) { pc.addTrack(t, C.stream); });
-      return applyBitrate(false);
-    }).then(function () {
-      return pc.createAnswer();
-    }).then(function (answer) {
-      return gatherLocalDescription(pc, limitLocalBitrate(answer));
-    }).then(function (desc) {
-      if (C.pc !== pc) return null;
-      return packSignal(desc);
-    }).then(function (text) {
-      if (!text || C.pc !== pc) return;
-      C.answerReady = true;
-      $("cAnswer").value = text;
-      $("cAnswerWrap").style.display = "block";
-      document.body.classList.add("answerqrfull");
-      startQrCarousel("answer", $("cAnswerQr"), text, "A", $("cAnswerQrState"));
-      cStatus("wait", "Answer QR ready — show it to the viewing screen");
-      toast("Local answer QR ready");
+    if (C.bus) C.bus.close();
+    C.bus = PeerLink("tether-cam-" + Math.random().toString(36).slice(2, 10), {
+      up: function () { if (!C.connected && (!C.pc || C.pc.signalingState !== "have-local-offer")) camOffer(); },
+      down: function () { if (!C.connected) cStatus("wait", "Restoring the pairing connection…"); },
+      taken: function () { if (C.want) camConnect(code); },
+      error: function (message) { cWarn(message); },
+      message: camSignal
     });
-  }).catch(function (e) {
-    cStatus("bad", "Could not create the phone answer");
-    cWarn(e.message || String(e));
-    $("camPanel").classList.add("show");
-  });
+    cStatus("wait", "Calling the viewing screen…");
+  }).catch(function (e) { cStatus("bad", "Could not start the camera"); cWarn(e.message || String(e)); });
+}
+function camOffer() {
+  if (!C.want || !C.stream || !C.bus || !C.code) return;
+  camCloseConn(); C.want = true;
+  C.connId = "tc_" + Math.random().toString(36).slice(2, 10);
+  var pc = new RTCPeerConnection(iceConf()); C.pc = pc;
+  wireCameraPc(pc); camWireDC(pc.createDataChannel("ctl", { ordered: true }));
+  C.stream.getTracks().forEach(function (track) { pc.addTrack(track, C.stream); });
+  applyBitrate(false).then(function () { return pc.createOffer(); }).then(function (offer) {
+    return pc.setLocalDescription(offer);
+  }).then(function () {
+    function send() {
+      if (C.pc === pc && C.bus && !C.connected)
+        C.bus.send("OFFER", descMsg(pc.localDescription, C.connId), "tether-" + C.code);
+    }
+    send(); clearInterval(C.shout); C.shout = setInterval(send, 1800);
+    cStatus("wait", "Waiting for the viewing screen…");
+  }).catch(function (e) { cStatus("bad", "Could not create the connection"); cWarn(e.message || String(e)); });
+}
+function camSignal(message) {
+  if (message.type === "ANSWER") {
+    if (!C.pc || C.pc.signalingState !== "have-local-offer") return;
+    clearInterval(C.shout); C.shout = 0;
+    C.pc.setRemoteDescription(message.payload.sdp).then(function () {
+      var pending = C.pend.slice(); C.pend = [];
+      pending.forEach(function (candidate) { C.pc.addIceCandidate(candidate).catch(function () {}); });
+      cStatus("wait", "Viewing screen answered — opening local video…");
+    }).catch(function (e) { cWarn(e.message || String(e)); });
+    return;
+  }
+  if (message.type === "CANDIDATE") {
+    var candidate = message.payload && message.payload.candidate;
+    if (!candidate) return;
+    if (C.pc && C.pc.remoteDescription) C.pc.addIceCandidate(candidate).catch(function () {});
+    else C.pend.push(candidate);
+    return;
+  }
+  if (message.type === "LEAVE") cameraSessionEnded("Viewing screen left — scan a new code to reconnect");
 }
 
 function camWireDC(ch) {
@@ -2831,59 +2561,42 @@ function pushBattery() {
 
 function cameraSessionEnded(message) {
   if (C.ending) return;
-  C.ending = true;
-  C.want = false;
-  C.answerReady = false;
-  stopQrCarousel("answer");
-  document.body.classList.remove("answerqrfull");
-  stopPhoneOfferScan();
-  clearTimeout(C.endT);
-  camCloseConn();
-  $("cStop").disabled = true;
-  $("cAnswerWrap").style.display = "none";
-  $("camPanel").classList.add("show");
-  $("cStats").style.display = "none";
-  cWarn("");
-  cStatus("", message || "Session ended — paste a new local offer to pair again");
+  C.ending = true; C.want = false;
+  stopPhoneOfferScan(); clearTimeout(C.endT); camCloseConn();
+  if (C.bus) { C.bus.close(); C.bus = null; }
+  C.code = null; $("cStop").disabled = true;
+  $("camPanel").classList.add("show"); $("cStats").style.display = "none";
+  cWarn(""); cStatus("", message || "Session ended — scan a pairing code to reconnect");
   C.ending = false;
 }
 function camCloseConn() {
-  clearInterval(C.beat); C.beat = 0;
+  clearInterval(C.beat); C.beat = 0; clearInterval(C.shout); C.shout = 0;
   if (C.dc) { try { C.dc.close(); } catch (e) {} C.dc = null; }
   if (C.pc) { try { C.pc.close(); } catch (e) {} C.pc = null; }
-  C.connected = false;
+  C.connected = false; C.pend = [];
   clearInterval(C.statT); C.statT = 0;
 }
 function camStop() {
-  camBye();
-  C.want = false;
-  C.answerReady = false;
-  stopQrCarousel("answer");
-  document.body.classList.remove("answerqrfull");
-  stopPhoneOfferScan();
-  C.ending = true;
-  clearTimeout(C.endT);
-  camCloseConn();
+  camBye(); C.want = false; C.ending = true;
+  stopPhoneOfferScan(); clearTimeout(C.endT); camCloseConn();
+  if (C.bus) { C.bus.close(); C.bus = null; }
   stopDigitalZoom();
-  if (C.rawStream) C.rawStream.getTracks().forEach(function (t) { t.stop(); });
-  else if (C.stream) C.stream.getTracks().forEach(function (t) { t.stop(); });
-  C.rawStream = null; C.stream = null; C.zoom = 1;
-  $("local").srcObject = null;
-  $("cAnswerWrap").style.display = "none";
-  $("cStop").disabled = true;
-  $("camPanel").classList.add("show");
-  $("cStats").style.display = "none";
-  cStatus("", "Camera off");
-  C.ending = false;
+  if (C.rawStream) C.rawStream.getTracks().forEach(function (track) { track.stop(); });
+  else if (C.stream) C.stream.getTracks().forEach(function (track) { track.stop(); });
+  C.rawStream = null; C.stream = null; C.zoom = 1; C.code = null;
+  $("local").srcObject = null; $("cStop").disabled = true;
+  $("camPanel").classList.add("show"); $("cStats").style.display = "none";
+  cStatus("", "Camera off"); C.ending = false;
 }
 function camBye() {
   try { if (C.dc && C.dc.readyState === "open") C.dc.send(JSON.stringify({ t: "bye" })); } catch (e) {}
+  try { if (C.bus && C.code) C.bus.send("LEAVE", { connectionId: C.connId }, "tether-" + C.code); } catch (e) {}
   try { if (C.pc) C.pc.close(); } catch (e) {}
 }
 window.addEventListener("pagehide", camBye);
 window.addEventListener("pageshow", function () {
   if (role === "cam" && C.want && (!C.pc || C.pc.signalingState === "closed"))
-    cameraSessionEnded("Page restored — paste a new local offer to pair again");
+    cameraSessionEnded("Page restored — scan the pairing QR again");
 });
 
 setInterval(function () {
@@ -2909,39 +2622,24 @@ function startPhoneOfferScan() {
   var go = C.stream ? Promise.resolve() : openCamera();
   go.then(function () {
     if (!C.stream) throw new Error("Camera unavailable");
-    document.body.classList.add("qrscanning");
-    $("scanBox").classList.add("on");
-    $("cScanState").textContent = "Fill the large square with the animated offer QR";
-    $("cScanBar").style.width = "0%";
-    $("cScanCount").textContent = "Decoded 0 blocks";
-    cStatus("wait", "Scanning the offer QR…");
-    scanQrVideo($("local"), "O", null, function (n, total) {
-      $("cScanState").textContent = "Reading fountain offer QR — hold steady";
-      $("cScanBar").style.width = Math.round(n * 100 / total) + "%";
-      $("cScanCount").textContent = "Decoded " + n + " of " + total + " blocks";
-    }, function (text) {
-      document.body.classList.remove("qrscanning");
-      $("scanBox").classList.remove("on");
-      $("cOffer").value = text;
+    document.body.classList.add("qrscanning"); $("scanBox").classList.add("on");
+    $("cScanState").textContent = "Fill the guide with the pairing QR";
+    $("cScanBar").style.width = "20%"; $("cScanCount").textContent = "Searching for the code…";
+    cStatus("wait", "Scanning the pairing QR…");
+    scanQrVideo($("local"), null, function (code) {
+      document.body.classList.remove("qrscanning"); $("scanBox").classList.remove("on");
+      $("cCode").value = code;
       try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {}
-      toast("Offer QR complete");
-      camConnect(text);
+      toast("Code " + code + " found — connecting"); camConnect(code);
     });
-  }).catch(function () {
-    stopPhoneOfferScan();
-    toast("Could not open the camera scanner");
-  });
+  }).catch(function () { stopPhoneOfferScan(); toast("Could not open the QR scanner"); });
 }
 
 /* --- camera wiring --- */
 on($("cScanOffer"), "click", startPhoneOfferScan);
 on($("cScanStop"), "click", stopPhoneOfferScan);
-on($("cConnect"), "click", function () { camConnect($("cOffer").value); });
-on($("cAnswerClose"), "click", function () { document.body.classList.remove("answerqrfull"); });
-on($("cCopyAnswer"), "click", function () {
-  if (!$("cAnswer").value) { toast("Create the phone answer first"); return; }
-  copyText($("cAnswer").value);
-});
+on($("cConnect"), "click", function () { camConnect($("cCode").value); });
+on($("cCode"), "keydown", function (e) { if (e.key === "Enter") camConnect($("cCode").value); });
 on($("cStop"), "click", camStop);
 on($("cExit"), "click", function () { stopPhoneOfferScan(); camStop(); show("start"); });
 on($("cPanelBtn"), "click", function () { $("camPanel").classList.toggle("show"); });
@@ -3033,8 +2731,8 @@ function runDiag() {
   dline("secure context : " + (window.isSecureContext ? "yes" : "NO — the camera will be blocked, serve over https"));
   dline("in a frame     : " + (window.top !== window.self ? "YES — open it in its own tab" : "no"));
   dline("WebRTC         : " + (window.RTCPeerConnection ? "present" : "MISSING in this browser"));
-  dline("cloud services : disabled");
-  dline("ICE servers    : none");
+  dline("signaling      : online handshake only");
+  dline("media servers  : none (no STUN or TURN)");
   navigator.mediaDevices.enumerateDevices().then(function (devs) {
     var cams = devs.filter(function (d) { return d.kind === "videoinput"; });
     dline("cameras        : " + cams.length + (cams.length && cams[0].label ? " — " + cams.map(function (d) { return d.label; }).join(" / ") : " (names appear after permission)"));
@@ -3087,10 +2785,7 @@ formFromCfg();
   var saved = String(store.get("bitrate", 1500));
   if (Array.prototype.some.call($("cBr").options, function (o) { return o.value === saved; })) $("cBr").value = saved;
 })();
-on($("pickViewer"), "click", function () {
-  vNewCode();
-  startViewerAnswerScan(true);
-});
+on($("pickViewer"), "click", function () { vNewCode(); });
 on($("pickCamera"), "click", function () {
   show("cam");
   cStatus("", "Camera off");
@@ -3115,5 +2810,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e9baad495c6385',t:'MTc4NzMxNjI2Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
