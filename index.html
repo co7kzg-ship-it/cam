@@ -748,11 +748,11 @@ body.live .hideonlive{display:none}
 <div class="toast" id="toast"></div>
 
 <!-- Embedded qr-scanner worker (jsQR), MIT license. -->
-<script id="qrworkersrc" type="text/plain">export const createWorker=()=>new Worker(URL.createObjectURL(new Blob([`class x{constructor(a,b){this.width=b;this.height=a.length/b;this.data=a}static createEmpty(a,b){return new x(new Uint8ClampedArray(a*b),a)}get(a,b){return 0>a||a>=this.width||0>b||b>=this.height?!1:!!this.data[b*this.width+a]}set(a,b,c){this.data[b*this.width+a]=c?1:0}setRegion(a,b,c,d,e){for(let f=b;f<b+d;f++)for(let g=a;g<a+c;g++)this.set(g,f,!!e)}}
+<script id="qrworkersrc" type="text/plain">class x{constructor(a,b){this.width=b;this.height=a.length/b;this.data=a}static createEmpty(a,b){return new x(new Uint8ClampedArray(a*b),a)}get(a,b){return 0>a||a>=this.width||0>b||b>=this.height?!1:!!this.data[b*this.width+a]}set(a,b,c){this.data[b*this.width+a]=c?1:0}setRegion(a,b,c,d,e){for(let f=b;f<b+d;f++)for(let g=a;g<a+c;g++)this.set(g,f,!!e)}}
 class A{constructor(a,b,c){this.width=a;a*=b;if(c&&c.length!==a)throw Error("Wrong buffer size");this.data=c||new Uint8ClampedArray(a)}get(a,b){return this.data[b*this.width+a]}set(a,b,c){this.data[b*this.width+a]=c}}
 class ba{constructor(a){this.bitOffset=this.byteOffset=0;this.bytes=a}readBits(a){if(1>a||32<a||a>this.available())throw Error("Cannot read "+a.toString()+" bits");var b=0;if(0<this.bitOffset){b=8-this.bitOffset;var c=a<b?a:b;b-=c;b=(this.bytes[this.byteOffset]&255>>8-c<<b)>>b;a-=c;this.bitOffset+=c;8===this.bitOffset&&(this.bitOffset=0,this.byteOffset++)}if(0<a){for(;8<=a;)b=b<<8|this.bytes[this.byteOffset]&255,this.byteOffset++,a-=8;0<a&&(c=8-a,b=b<<a|(this.bytes[this.byteOffset]&255>>c<<c)>>c,
 this.bitOffset+=a)}return b}available(){return 8*(this.bytes.length-this.byteOffset)-this.bitOffset}}var B,C=B||(B={});C.Numeric="numeric";C.Alphanumeric="alphanumeric";C.Byte="byte";C.Kanji="kanji";C.ECI="eci";C.StructuredAppend="structuredappend";var D,E=D||(D={});E[E.Terminator=0]="Terminator";E[E.Numeric=1]="Numeric";E[E.Alphanumeric=2]="Alphanumeric";E[E.Byte=4]="Byte";E[E.Kanji=8]="Kanji";E[E.ECI=7]="ECI";E[E.StructuredAppend=3]="StructuredAppend";let F="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".split("");
-function ca(a,b){let c=[],d="";b=a.readBits([8,16,16][b]);for(let e=0;e<b;e++){let f=a.readBits(8);c.push(f)}try{d+=decodeURIComponent(c.map(e=>\`%\${("0"+e.toString(16)).substr(-2)}\`).join(""))}catch(e){}return{bytes:c,text:d}}
+function ca(a,b){let c=[],d="";b=a.readBits([8,16,16][b]);for(let e=0;e<b;e++){let f=a.readBits(8);c.push(f)}try{d+=decodeURIComponent(c.map(e=>`%${("0"+e.toString(16)).substr(-2)}`).join(""))}catch(e){}return{bytes:c,text:d}}
 function da(a,b){a=new ba(a);let c=9>=b?0:26>=b?1:2;for(b={text:"",bytes:[],chunks:[],version:b};4<=a.available();){var d=a.readBits(4);if(d===D.Terminator)return b;if(d===D.ECI)0===a.readBits(1)?b.chunks.push({type:B.ECI,assignmentNumber:a.readBits(7)}):0===a.readBits(1)?b.chunks.push({type:B.ECI,assignmentNumber:a.readBits(14)}):0===a.readBits(1)?b.chunks.push({type:B.ECI,assignmentNumber:a.readBits(21)}):b.chunks.push({type:B.ECI,assignmentNumber:-1});else if(d===D.Numeric){var e=a,f=[];d="";for(var g=
 e.readBits([10,12,14][c]);3<=g;){var h=e.readBits(10);if(1E3<=h)throw Error("Invalid numeric value above 999");var k=Math.floor(h/100),m=Math.floor(h/10)%10;h%=10;f.push(48+k,48+m,48+h);d+=k.toString()+m.toString()+h.toString();g-=3}if(2===g){g=e.readBits(7);if(100<=g)throw Error("Invalid numeric value above 99");e=Math.floor(g/10);g%=10;f.push(48+e,48+g);d+=e.toString()+g.toString()}else if(1===g){e=e.readBits(4);if(10<=e)throw Error("Invalid numeric value above 9");f.push(48+e);d+=e.toString()}b.text+=
 d;b.bytes.push(...f);b.chunks.push({type:B.Numeric,text:d})}else if(d===D.Alphanumeric){e=a;f=[];d="";for(g=e.readBits([9,11,13][c]);2<=g;)m=e.readBits(11),k=Math.floor(m/45),m%=45,f.push(F[k].charCodeAt(0),F[m].charCodeAt(0)),d+=F[k]+F[m],g-=2;1===g&&(e=e.readBits(6),f.push(F[e].charCodeAt(0)),d+=F[e]);b.text+=d;b.bytes.push(...f);b.chunks.push({type:B.Alphanumeric,text:d})}else if(d===D.Byte)d=ca(a,c),b.text+=d.text,b.bytes.push(...d.bytes),b.chunks.push({type:B.Byte,bytes:d.bytes,text:d.text});
@@ -845,7 +845,6 @@ u.set(r,q,v)}h?(q=new Uint8ClampedArray(a.buffer,m,k),m+=k,q=new x(q,b)):q=x.cre
 y:z))||"attemptBoth"!==e.inversionAttempts&&"invertFirst"!==e.inversionAttempts||(f=V(d?z:y));return f}X.default=X;let Y="dontInvert",Z={red:77,green:150,blue:29,useIntegerApproximation:!0};
 self.onmessage=a=>{let b=a.data.id,c=a.data.data;switch(a.data.type){case "decode":(a=X(c.data,c.width,c.height,{inversionAttempts:Y,greyScaleWeights:Z}))?self.postMessage({id:b,type:"qrResult",data:a.data,cornerPoints:[a.location.topLeftCorner,a.location.topRightCorner,a.location.bottomRightCorner,a.location.bottomLeftCorner]}):self.postMessage({id:b,type:"qrResult",data:null});break;case "grayscaleWeights":Z.red=c.red;Z.green=c.green;Z.blue=c.blue;Z.useIntegerApproximation=c.useIntegerApproximation;
 break;case "inversionMode":switch(c){case "original":Y="dontInvert";break;case "invert":Y="onlyInvert";break;case "both":Y="attemptBoth";break;default:throw Error("Invalid inversion mode");}break;case "close":self.close()}}
-`]),{type:"application/javascript"}))//# sourceMappingURL=qr-scanner-worker.min.js.map
 </script>
 <script>
 "use strict";
@@ -1289,9 +1288,8 @@ function startQrCarousel(key, canvas, text, kind, stateEl) {
       at++;
     }
     paint();
-    /* Hold frames long enough for mobile autofocus and the JS decoder while
-       still delivering more than one useful equation per second. */
-    state.timer = setInterval(paint, 750);
+    /* User-selected optical transfer speed: ten fountain frames per second. */
+    state.timer = setInterval(paint, 100);
   });
 }
 function makeQrCollector(kind, progress, complete) {
@@ -1350,19 +1348,35 @@ function makeQrCollector(kind, progress, complete) {
   };
 }
 var QR_WORKER_READY = null, QR_WORKER_ID = 0;
+function qrWorkerSelfTestImage() {
+  var text = "TETHER-QR-SELFTEST", matrix = qrMatrix(text, "M"), quiet = 4, scale = 5;
+  var size = (matrix.length + quiet * 2) * scale, data = new Uint8ClampedArray(size * size * 4);
+  data.fill(255);
+  for (var r = 0; r < matrix.length; r++) for (var c = 0; c < matrix.length; c++) if (matrix[r][c]) {
+    for (var y = 0; y < scale; y++) for (var x = 0; x < scale; x++) {
+      var at = (((r + quiet) * scale + y) * size + (c + quiet) * scale + x) * 4;
+      data[at] = data[at + 1] = data[at + 2] = 0; data[at + 3] = 255;
+    }
+  }
+  return { text: text, image: new ImageData(data, size, size) };
+}
 function ensureQrWorker() {
   if (QR_WORKER_READY) return QR_WORKER_READY;
-  QR_WORKER_READY = (async function () {
+  QR_WORKER_READY = new Promise(function (resolve, reject) {
     var holder = $("qrworkersrc"), source = holder && holder.textContent;
-    if (!source || source.length < 1000) throw new Error("The embedded QR decoder is missing");
-    var url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+    if (!source || source.length < 1000) { reject(new Error("The embedded QR decoder is missing")); return; }
+    var url = URL.createObjectURL(new Blob([source], { type: "text/javascript" })), worker;
     try {
-      var module = await import(url);
-      var worker = module.createWorker();
+      worker = new Worker(url);
       worker.postMessage({ id: -1, type: "inversionMode", data: "both" });
-      return worker;
-    } finally { URL.revokeObjectURL(url); }
-  })().catch(function (e) { QR_WORKER_READY = null; throw e; });
+      var test = qrWorkerSelfTestImage();
+      decodeWithQrWorker(worker, test.image).then(function (result) {
+        if (result !== test.text) throw new Error("QR decoder self-test failed");
+        resolve(worker);
+      }, reject);
+    } catch (e) { reject(e); }
+    finally { URL.revokeObjectURL(url); }
+  }).catch(function (e) { QR_WORKER_READY = null; throw e; });
   return QR_WORKER_READY;
 }
 function decodeWithQrWorker(worker, image) {
@@ -1928,7 +1942,7 @@ function startViewerAnswerScan(background) {
     });
   }).catch(function (e) {
     stopViewerAnswerScan();
-    toast("Could not open this computer's camera — paste the answer instead");
+    if (!background) toast("Could not open this computer's camera — use the manual answer fallback");
     log("[screen] answer scanner: " + (e && (e.name || e.message)));
   });
 }
@@ -3101,5 +3115,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e9ae2fbaa560b5',t:'MTc4NzMxNTc1NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e9baad495c6385',t:'MTc4NzMxNjI2Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
