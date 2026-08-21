@@ -21,12 +21,7 @@
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
 }
-html[data-tone="paper"]{
-  --page:#e9edf0; --bar:#dde3e7; --panel:#f2f5f7; --panel-2:#e6ebee; --field:#fbfcfd;
-  --line:#c3cbd1; --line-2:#dbe1e5; --ink:#171d22; --ink-2:#455158; --dim:#616c73;
-  --acc-soft:#dbe8ef; --matte:#a8b1b8;
-  --warn:#f2e9d4; --warn-line:#d5c69c; --warn-ink:#6a5619;
-}
+
 html[data-tone="dim"]{
   --page:#b7c0c7; --bar:#a9b3bb; --panel:#c8d0d6; --panel-2:#bec7ce; --field:#d4dbe0;
   --line:#94a0a9; --line-2:#b3bdc4; --ink:#101619; --ink-2:#334047; --dim:#4c5960;
@@ -391,7 +386,6 @@ body.live #pairSect .pairnote{margin-top:5px}
     <span class="mark">Tether<s>.</s></span>
     <span class="mark-sub">phone camera → desktop</span>
     <span class="grow"></span>
-    <button class="btn quiet tone" id="tone0" title="Surface tone">Soft</button>
     <button class="btn quiet" id="startHelp">Help</button>
   </header>
   <div class="startwrap">
@@ -441,7 +435,6 @@ body.live #pairSect .pairnote{margin-top:5px}
     <span class="ro onlylive" id="roRtt">—</span>
     <span class="grow"></span>
     <span class="ro onlylive" id="roBatt" title="Phone battery">—</span>
-    <button class="btn quiet tone" id="tone1" title="Surface tone">Soft</button>
     <button class="btn quiet sq" id="vNew" title="New code, restart the session"><svg><use href="#i-refresh"/></svg></button>
     <button class="btn quiet sq" id="vSet" title="Settings"><svg><use href="#i-gear"/></svg></button>
     <button class="btn quiet sq" id="vHelp" title="Help"><svg><use href="#i-info"/></svg></button>
@@ -504,10 +497,6 @@ body.live #pairSect .pairnote{margin-top:5px}
           </div>
         </div>
         <div class="relayline" id="vRelay">Pairing relays: opening…</div>
-        <div class="lanrow" id="lanRow" style="display:none">
-          <span id="lanState"></span>
-          <button class="btn sm" id="lanFix">Publish local address</button>
-        </div>
       </div>
 
       <div class="sect">
@@ -581,7 +570,6 @@ body.live #pairSect .pairnote{margin-top:5px}
     <span class="mark-sub">camera</span>
     <span class="grow"></span>
     <span class="chip" id="cChip">not connected</span>
-    <button class="btn quiet tone" id="tone2" title="Surface tone">Soft</button>
     <button class="btn quiet sq" id="cPanelBtn" title="Camera settings"><svg><use href="#i-gear"/></svg></button>
     <button class="btn quiet sq" id="cHelp" title="Help"><svg><use href="#i-info"/></svg></button>
     <button class="btn quiet sq" id="cExit" title="Leave"><svg><use href="#i-x"/></svg></button>
@@ -699,8 +687,8 @@ body.live #pairSect .pairnote{margin-top:5px}
 
       <h3>Controlling the phone from the desktop</h3>
       <p>LED, autofocus, zoom, camera choice, frame rate, resolution and the microphone are all driven
-        from the rail on the right. A control that the phone's camera cannot honour is switched off
-        rather than left to fail silently.</p>
+        from the rail on the right. LED, focus and zoom stay available because some phones support them
+        even when their browser does not advertise the capability; the app tries the control and reports the result.</p>
 
       <h3>Working with a VPN</h3>
       <p>Two devices on one Wi-Fi pair through their local addresses. Most VPN apps have a switch called
@@ -710,9 +698,6 @@ body.live #pairSect .pairnote{margin-top:5px}
       <p>If the status line says <b>paired, but no route</b>, the code did its job and only the video path is
         blocked. Switch local network access on in the VPN app, or turn off <b>keep the video on this Wi-Fi</b>
         in Settings so it can go the long way round.</p>
-      <p>Chrome also hides the local address behind an mDNS name until the page holds a media
-        permission. The desktop asks for the microphone once for that reason and stops the track
-        immediately; it is never recorded or sent.</p>
 
       <h3>Keyboard</h3>
       <p class="keys">
@@ -728,7 +713,6 @@ body.live #pairSect .pairnote{margin-top:5px}
     <div class="body">
       <h3>Surface tone</h3>
       <div class="rowbtns" style="margin:0 0 4px">
-        <button class="btn sm" data-tone-set="paper">Paper</button>
         <button class="btn sm" data-tone-set="soft">Soft</button>
         <button class="btn sm" data-tone-set="dim">Dim</button>
       </div>
@@ -741,7 +725,6 @@ body.live #pairSect .pairnote{margin-top:5px}
       <h3>Connection</h3>
       <label class="checkline"><input type="checkbox" id="optLanOnly" checked><span><b>Keep the video on this Wi-Fi.</b> The picture only ever travels between the two devices on your own network — no STUN, no relay, nothing to the internet. Turn this off only if the devices are on different networks.</span></label>
       <label class="checkline"><input type="checkbox" id="optLocal" checked><span>When the above is off, still try the local network first</span></label>
-      <label class="checkline"><input type="checkbox" id="optAskLan" checked><span>Ask for the microphone once, so this screen can publish its local address (needed for same-Wi-Fi pairing in Chrome; the track is stopped immediately)</span></label>
       <label class="checkline"><input type="checkbox" id="optRelayOnly"><span>Send everything through the TURN relay below, never directly</span></label>
       <div class="k2">
         <div class="full">
@@ -1588,7 +1571,7 @@ function qrTryGrid(bits, w, h, dim, xf, ox, oy, ux, uy, vx, vy, mod) {
 /* ------------------------------------------------------------------ */
 /* settings                                                            */
 /* ------------------------------------------------------------------ */
-var DEF = { stamp: true, beep: false, local: true, lanOnly: true, askLan: true, relayOnly: false, route: "auto",
+var DEF = { stamp: true, beep: false, local: true, lanOnly: true, relayOnly: false, route: "auto",
             turn: "", turnU: "", turnP: "", peerHost: "0.peerjs.com" };
 var cfg = {};
 Object.keys(DEF).forEach(function (k) { cfg[k] = store.get(k, DEF[k]); });
@@ -1632,28 +1615,6 @@ function trimSdp(sdp) {
   return sdp.split(/\r?\n/).filter(function (l) {
     return !(/^a=candidate:/.test(l) && !/ typ host/.test(l));
   }).join("\r\n");
-}
-
-/* Chrome replaces local addresses with an mDNS name until the page owns a
-   media permission — and mDNS is what a VPN tends to break. Holding a
-   permission for a moment (the track is stopped at once) puts the real
-   192.168.x.x into the handshake, which is what makes LAN pairing work. */
-var ipOpen = false;
-function unlockIp(force) {
-  if (ipOpen) return Promise.resolve(true);
-  var pre = Promise.resolve(true);
-  if (!force) {
-    if (!navigator.permissions || !navigator.permissions.query) return Promise.resolve(false);
-    pre = navigator.permissions.query({ name: "microphone" }).then(function (s) { return s.state === "granted"; }, function () { return false; });
-  }
-  return pre.then(function (ok) {
-    if (!ok) return false;
-    return navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) {
-      s.getTracks().forEach(function (t) { t.stop(); });
-      ipOpen = true; log("local address published for LAN pairing");
-      return true;
-    }, function (e) { log("local address stays hidden (" + (e && e.name) + ")"); return false; });
-  });
 }
 
 /* PeerJS cloud validates the envelope, so payloads keep the shape its own
@@ -1880,23 +1841,18 @@ function sampler(getPc, inbound, paint) {
 /* ------------------------------------------------------------------ */
 /* surface tone                                                        */
 /* ------------------------------------------------------------------ */
-var TONES = ["paper", "soft", "dim"];
-var TONE_NAME = { paper: "Paper", soft: "Soft", dim: "Dim" };
+var TONES = ["soft", "dim"];
+var TONE_NAME = { soft: "Soft", dim: "Dim" };
 function applyTone(t) {
   if (TONES.indexOf(t) < 0) t = "soft";
   document.documentElement.setAttribute("data-tone", t);
   store.set("tone", t);
-  ["tone0", "tone1", "tone2"].forEach(function (id) { if ($(id)) $(id).textContent = TONE_NAME[t]; });
   Array.prototype.forEach.call(document.querySelectorAll("[data-tone-set]"), function (b) {
     b.classList.toggle("on", b.getAttribute("data-tone-set") === t);
   });
   var mt = document.querySelector('meta[name="theme-color"]');
   if (mt) mt.setAttribute("content", getComputedStyle(document.documentElement).getPropertyValue("--page").trim());
   drawStrip();
-}
-function cycleTone() {
-  var now = document.documentElement.getAttribute("data-tone") || "soft";
-  applyTone(TONES[(TONES.indexOf(now) + 1) % TONES.length]);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1943,23 +1899,6 @@ function pairText(code) { return "TETHER-PAIR-V1:" + code; }
 
 function vNewCode() { vStart(String(1000 + Math.floor(Math.random() * 9000))); }
 
-/* Chrome and Edge replace this machine's LAN address with a random .local
-   name until the page holds a media permission, and a VPN usually stops the
-   phone from resolving that name — which is exactly how a same-Wi-Fi pairing
-   dies after a perfectly good handshake. Holding the microphone for a moment
-   (the track is stopped straight away, nothing is recorded) puts the real
-   192.168.x.x into the offer. */
-function lanCheck(prompt) {
-  if (prompt) V.asked = true;
-  return unlockIp(!!prompt).then(function (ok) {
-    $("lanRow").style.display = ok ? "none" : "block";
-    $("lanState").textContent = ok
-      ? "This screen publishes its local address."
-      : "This screen has not published its local address, so a phone on the same Wi-Fi may not find it.";
-    return ok;
-  });
-}
-
 function vStart(code) {
   vTeardown();
   relaxLan = false;
@@ -1970,7 +1909,6 @@ function vStart(code) {
   $("pairNote").innerHTML = "Open this page on the phone, tap <b>Scan the square</b>, and point it here.";
   vStatus("wait", "Opening the code…");
   railEnabled(false);
-  lanCheck(cfg.askLan && !V.asked);
   V.bus = Bus("tether-" + code, {
     up: function () {
       vWarn("");
@@ -2040,8 +1978,7 @@ function vAnswer(src, payload, link) {
       if (st === "connected" || st === "completed") { vWarn(""); if (V.gotVideo) vStatus("live", "Live"); }
       else if (st === "failed") {
         vStatus("bad", "No network path to the phone");
-        if (!ipOpen) vWarn("This screen never published its local address, which same-Wi-Fi pairing needs. Open Settings → connection check, or pair offline.");
-        else vWarn("No route between the two devices. Put both on one network, add a TURN relay in Settings, or pair offline.");
+        vWarn("No route between the two devices. Put both on one network or add a TURN relay in Settings.");
         vDropped();
       } else if (st === "disconnected") vStatus("wait", "Link interrupted, waiting for it to come back");
     };
@@ -2074,13 +2011,11 @@ function vRouteWatch() {
     if (lanActive()) {
       vWarn("The phone reached this screen, so pairing works — but no route inside the Wi-Fi. Either the two " +
         "devices are on different networks, the router keeps its clients apart, or the VPN blocks local " +
-        (ipOpen ? "traffic. " : "traffic and this screen has not published its local address. ") +
-        "Trying the long way round now.");
+        "traffic. Trying the long way round now.");
       return;
     }
     vWarn("The phone reached this screen, so the code works — the two devices just cannot pass video. " +
       "This is what a VPN that blocks local network access does. Allow local network access in the VPN app " +
-      (ipOpen ? "" : "and press “Publish local address” on the right, ") +
       "then press the refresh button above.");
   }, 11000);
 }
@@ -2198,7 +2133,14 @@ function vWireDC(ch) {
     V.lastBeat = Date.now();
     var m; try { m = JSON.parse(e.data); } catch (err) { return; }
     if (m.t === "ping") { try { ch.send('{"t":"pong"}'); } catch (err) {} return; }
-    if (m.t === "bye") { vClose(); vDropped(); vStatus("wait", "Camera stopped — listening on " + V.code); return; }
+    if (m.t === "bye") {
+      var wasLive = V.gotVideo;
+      vClose();
+      $("pairNote").textContent = "The camera stopped. This code is still ready for a new connection.";
+      vStatus("wait", "Camera stopped — listening on " + V.code);
+      if (wasLive) tick("down");
+      return;
+    }
     if (m.t === "ack") { clearTimeout(V.acks[m.id]); delete V.acks[m.id]; if (m.msg) toast(m.msg); return; }
     if (m.t === "state") vApplyState(m);
     else if (m.t === "batt") $("roBatt").innerHTML = "<b>" + Math.round(m.level * 100) + "%</b>" + (m.charging ? "&nbsp;charging" : "&nbsp;battery");
@@ -2238,14 +2180,18 @@ function vApplyState(s) {
   $("tPause").classList.toggle("show", !!s.paused);
   $("tMute").classList.toggle("show", !s.mic);
   freeze(!!s.paused);
-  able($("rLed"), s.capTorch !== false, "This camera has no LED");
-  if (s.capTorch === null) $("rLed").title = "LED support unknown — press to try";
-  able($("rZin"), !!s.capZoom, "This camera cannot zoom");
-  able($("rZout"), !!s.capZoom, "This camera cannot zoom");
-  able($("rFocus"), s.capFocus !== false, "Focus is fixed on this camera");
+  able($("rLed"), true, "");
+  $("rLed").title = s.capTorch === false ? "LED was not advertised — press to try anyway" : "Toggle the phone camera LED";
+  able($("rZin"), true, "");
+  able($("rZout"), true, "");
+  $("rZin").title = s.capZoom === false ? "Zoom was not advertised — press to try anyway" : "Zoom in";
+  $("rZout").title = s.capZoom === false ? "Zoom was not advertised — press to try anyway" : "Zoom out";
+  able($("rFocus"), true, "");
+  $("rFocus").title = s.capFocus === false ? "Focus control was not advertised — press to refocus anyway" : "Autofocus";
   able($("rPrev"), (s.cams || 1) > 1, "Only one camera on that device");
   able($("rNext"), (s.cams || 1) > 1, "Only one camera on that device");
   if (s.res) $("rRes").value = s.res;
+  if (s.bitrate != null) $("rBr").value = String(s.bitrate);
   if (s.zoom && s.capZoom) $("rZin").title = "Zoom in — now " + Number(s.zoom).toFixed(1) + "×";
   if (s.mic && $("remote").muted && !V.audioHint) {
     V.audioHint = true;
@@ -2594,8 +2540,8 @@ function detectTorch(t) {
 }
 function paintTorch() {
   var st = C.caps.torch;
-  $("cLed").disabled = st === false;
-  $("cLed").title = st === false ? "This camera has no LED" : st === null ? "LED support unknown — tap to try" : "";
+  $("cLed").disabled = !vtrack();
+  $("cLed").title = st === false ? "LED was not advertised — tap to try anyway" : st == null ? "Tap to detect and toggle the LED" : "Toggle LED";
   $("cLed").classList.toggle("on", !!C.torch);
 }
 var capT = [];
@@ -2620,20 +2566,25 @@ function watchCaps() {
 function readCaps(quiet) {
   var t = vtrack();
   if (!quiet) C.caps = {};
-  if (!t || !t.getCapabilities) { $("cZoomWrap").style.display = "none"; $("cEvWrap").style.display = "none"; return; }
+  if (!t) return;
   var c = {}, st = {};
-  try { c = t.getCapabilities() || {}; } catch (e) { return; }
-  try { st = t.getSettings() || {}; } catch (e) {}
-  C.caps.zoom = c.zoom || null;
-  C.caps.focus = ("focusMode" in c) ? !!c.focusMode : null;
+  try { c = t.getCapabilities ? (t.getCapabilities() || {}) : {}; } catch (e) {}
+  try { st = t.getSettings ? (t.getSettings() || {}) : {}; } catch (e) {}
+  C.caps.zoom = c.zoom || (st.zoom != null ? { min: 1, max: Math.max(4, st.zoom), step: .1 } : null);
+  C.caps.focus = ("focusMode" in c) ? c.focusMode : null;
   if (!quiet) C.caps.torch = ("torch" in c) ? !!c.torch : null;
-  $("cZoomWrap").style.display = c.zoom ? "block" : "none";
-  if (c.zoom) {
-    $("cZoom").min = c.zoom.min; $("cZoom").max = c.zoom.max; $("cZoom").step = c.zoom.step || .1;
-    C.zoom = st.zoom || c.zoom.min || 1;
-    $("cZoom").value = C.zoom;
-    $("cZoomV").textContent = Number(C.zoom).toFixed(1) + "×";
-  }
+
+  /* Some mobile browsers accept zoom but omit it from getCapabilities().
+     Keep the control available and let applyConstraints be the authority. */
+  var zr = C.caps.zoom || { min: 1, max: 4, step: .1 };
+  $("cZoomWrap").style.display = "block";
+  $("cZoom").min = zr.min == null ? 1 : zr.min;
+  $("cZoom").max = zr.max == null ? 4 : zr.max;
+  $("cZoom").step = zr.step || .1;
+  C.zoom = st.zoom != null ? st.zoom : clamp(C.zoom || 1, +$("cZoom").min, +$("cZoom").max);
+  $("cZoom").value = C.zoom;
+  $("cZoomV").textContent = Number(C.zoom).toFixed(1) + "×";
+
   $("cEvWrap").style.display = c.exposureCompensation ? "block" : "none";
   if (c.exposureCompensation) {
     $("cEv").min = c.exposureCompensation.min;
@@ -2645,6 +2596,7 @@ function readCaps(quiet) {
     }
   }
   paintTorch();
+  $("cFocus").disabled = false;
   $("cSwap").disabled = C.cams < 2;
   $("cSwap").title = C.cams < 2 ? "Only one camera on this device" : "";
 }
@@ -2656,16 +2608,32 @@ function applyAdv(obj) {
     function () { log("[camera] refused " + JSON.stringify(obj)); return false; });
 }
 function applyBitrate() {
-  if (!C.pc) return;
   var kbps = +$("cBr").value;
-  C.pc.getSenders().forEach(function (s) {
-    if (!s.track || s.track.kind !== "video" || !s.getParameters) return;
-    var p = s.getParameters();
-    if (!p.encodings || !p.encodings.length) p.encodings = [{}];
-    if (kbps) p.encodings[0].maxBitrate = kbps * 1000; else delete p.encodings[0].maxBitrate;
-    p.degradationPreference = "maintain-framerate";
-    s.setParameters(p).catch(function () {});
+  store.set("bitrate", kbps);
+  if (!C.pc) { pushState(); return Promise.resolve(false); }
+  var jobs = C.pc.getSenders().filter(function (s) {
+    return s.track && s.track.kind === "video" && s.getParameters && s.setParameters;
+  }).map(function (sender) {
+    function update(withPreference) {
+      var p = sender.getParameters() || {};
+      if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+      p.encodings.forEach(function (e) {
+        if (kbps) e.maxBitrate = kbps * 1000;
+        else delete e.maxBitrate;
+      });
+      if (withPreference) p.degradationPreference = "maintain-framerate";
+      else delete p.degradationPreference;
+      return sender.setParameters(p);
+    }
+    return update(true).catch(function () { return update(false); }).then(function () {
+      log("[camera] bitrate ceiling " + (kbps ? kbps + " kbit/s" : "automatic"));
+      return true;
+    }, function (e) {
+      log("[camera] bitrate change refused: " + (e && e.message));
+      return false;
+    });
   });
+  return Promise.all(jobs).then(function (r) { pushState(); return r.some(Boolean); });
 }
 function pushState() {
   if (!C.dc || C.dc.readyState !== "open") return;
@@ -2673,10 +2641,10 @@ function pushState() {
     C.dc.send(JSON.stringify({
       t: "state", torch: C.torch, paused: C.paused, zoom: C.zoom,
       mic: !!(atrack() && atrack().enabled),
-      fps: +$("cFps").value, res: $("cRes").value,
-      capTorch: C.caps.torch === undefined ? null : C.caps.torch,
-      capFocus: C.caps.focus === undefined ? null : C.caps.focus,
-      capZoom: !!C.caps.zoom, cams: C.cams
+      fps: +$("cFps").value, res: $("cRes").value, bitrate: +$("cBr").value,
+      capTorch: C.caps.torch == null ? null : C.caps.torch,
+      capFocus: C.caps.focus == null ? null : C.caps.focus !== false,
+      capZoom: C.caps.zoom == null ? null : true, cams: C.cams
     }));
   } catch (e) {}
 }
@@ -2716,7 +2684,6 @@ function camConnect(code) {
   var go = C.stream ? Promise.resolve() : openCamera();
   go.then(function () {
     if (!C.stream) return;
-    ipOpen = true;
     if (!C.bus) {
       C.bus = Bus("tether-cam-" + rid(7), {
         up: function () {
@@ -2782,6 +2749,7 @@ function camOffer() {
       cStatus("live", "Streaming to " + C.code);
       cWarn("");
       $("camPanel").classList.remove("show");
+      applyBitrate();
       pushState();
     } else if (st === "failed") {
       C.connected = false;
@@ -2808,8 +2776,9 @@ function camOffer() {
       setTimeout(function () { renegotiate(pc); }, 150);
     }
   };
-  applyBitrate();
-  sendOffer(pc, "new");
+  applyBitrate().then(function () {
+    if (C.pc === pc) sendOffer(pc, "new");
+  });
   cStatus("wait", "Calling " + C.code + "…");
 }
 
@@ -2966,7 +2935,12 @@ function handleCmd(k, v, id) {
   else if (k === "snap") { grabStill($("local"), "tether-phone"); job = Promise.resolve("Photo saved on the phone"); }
   else if (k === "mic") job = setMic(!!v).then(function () { return v ? "Microphone on" : "Microphone off"; });
   else if (k === "camStep") job = stepCamera(v);
-  else if (k === "bitrate") { $("cBr").value = String(v); applyBitrate(); job = Promise.resolve(v ? "Ceiling " + (v / 1000) + " Mbit/s" : "Automatic bitrate"); }
+  else if (k === "bitrate") {
+    $("cBr").value = String(v);
+    job = applyBitrate().then(function (ok) {
+      return ok ? (v ? "Ceiling " + (v / 1000) + " Mbit/s" : "Automatic bitrate") : "This browser refused a live bitrate change";
+    });
+  }
   else job = Promise.resolve("");
   Promise.resolve(job).then(function (msg) {
     if (id && C.dc && C.dc.readyState === "open") {
@@ -2979,18 +2953,25 @@ function handleCmd(k, v, id) {
 function setTorch(want) {
   var t = vtrack();
   if (!t) return Promise.resolve("No camera is running");
-  if (C.caps.torch === false) return Promise.resolve("This camera has no LED");
-  return applyAdv({ torch: want }).then(function (ok) {
-    if (ok) return true;
-    return t.applyConstraints({ torch: want }).then(function () { return true; }, function () { return false; });
-  }).then(function (ok) {
-    if (!ok && want) {
+  /* Capability flags are unreliable on several Android builds. Try both
+     constraint shapes even when getCapabilities() did not advertise torch. */
+  var tries = [
+    { advanced: [{ torch: want }] },
+    { torch: want },
+    { advanced: [{ torch: { exact: want } }] }
+  ];
+  function attempt(i) {
+    if (i >= tries.length) return Promise.resolve(false);
+    return t.applyConstraints(tries[i]).then(function () { return true; }, function () { return attempt(i + 1); });
+  }
+  return attempt(0).then(function (ok) {
+    if (!ok) {
       C.caps.torch = false; C.torch = false;
       paintTorch(); pushState();
-      return "This camera refused the LED";
+      return "This camera or browser does not provide LED control";
     }
-    if (ok) C.caps.torch = true;
-    C.torch = want && ok;
+    C.caps.torch = true;
+    C.torch = !!want;
     paintTorch(); pushState();
     return C.torch ? "LED on" : "LED off";
   });
@@ -3002,34 +2983,64 @@ function restoreTorch() {
   });
 }
 function doFocus(x, y) {
-  if (!vtrack()) return Promise.resolve("No camera is running");
-  if (x != null && y != null) {
-    return applyAdv({ pointsOfInterest: [{ x: x, y: y }], focusMode: "single-shot" })
-      .then(function (ok) { return ok ? "Focusing there" : "Focus is fixed on this camera"; });
+  var t = vtrack();
+  if (!t) return Promise.resolve("No camera is running");
+  var point = x != null && y != null ? [{ x: x, y: y }] : null;
+  var modes = ["single-shot", "continuous", "auto"];
+  try {
+    var advertised = C.caps.focus;
+    if (advertised && advertised.length) {
+      modes = advertised.concat(modes.filter(function (m) { return advertised.indexOf(m) < 0; }));
+    }
+  } catch (e) {}
+  var tries = [];
+  modes.forEach(function (mode) {
+    var v = { focusMode: mode };
+    if (point) v.pointsOfInterest = point;
+    tries.push({ advanced: [v] });
+  });
+  if (point) tries.push({ advanced: [{ pointsOfInterest: point }] });
+  function attempt(i) {
+    if (i >= tries.length) return Promise.resolve(false);
+    return t.applyConstraints(tries[i]).then(function () { return true; }, function () { return attempt(i + 1); });
   }
-  return applyAdv({ focusMode: "single-shot" }).then(function (ok) {
-    if (ok) return "Autofocus";
-    return applyAdv({ focusMode: "continuous" }).then(function (ok2) {
-      return ok2 ? "Continuous autofocus" : "Focus is fixed on this camera";
-    });
+  return attempt(0).then(function (ok) {
+    C.caps.focus = ok ? (C.caps.focus || ["auto"]) : false;
+    pushState();
+    return ok ? (point ? "Focusing there" : "Autofocus requested") : "This camera uses fixed or automatic focus";
   });
 }
 function setZoom(v) {
-  var c = C.caps.zoom;
-  if (!c) return Promise.resolve("This camera cannot zoom");
-  v = clamp(v, c.min, c.max);
-  return applyAdv({ zoom: v }).then(function (ok) {
-    if (!ok) return "The camera refused that zoom";
-    C.zoom = v;
-    $("cZoom").value = v;
-    $("cZoomV").textContent = Number(v).toFixed(1) + "×";
-    return "Zoom " + Number(v).toFixed(1) + "×";
+  var t = vtrack();
+  if (!t) return Promise.resolve("No camera is running");
+  var c = C.caps.zoom || { min: 1, max: 4, step: .1 };
+  v = clamp(+v, c.min == null ? 1 : c.min, c.max == null ? 4 : c.max);
+  var tries = [
+    { advanced: [{ zoom: v }] },
+    { zoom: v },
+    { advanced: [{ zoom: { exact: v } }] }
+  ];
+  function attempt(i) {
+    if (i >= tries.length) return Promise.resolve(false);
+    return t.applyConstraints(tries[i]).then(function () { return true; }, function () { return attempt(i + 1); });
+  }
+  return attempt(0).then(function (ok) {
+    if (!ok) { pushState(); return "This camera or browser does not provide zoom control"; }
+    C.caps.zoom = c;
+    try {
+      var st = t.getSettings ? t.getSettings() : {};
+      C.zoom = st.zoom != null ? st.zoom : v;
+    } catch (e) { C.zoom = v; }
+    $("cZoom").value = C.zoom;
+    $("cZoomV").textContent = Number(C.zoom).toFixed(1) + "×";
+    pushState();
+    return "Zoom " + Number(C.zoom).toFixed(1) + "×";
   });
 }
 function stepZoom(dir) {
-  var c = C.caps.zoom;
-  if (!c) return Promise.resolve("This camera cannot zoom");
-  return setZoom(C.zoom + dir * ((c.max - c.min) / 10 || .1));
+  var c = C.caps.zoom || { min: 1, max: 4, step: .1 };
+  var step = c.step || ((c.max - c.min) / 10) || .1;
+  return setZoom((C.zoom || c.min || 1) + dir * step);
 }
 function stepCamera(dir) {
   var sel = $("cPick");
@@ -3099,7 +3110,35 @@ function camBye() {
   try { if (C.dc && C.dc.readyState === "open") C.dc.send(JSON.stringify({ t: "bye" })); } catch (e) {}
   try { if (C.pc) C.pc.close(); } catch (e) {}
 }
-window.addEventListener("pagehide", camBye);
+var resumeT = 0;
+function resumeCameraSession() {
+  if (role !== "cam" || !C.want) return;
+  clearTimeout(resumeT);
+  resumeT = setTimeout(function () {
+    var t = vtrack();
+    var ready = t && t.readyState === "live";
+    var go = ready ? Promise.resolve() : openCamera();
+    go.then(function () {
+      if (!C.want || C.connected || !C.stream) return;
+      if (!C.bus) { camConnect(C.code); return; }
+      if (C.bus.ready().length) camOffer();
+      else cStatus("wait", "Restoring the session…");
+    });
+  }, 250);
+}
+window.addEventListener("pagehide", function () {
+  if (role === "cam" && C.want) {
+    C.suspended = true;
+    camBye();
+    camCloseConn();
+  } else camBye();
+});
+window.addEventListener("pageshow", function () {
+  if (C.suspended || (role === "cam" && C.want && !C.connected)) {
+    C.suspended = false;
+    resumeCameraSession();
+  }
+});
 
 setInterval(function () {
   if (role !== "cam" || !C.pc || document.hidden) return;
@@ -3139,15 +3178,29 @@ on($("cWake"), "click", function () {
   }).catch(function () { toast("The screen lock was refused"); });
 });
 document.addEventListener("visibilitychange", function () {
-  if (document.visibilityState === "visible" && $("cWake").classList.contains("on") && !C.wake && navigator.wakeLock) {
+  if (document.visibilityState !== "visible") return;
+  if ($("cWake").classList.contains("on") && !C.wake && navigator.wakeLock) {
     navigator.wakeLock.request("screen").then(function (w) { C.wake = w; }).catch(function () {});
+  }
+  if (role === "cam" && C.want) {
+    var state = C.pc && (C.pc.connectionState || C.pc.iceConnectionState);
+    if (!C.connected || state === "failed" || state === "closed" || state === "disconnected") {
+      camCloseConn();
+      resumeCameraSession();
+    }
   }
 });
 on($("cPick"), "change", function () { if (C.stream) openCamera(); });
 on($("cRes"), "change", function () { if (C.stream) setRes($("cRes").value); });
 on($("cFps"), "change", function () { if (C.stream) setFps($("cFps").value); });
-on($("cBr"), "change", applyBitrate);
-on($("cZoom"), "input", function () { setZoom(+$("cZoom").value); });
+on($("cBr"), "change", function () { applyBitrate().then(function (ok) { if (C.pc) toast(ok ? "Bitrate ceiling applied" : "Live bitrate change was refused by this browser"); }); });
+var zoomInputT = 0;
+on($("cZoom"), "input", function () {
+  clearTimeout(zoomInputT);
+  var z = +$("cZoom").value;
+  $("cZoomV").textContent = Number(z).toFixed(1) + "×";
+  zoomInputT = setTimeout(function () { setZoom(z).then(function (m) { if (/does not|refused/.test(m)) toast(m); }); }, 80);
+});
 on($("cEv"), "input", function () {
   $("cEvV").textContent = Number($("cEv").value).toFixed(1);
   applyAdv({ exposureCompensation: +$("cEv").value });
@@ -3302,8 +3355,6 @@ function runDiag() {
     }, Promise.resolve());
   }).then(function () {
     dline("");
-    dline("local address  : " + (ipOpen ? "published, same-network pairing can work" : "hidden until a media permission is held"));
-    dline("");
     dline("ice candidates, five second sample");
     return probeIce();
   }).then(function (r) {
@@ -3325,7 +3376,6 @@ function formFromCfg() {
   $("optBeep").checked = cfg.beep;
   $("optLocal").checked = cfg.local;
   $("optLanOnly").checked = cfg.lanOnly;
-  $("optAskLan").checked = cfg.askLan;
   $("optRelayOnly").checked = cfg.relayOnly;
   $("optRoute").value = cfg.route;
   $("optTurn").value = cfg.turn;
@@ -3338,7 +3388,6 @@ on($("optSave"), "click", function () {
   cfg.beep = $("optBeep").checked;
   cfg.local = $("optLocal").checked;
   cfg.lanOnly = $("optLanOnly").checked;
-  cfg.askLan = $("optAskLan").checked;
   cfg.relayOnly = $("optRelayOnly").checked;
   cfg.route = $("optRoute").value;
   cfg.turn = $("optTurn").value.trim();
@@ -3356,11 +3405,6 @@ on($("turnPreset"), "click", function () {
   $("optTurnP").value = "openrelayproject";
   toast("Filled in — press Save, then run the connection check");
 });
-on($("lanFix"), "click", function () {
-  lanCheck(true).then(function (ok) {
-    toast(ok ? "Local address published" : "Still blocked — allow the microphone for this site in the address bar");
-  });
-});
 on($("optReset"), "click", function () {
   Object.keys(DEF).forEach(function (k) { cfg[k] = DEF[k]; store.set(k, DEF[k]); });
   formFromCfg();
@@ -3370,9 +3414,7 @@ on($("optReset"), "click", function () {
 /* ==================================================================== */
 /* BOOT                                                                 */
 /* ==================================================================== */
-applyTone(store.get("tone", null) ||
-  (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dim" : "soft"));
-["tone0", "tone1", "tone2"].forEach(function (id) { on($(id), "click", cycleTone); });
+applyTone(store.get("tone", "soft"));
 Array.prototype.forEach.call(document.querySelectorAll("[data-tone-set]"), function (b) {
   on(b, "click", function () { applyTone(b.getAttribute("data-tone-set")); });
 });
@@ -3396,6 +3438,8 @@ setInterval(function () {
 }, 2000);
 
 formFromCfg();
+var savedBitrate = store.get("bitrate", 1500);
+if ([0, 600, 1500, 3000, 6000].indexOf(+savedBitrate) >= 0) $("cBr").value = String(savedBitrate);
 on($("pickViewer"), "click", function () { vNewCode(); });
 on($("pickCamera"), "click", function () {
   show("cam");
@@ -3468,5 +3512,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
