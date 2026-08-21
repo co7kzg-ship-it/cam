@@ -158,10 +158,7 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .rotwrap{position:relative;flex:none}
 .frame{position:absolute;left:50%;top:50%;line-height:0;background:var(--matte);border-radius:var(--rp);overflow:hidden}
 #remote{display:block;width:100%;height:100%;background:var(--matte);object-fit:contain}
-.frame.stretch #remote{object-fit:fill}
-.frame.mirror #remote,.frame.mirror .freeze{transform:scaleX(-1)}
-.freeze{position:absolute;inset:0;width:100%;height:100%;display:none}
-.frame.frozen .freeze{display:block}
+.frame.mirror #remote{transform:scaleX(-1)}
 .tally{position:absolute;right:10px;top:10px;display:flex;gap:7px;pointer-events:none}
 .tally span{
   display:none;font:600 12px/1 var(--sans);padding:6px 9px;border-radius:20px;
@@ -332,7 +329,6 @@ body.live .hideonlive{display:none}
 <g id="i-gear"><path d="M6.7 2h2.6l.3 1.6 1.1.65 1.55-.55 1.3 2.25-1.2 1.07v1.26l1.2 1.07-1.3 2.25-1.55-.55-1.1.65-.3 1.6H6.7l-.3-1.6-1.1-.65-1.55.55-1.3-2.25 1.2-1.07V7.03l-1.2-1.07 1.3-2.25 1.55.55 1.1-.65z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.85" fill="none" stroke="currentColor" stroke-width="1.2"/></g>
 <g id="i-x"><path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.4"/></g>
 <g id="i-refresh"><path d="M13.2 8a5.2 5.2 0 1 1-1.65-3.8M13.2 2.3V5h-2.7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
-<g id="i-fps"><path d="M13.4 2.6C6.5 2.6 3.2 5.6 3.2 9.6c0 1.5.6 2.5.6 2.5s2.1-4.5 8-6.8c-3.3 2.3-6.3 4.2-7.3 7.8" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></g>
 <g id="i-save"><path d="M8 2v7.6M4.9 6.8 8 9.9l3.1-3.1M2.8 13.3h10.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-card"><path d="M3.6 2.4h5.6l3.2 3.2v8H3.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 4.9V3.3M8 4.9V3.3M10 5.5V4.1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></g>
 <g id="i-focus"><circle cx="8" cy="8" r="2.4" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.5v2.1M8 12.4v2.1M1.5 8h2.1M12.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
@@ -345,9 +341,7 @@ body.live .hideonlive{display:none}
 <g id="i-rec"><circle cx="8" cy="8" r="3.6" fill="currentColor"/><circle cx="8" cy="8" r="6.1" fill="none" stroke="currentColor" stroke-width="1.1"/></g>
 <g id="i-rotate"><path d="M4.2 4.4h6a2.9 2.9 0 0 1 0 5.8H6.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="m8.2 12.4-2.4-2.2 2.4-2.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-mirror"><path d="M8 1.7v12.6" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 2"/><path d="M6.5 4.3 2.6 8l3.9 3.7zM9.5 4.3 13.4 8l-3.9 3.7z" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></g>
-<g id="i-stretch"><path d="M1.8 8h12.4M4.4 5.4 1.8 8l2.6 2.6M11.6 5.4 14.2 8l-2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-mic"><rect x="6.1" y="1.7" width="3.8" height="7.6" rx="1.9" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3.7 8a4.3 4.3 0 0 0 8.6 0M8 12.3v2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
-<g id="i-pause"><path d="M5.7 3.6v8.8M10.3 3.6v8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></g>
 <g id="i-play"><path d="M5.2 3.4 12 8l-6.8 4.6z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></g>
 <g id="i-grid"><path d="M1.9 6.2h12.2M1.9 9.8h12.2M6.2 1.9v12.2M9.8 1.9v12.2" stroke="currentColor" stroke-width="1.1"/></g>
 <g id="i-eye"><path d="M1.6 8S4.2 3.9 8 3.9 14.4 8 14.4 8 11.8 12.1 8 12.1 1.6 8 1.6 8z" fill="none" stroke="currentColor" stroke-width="1.25"/><circle cx="8" cy="8" r="1.8" fill="none" stroke="currentColor" stroke-width="1.25"/></g>
@@ -424,10 +418,8 @@ body.live .hideonlive{display:none}
         <div class="rotwrap" id="rotwrap">
           <div class="frame" id="frame">
             <video id="remote" playsinline autoplay muted></video>
-            <canvas class="freeze" id="freeze"></canvas>
             <div class="tally">
               <span class="rec" id="tRec">Rec</span>
-              <span id="tPause">Held</span>
               <span id="tMute">No sound</span>
             </div>
             <div class="blank">
@@ -447,7 +439,6 @@ body.live .hideonlive{display:none}
           <option value="50">50%</option>
           <option value="25">25%</option>
         </select>
-        <button class="btn sq" id="vStretch" title="Stretch to the frame, ignore aspect ratio"><svg><use href="#i-stretch"/></svg></button>
         <button class="btn sq" id="vRotate" title="Rotate 90° (Shift+R)"><svg><use href="#i-rotate"/></svg></button>
         <button class="btn sq" id="vMirror" title="Mirror"><svg><use href="#i-mirror"/></svg></button>
         <span class="vrule"></span>
@@ -481,7 +472,6 @@ body.live .hideonlive{display:none}
             <textarea class="inp mono signalbox" id="vAnswer" rows="3" placeholder="Paste the phone answer here" aria-label="Phone WebRTC answer"></textarea>
             <div class="rowbtns"><button class="btn sm" id="vUseAnswer">Use pasted answer</button></div>
           </details>
-          <p class="note">Local WebRTC only. No cloud, STUN, TURN, MQTT or PeerJS connection is used.</p>
         </div>
       </div>
 
@@ -492,8 +482,6 @@ body.live .hideonlive{display:none}
           <button class="btn stack" id="rFocus"><svg><use href="#i-focus"/></svg>Autofocus</button>
           <button class="btn stack" id="rZout"><svg><use href="#i-zout"/></svg>Zoom out</button>
           <button class="btn stack" id="rZin"><svg><use href="#i-zin"/></svg>Zoom in</button>
-          <button class="btn stack" id="rFps"><svg><use href="#i-fps"/></svg>Limit fps</button>
-          <button class="btn stack" id="rHold"><svg><use href="#i-pause"/></svg>Hold</button>
           <button class="btn stack" id="rSd"><svg><use href="#i-card"/></svg>Photo on phone</button>
           <button class="btn stack" id="rMic"><svg><use href="#i-mic"/></svg>Microphone</button>
         </div>
@@ -578,7 +566,6 @@ body.live .hideonlive{display:none}
       <button class="btn stack" id="cSwap"><svg><use href="#i-swap"/></svg>Flip</button>
       <button class="btn stack" id="cFocus"><svg><use href="#i-focus"/></svg>Focus</button>
       <button class="btn stack" id="cMic"><svg><use href="#i-mic"/></svg>Mic</button>
-      <button class="btn stack" id="cHold"><svg><use href="#i-pause"/></svg><span id="cHoldT">Hold</span></button>
       <button class="btn stack" id="cGrid"><svg><use href="#i-grid"/></svg>Grid</button>
       <button class="btn stack" id="cSnap"><svg><use href="#i-save"/></svg>Photo</button>
       <button class="btn stack" id="cWake"><svg><use href="#i-eye"/></svg>Stay on</button>
@@ -601,7 +588,6 @@ body.live .hideonlive{display:none}
             <div class="rowbtns"><button class="btn" id="cCopyAnswer">Copy answer</button></div>
           </details>
         </div>
-        <p class="note">Local WebRTC only. This page does not contact a signaling or relay server.</p>
       </div>
 
       <div class="p2">
@@ -679,7 +665,7 @@ body.live .hideonlive{display:none}
         STUN or TURN server. Media is accepted only over host candidates on the local Wi-Fi.</p>
 
       <h3>Controlling the phone from the desktop</h3>
-      <p>LED, autofocus, zoom, frame rate, resolution and the microphone are all driven
+      <p>LED, autofocus, zoom, resolution and the microphone are all driven
         from the rail on the right. A control that the phone's camera cannot honour is switched off
         rather than left to fail silently.</p>
 
@@ -690,7 +676,7 @@ body.live .hideonlive{display:none}
       <h3>Keyboard</h3>
       <p class="keys">
         <b>F</b> fullscreen &nbsp; <b>S</b> save photo &nbsp; <b>R</b> record &nbsp; <b>L</b> LED &nbsp;
-        <b>A</b> autofocus &nbsp; <b>M</b> sound &nbsp; <b>H</b> hold &nbsp; <b>+ −</b> zoom &nbsp;
+        <b>A</b> autofocus &nbsp; <b>M</b> sound &nbsp; <b>+ −</b> zoom &nbsp;
         <b>0</b> reset view &nbsp; <b>⇧R</b> rotate
       </p>
     </div>
@@ -709,8 +695,6 @@ body.live .hideonlive{display:none}
       <h3>Feedback</h3>
       <label class="checkline"><input type="checkbox" id="optBeep"><span>Sound a short tick when the camera joins or drops</span></label>
 
-      <h3>Connection</h3>
-      <p class="note"><b>Local Wi-Fi only.</b> Cloud signaling, STUN, TURN, MQTT and PeerJS are disabled and not contacted.</p>
       <div class="dlgfoot">
         <button class="btn pri" id="optSave">Save</button>
         <button class="btn" id="optReset">Restore defaults</button>
@@ -1606,16 +1590,34 @@ function gatherLocalDescription(pc, desc) {
 /* Multi-part animated QR transport. WebRTC descriptions are compressed,
    split into small QR frames and reassembled by either device's camera. */
 var QR_CAROUSELS = {};
-function signalHash(text) {
+var FOUNTAIN_BLOCK = 90;
+function signalDigest(text) {
+  var bytes = new TextEncoder().encode(text);
+  if (crypto && crypto.subtle) {
+    return crypto.subtle.digest("SHA-256", bytes).then(function (buf) {
+      return bytesToUrl64(new Uint8Array(buf).subarray(0, 12));
+    });
+  }
   var h = 2166136261;
   for (var i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return (h >>> 0).toString(36);
+  return Promise.resolve((h >>> 0).toString(36));
 }
-function signalQrParts(kind, text) {
-  var size = 150, total = Math.ceil(text.length / size), hash = signalHash(text), out = [];
-  for (var i = 0; i < total; i++)
-    out.push("TQ1|" + kind + "|" + hash + "|" + i.toString(36) + "|" + total.toString(36) + "|" + text.slice(i * size, (i + 1) * size));
-  return out;
+function fountainPrng(x) {
+  x >>>= 0;
+  x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+  return x >>> 0;
+}
+function fountainMask(k, seed) {
+  var x = seed >>> 0, mask = 0n;
+  for (var i = 0; i < k; i++) {
+    x = fountainPrng(x || (0x6d2b79f5 ^ i));
+    if (x & 0x80000000) mask |= 1n << BigInt(i);
+  }
+  if (!mask) mask = 1n << BigInt((x >>> 0) % k);
+  return mask;
+}
+function fountainXor(dst, src) {
+  for (var i = 0; i < dst.length; i++) dst[i] ^= src[i];
 }
 function stopQrCarousel(key) {
   var q = QR_CAROUSELS[key];
@@ -1624,31 +1626,94 @@ function stopQrCarousel(key) {
 }
 function startQrCarousel(key, canvas, text, kind, stateEl) {
   stopQrCarousel(key);
-  var parts = signalQrParts(kind, text), at = 0;
-  function paint() {
-    try { drawQR(canvas, parts[at]); } catch (e) {}
-    if (stateEl) stateEl.textContent = "QR " + (at + 1) + " of " + parts.length + " — keep the scanner pointed here";
-    at = (at + 1) % parts.length;
+  var bytes = new TextEncoder().encode(text);
+  var k = Math.max(1, Math.ceil(bytes.length / FOUNTAIN_BLOCK));
+  var blocks = [];
+  for (var i = 0; i < k; i++) {
+    var block = new Uint8Array(FOUNTAIN_BLOCK);
+    block.set(bytes.subarray(i * FOUNTAIN_BLOCK, Math.min(bytes.length, (i + 1) * FOUNTAIN_BLOCK)));
+    blocks.push(block);
   }
-  paint();
-  QR_CAROUSELS[key] = { timer: setInterval(paint, 550), parts: parts };
+  var state = { timer: 0, cancelled: false };
+  QR_CAROUSELS[key] = state;
+  signalDigest(text).then(function (id) {
+    if (QR_CAROUSELS[key] !== state || state.cancelled) return;
+    var at = 0;
+    function paint() {
+      if (state.cancelled) return;
+      var mode, token, data = new Uint8Array(FOUNTAIN_BLOCK), mask;
+      if (at < k) {
+        mode = "S"; token = at.toString(36); data.set(blocks[at]);
+      } else {
+        mode = "R";
+        var seed = (Math.imul((at - k + 1) >>> 0, 2654435761) ^ 0xa5a5a5a5) >>> 0;
+        token = seed.toString(36); mask = fountainMask(k, seed);
+        for (var j = 0; j < k; j++) if (mask & (1n << BigInt(j))) fountainXor(data, blocks[j]);
+      }
+      var frame = "TF1|" + kind + "|" + id + "|" + k.toString(36) + "|" + bytes.length.toString(36) + "|" + mode + "|" + token + "|" + bytesToUrl64(data);
+      try { drawQR(canvas, frame); } catch (e) {}
+      if (stateEl) stateEl.textContent = at < k
+        ? "Fountain QR — source block " + (at + 1) + " of " + k
+        : "Fountain QR — repair stream " + (at - k + 1) + " · keep scanning";
+      at++;
+    }
+    paint();
+    state.timer = setInterval(paint, 450);
+  });
 }
 function makeQrCollector(kind, progress, complete) {
-  var id = "", total = 0, chunks = [], count = 0;
+  var id = "", k = 0, length = 0, rows = [], rank = 0, verifying = false;
+  function reset(nid, nk, nlen) {
+    id = nid; k = nk; length = nlen; rows = new Array(k); rank = 0; verifying = false;
+  }
   return function (text) {
-    var m = /^TQ1\|([OA])\|([a-z0-9]+)\|([a-z0-9]+)\|([a-z0-9]+)\|([A-Za-z0-9._~-]+)$/.exec(String(text || ""));
-    if (!m || m[1] !== kind) return;
-    var idx = parseInt(m[3], 36), n = parseInt(m[4], 36);
-    if (!n || idx < 0 || idx >= n) return;
-    if (id !== m[2]) { id = m[2]; total = n; chunks = new Array(n); count = 0; }
-    if (n !== total || chunks[idx] != null) return;
-    chunks[idx] = m[5]; count++;
-    if (progress) progress(count, total);
-    if (count === total) {
-      var joined = chunks.join("");
-      if (signalHash(joined) !== id) { id = ""; chunks = []; count = 0; return; }
-      complete(joined);
+    var m = /^TF1\|([OA])\|([A-Za-z0-9_-]+)\|([a-z0-9]+)\|([a-z0-9]+)\|([SR])\|([a-z0-9]+)\|([A-Za-z0-9_-]+)$/.exec(String(text || ""));
+    if (!m || m[1] !== kind || verifying) return;
+    var nk = parseInt(m[3], 36), nlen = parseInt(m[4], 36);
+    if (!nk || nk > 512 || !nlen || nlen > nk * FOUNTAIN_BLOCK) return;
+    if (id !== m[2] || k !== nk || length !== nlen) reset(m[2], nk, nlen);
+    var data;
+    try { data = url64ToBytes(m[7]); } catch (e) { return; }
+    if (data.length !== FOUNTAIN_BLOCK) return;
+    var mask;
+    if (m[5] === "S") {
+      var index = parseInt(m[6], 36);
+      if (index < 0 || index >= k) return;
+      mask = 1n << BigInt(index);
+    } else {
+      var seed = parseInt(m[6], 36) >>> 0;
+      mask = fountainMask(k, seed);
     }
+    data = new Uint8Array(data);
+    for (var i = 0; i < k; i++) {
+      var bit = 1n << BigInt(i);
+      if (!(mask & bit)) continue;
+      if (rows[i]) {
+        mask ^= rows[i].mask;
+        fountainXor(data, rows[i].data);
+      } else {
+        rows[i] = { mask: mask, data: data };
+        rank++;
+        if (progress) progress(rank, k);
+        break;
+      }
+    }
+    if (rank !== k) return;
+    verifying = true;
+    var solved = new Array(k);
+    for (var r = k - 1; r >= 0; r--) {
+      var value = new Uint8Array(rows[r].data);
+      for (var c = r + 1; c < k; c++)
+        if (rows[r].mask & (1n << BigInt(c))) fountainXor(value, solved[c]);
+      solved[r] = value;
+    }
+    var joined = new Uint8Array(k * FOUNTAIN_BLOCK);
+    for (var q = 0; q < k; q++) joined.set(solved[q], q * FOUNTAIN_BLOCK);
+    var result = new TextDecoder().decode(joined.subarray(0, length));
+    signalDigest(result).then(function (check) {
+      if (check === id) complete(result);
+      else reset("", 0, 0);
+    });
   };
 }
 var ACTIVE_SCAN = null;
@@ -1774,7 +1839,7 @@ on(document, "keydown", function (e) { if (e.key === "Escape") closeDlg(); });
 /* ==================================================================== */
 var V = {
   pc: null, dc: null, stream: null, gotVideo: false, since: 0, upT: 0, statT: 0,
-  rot: 0, mirror: false, stretch: false, zoom: 100, cam: {}, rec: null, recBits: [],
+  rot: 0, mirror: false, zoom: 100, cam: {}, rec: null, recBits: [],
   cmdId: 0, acks: {}, lastBeat: 0, lastMedia: 0, badSince: 0, hist: [], routeT: 0
 };
 
@@ -1956,7 +2021,7 @@ function vDropped() {
   railEnabled(false);
   V.gotVideo = false;
   document.body.classList.remove("live");
-  $("frame").classList.remove("hasvideo", "frozen");
+  $("frame").classList.remove("hasvideo");
   $("remote").srcObject = null;
   V.stream = null;
   clearInterval(V.statT); clearInterval(V.upT);
@@ -1979,7 +2044,7 @@ function vClose() {
   if (V.pc) { try { V.pc.close(); } catch (e) {} V.pc = null; }
   V.gotVideo = false; V.stream = null;
   document.body.classList.remove("live");
-  $("frame").classList.remove("hasvideo", "frozen");
+  $("frame").classList.remove("hasvideo");
   $("remote").srcObject = null;
 }
 function vTeardown() {
@@ -2023,7 +2088,7 @@ function able(el, ok, why) {
   el.disabled = !ok;
   el.title = ok ? el.dataset.tip : why;
 }
-var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rFps", "rHold", "rSd", "rMic", "rRes", "rBr"];
+var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rSd", "rMic", "rRes", "rBr"];
 function railEnabled(on2) {
   RAIL.forEach(function (id) {
     var el = $(id);
@@ -2036,12 +2101,8 @@ function railEnabled(on2) {
 function vApplyState(s) {
   V.cam = s;
   $("rLed").classList.toggle("on", !!s.torch);
-  $("rFps").classList.toggle("on", s.fps === 15);
-  $("rHold").classList.toggle("on", !!s.paused);
   $("rMic").classList.toggle("on", !!s.mic);
-  $("tPause").classList.toggle("show", !!s.paused);
   $("tMute").classList.toggle("show", !s.mic);
-  freeze(!!s.paused);
   able($("rLed"), s.capTorch !== false, "This camera has no LED");
   if (s.capTorch == null) $("rLed").title = "Press to test the phone LED";
   able($("rZin"), s.capZoom !== false, "Zoom is unavailable");
@@ -2058,16 +2119,6 @@ function vApplyState(s) {
     toast("The phone microphone is live — press the speaker to listen");
   }
 }
-function freeze(want) {
-  var f = $("frame"), v = $("remote"), cv = $("freeze");
-  if (want && v.videoWidth) {
-    cv.width = v.videoWidth; cv.height = v.videoHeight;
-    cv.getContext("2d").drawImage(v, 0, 0);
-    cv.style.width = "100%"; cv.style.height = "100%";
-    f.classList.add("frozen");
-  } else f.classList.remove("frozen");
-}
-
 /* --- geometry --- */
 function fitVideo() {
   var v = $("remote"), fr = $("frame"), rw = $("rotwrap"), st = $("stage");
@@ -2090,7 +2141,6 @@ function fitVideo() {
   rw.style.width = (odd ? h : w) + "px";
   rw.style.height = (odd ? w : h) + "px";
   fr.classList.toggle("mirror", V.mirror);
-  fr.classList.toggle("stretch", V.stretch);
   $("vZoomT").textContent = V.zoom + "%";
 }
 window.addEventListener("resize", function () { if (role === "view") fitVideo(); });
@@ -2155,7 +2205,7 @@ function startViewerAnswerScan() {
     video.srcObject = stream;
     return video.play().catch(function () {}).then(function () {
       scanQrVideo(video, "A", stream, function (n, total) {
-        $("vScanState").textContent = "Reading answer QR — " + n + " of " + total + " parts";
+        $("vScanState").textContent = "Reading answer QR — " + n + " of " + total + " blocks";
       }, function (text) {
         $("vScanWrap").style.display = "none";
         $("vScanState").textContent = "Answer QR complete";
@@ -2189,11 +2239,10 @@ on($("vFit"), "change", fitVideo);
 on($("vZoom"), "input", function () { V.zoom = +$("vZoom").value; fitVideo(); });
 on($("vRotate"), "click", function () { V.rot = (V.rot + 1) % 4; $("vRotate").classList.toggle("on", V.rot !== 0); fitVideo(); });
 on($("vMirror"), "click", function () { V.mirror = !V.mirror; $("vMirror").classList.toggle("on", V.mirror); fitVideo(); });
-on($("vStretch"), "click", function () { V.stretch = !V.stretch; $("vStretch").classList.toggle("on", V.stretch); fitVideo(); });
 on($("vReset"), "click", function () {
-  V.rot = 0; V.mirror = false; V.stretch = false; V.zoom = 100;
+  V.rot = 0; V.mirror = false; V.zoom = 100;
   $("vZoom").value = 100; $("vFit").value = "fit";
-  ["vRotate", "vMirror", "vStretch"].forEach(function (i) { $(i).classList.remove("on"); });
+  ["vRotate", "vMirror"].forEach(function (i) { $(i).classList.remove("on"); });
   fitVideo();
 });
 on($("vSnap"), "click", function () { grabStill($("remote"), "tether"); });
@@ -2225,8 +2274,6 @@ on($("rLed"), "click", function () { vCmd("torch", !V.cam.torch); });
 on($("rFocus"), "click", function () { vCmd("af"); });
 on($("rZin"), "click", function () { vCmd("zoomStep", 1); });
 on($("rZout"), "click", function () { vCmd("zoomStep", -1); });
-on($("rFps"), "click", function () { vCmd("fps", V.cam.fps === 15 ? 30 : 15); });
-on($("rHold"), "click", function () { vCmd("pause", !V.cam.paused); });
 on($("rSd"), "click", function () { vCmd("snap"); });
 on($("rMic"), "click", function () { vCmd("mic", !V.cam.mic); });
 on($("rRes"), "change", function () { vCmd("res", $("rRes").value); });
@@ -2244,7 +2291,6 @@ on(document, "keydown", function (e) {
   else if (k === "l") $("rLed").click();
   else if (k === "a") $("rFocus").click();
   else if (k === "m") $("vSound").click();
-  else if (k === "h") $("rHold").click();
   else if (k === "+" || k === "=") $("rZin").click();
   else if (k === "-") $("rZout").click();
   else if (k === "0") $("vReset").click();
@@ -2258,7 +2304,7 @@ on(document, "keydown", function (e) {
 var C = {
   pc: null, dc: null, stream: null, rawStream: null, digital: null, want: false,
   facing: store.get("facing", "environment"), devId: store.get("devId", ""),
-  torch: false, mic: false, paused: false, zoom: 1, caps: {}, cams: 1,
+  torch: false, mic: false, zoom: 1, caps: {}, cams: 1,
   statT: 0, wake: null, connected: false, lastPong: 0, beat: 0,
   ending: false, endT: 0, answerReady: false
 };
@@ -2370,7 +2416,7 @@ function openCamera() {
     C.rawStream = s;
     C.stream = s;
     C.zoom = 1;
-    s.getAudioTracks().forEach(function (a) { a.enabled = C.mic && !C.paused; });
+    s.getAudioTracks().forEach(function (a) { a.enabled = C.mic; });
     try { var t0 = s.getVideoTracks()[0]; if (t0 && "contentHint" in t0) t0.contentHint = "motion"; } catch (e) {}
     var chain = Promise.resolve();
     if (C.pc && C.pc.signalingState !== "closed") {
@@ -2602,7 +2648,7 @@ function pushState() {
   if (!C.dc || C.dc.readyState !== "open") return;
   try {
     C.dc.send(JSON.stringify({
-      t: "state", torch: C.torch, paused: C.paused, zoom: C.zoom,
+      t: "state", torch: C.torch, zoom: C.zoom,
       mic: !!(atrack() && atrack().enabled),
       fps: +$("cFps").value, res: $("cRes").value, bitrate: +$("cBr").value,
       /* Unknown capability reports stay pressable. Zoom has a software
@@ -2756,9 +2802,7 @@ function handleCmd(k, v, id) {
   else if (k === "af") { pulseFocusRing(.5, .5); job = doFocus(); }
   else if (k === "zoomStep") job = stepZoom(v);
   else if (k === "zoomSet") job = setZoom(v);
-  else if (k === "fps") job = setFps(v).then(function () { return v + " fps on the phone"; });
   else if (k === "res") job = setRes(v).then(function () { return "Size " + String(v).replace("x", " × "); });
-  else if (k === "pause") { setPause(!!v); job = Promise.resolve(v ? "Camera held" : "Camera resumed"); }
   else if (k === "snap") { grabStill($("local"), "tether-phone"); job = Promise.resolve("Photo saved on the phone"); }
   else if (k === "mic") job = setMic(!!v).then(function () { return v ? "Microphone on" : "Microphone off"; });
   else if (k === "camStep") job = stepCamera(v);
@@ -2840,7 +2884,6 @@ function startDigitalZoom() {
 }
 
 function setTorch(want) {
-  if (want && C.paused) setPause(false);
   function applyToCurrentTrack(switched) {
     var t = vtrack();
     if (!t || !t.applyConstraints) return Promise.resolve("LED is not available on this camera");
@@ -2875,8 +2918,7 @@ function setTorch(want) {
       }, next);
     }
     return next().then(function (ok) {
-      if (C.paused) t.enabled = false;
-      else if (!wasEnabled && !want) t.enabled = false;
+      if (!wasEnabled && !want) t.enabled = false;
       C.torch = !!(want && ok);
       if (ok) C.caps.torch = true;
       paintTorch(); pushState();
@@ -3033,21 +3075,12 @@ function stepCamera(dir) {
   sel.selectedIndex = i;
   return openCamera().then(function () { return "Camera: " + sel.options[i].textContent; });
 }
-function setPause(want) {
-  C.paused = want;
-  var t = vtrack(); if (t) t.enabled = !want;
-  var ot = outVtrack(); if (ot && ot !== t) ot.enabled = !want;
-  var a = atrack(); if (a) a.enabled = !want && C.mic;
-  $("cHold").classList.toggle("on", want);
-  $("cHoldT").textContent = want ? "Resume" : "Hold";
-  pushState();
-}
 function setMic(want) {
   C.mic = want;
   $("cMic").classList.toggle("on", want);
   var a = atrack();
   if (want && !a) return openCamera();
-  if (a) a.enabled = want && !C.paused;
+  if (a) a.enabled = want;
   pushState();
   return Promise.resolve();
 }
@@ -3144,7 +3177,7 @@ function startPhoneOfferScan() {
     $("scanBox").classList.add("on");
     $("cScanState").textContent = "Point the phone at the animated offer QR";
     scanQrVideo($("local"), "O", null, function (n, total) {
-      $("cScanState").textContent = "Reading offer QR — " + n + " of " + total + " parts";
+      $("cScanState").textContent = "Reading offer QR — " + n + " of " + total + " blocks";
     }, function (text) {
       $("scanBox").classList.remove("on");
       $("cOffer").value = text;
@@ -3175,7 +3208,6 @@ on($("cFocus"), "click", function () {
   pulseFocusRing(.5, .5);
   doFocus().then(function (m) { if (m) toast(m); });
 });
-on($("cHold"), "click", function () { setPause(!C.paused); });
 on($("cMic"), "click", function () { setMic(!C.mic); });
 on($("cGrid"), "click", function () { $("camGrid").classList.toggle("on"); $("cGrid").classList.toggle("on"); });
 on($("cSnap"), "click", function () { grabStill($("local"), "tether-phone"); });
@@ -3352,5 +3384,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e881a5b8fce465',t:'MTc4NzMwMzQ0NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
