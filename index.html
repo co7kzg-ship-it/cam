@@ -173,6 +173,7 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .blank .t{font:600 16px/1.3 var(--sans)}
 .blank .s{font-size:14px;color:#dfe6ea;max-width:36ch}
 .frame.hasvideo .blank{display:none}
+.offerqr-large{display:block;height:min(64%,460px);width:auto;max-width:78%;aspect-ratio:1;background:#fff;image-rendering:pixelated;border-radius:4px}
 
 .toolstrip{
   flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
@@ -200,11 +201,19 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 body.qrviewscanning{overflow:hidden}
 body.qrviewscanning .viewscan{position:fixed;inset:0;z-index:100;margin:0;padding:18px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;background:#111}
 body.qrviewscanning .viewscan video{width:100%;height:100%;max-height:none;object-fit:contain;background:#111}
-body.qrviewscanning .viewscan p{position:absolute;left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom) + 72px);z-index:2;color:#fff;font-size:16px;font-weight:600;text-shadow:0 1px 4px #000}
-body.qrviewscanning .viewscan .btn{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 20px);z-index:2;background:#fff;color:#111;border-color:#fff}
+body.qrviewscanning .viewscan #vScanState{position:absolute;left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom) + 112px);z-index:2;color:#fff;font-size:16px;font-weight:600;text-shadow:0 1px 4px #000}
+body.qrviewscanning .viewscan .scanprogress{position:absolute;left:9%;right:9%;bottom:calc(env(safe-area-inset-bottom) + 89px);width:82%}
+body.qrviewscanning .viewscan .scancount{position:absolute;left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom) + 58px);margin:0;color:#fff}
+body.qrviewscanning .viewscan .btn{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:2;background:#fff;color:#111;border-color:#fff}
 .manualpair{margin-top:9px;padding:8px 9px;background:var(--field);border:1px solid var(--line-2);border-radius:var(--r)}
 .manualpair summary{cursor:pointer;font-size:12.5px;color:var(--dim);user-select:none}
 .manualpair[open] summary{margin-bottom:8px}
+body.answerqrfull{overflow:hidden}
+body.answerqrfull #cAnswerWrap{position:fixed;inset:0;z-index:100;display:flex!important;flex-direction:column;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 18px);background:var(--panel)}
+body.answerqrfull #cAnswerWrap>.pairnote{font-size:17px;font-weight:600;text-align:center}
+body.answerqrfull #cAnswerWrap .signalqr{width:min(86vw,620px);margin:12px auto}
+body.answerqrfull #cAnswerWrap .signalqr canvas{width:min(78vw,68dvh,560px)}
+body.answerqrfull #cAnswerWrap .manualpair{display:none}
 .rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ctlgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .ctlgrid .full{grid-column:1/-1}
@@ -253,6 +262,9 @@ body.qrviewscanning .viewscan .btn{position:absolute;bottom:calc(env(safe-area-i
 .scanbox.on{display:flex}
 .scanframe{width:min(82vw,58dvh,460px);height:min(82vw,58dvh,460px);border:4px solid #fff;border-radius:14px;box-shadow:0 0 0 2000px rgba(16,24,28,.35)}
 .scanhint{color:#fff;font-size:16px;font-weight:600;text-align:center;padding:0 24px;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+.scanprogress{position:relative;z-index:2;width:min(82vw,460px);height:9px;overflow:hidden;background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.65);border-radius:999px}
+.scanprogress span{display:block;width:0;height:100%;background:#fff;transition:width .18s ease}
+.scancount{position:relative;z-index:2;color:#fff;font-size:14px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.8)}
 body.qrscanning{overflow:hidden}
 body.qrscanning #camStage{position:fixed;inset:0;z-index:90;width:100vw;height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;background:#111}
 body.qrscanning #local{width:100%;height:100%;object-fit:contain}
@@ -390,8 +402,6 @@ body.live .hideonlive{display:none}
         </li>
       </ul>
 
-      <p class="ready" id="ready">Checking this page…</p>
-
       <dl class="facts">
         <div><dt>The video</dt><dd>Goes straight from the phone to this browser across your Wi-Fi. It is never uploaded, and by default the app refuses any route that leaves the local network.</dd></div>
         <div><dt>The pairing</dt><dd>You transfer the offer and answer yourself. No cloud, signaling server, STUN or TURN service is contacted.</dd></div>
@@ -433,8 +443,9 @@ body.live .hideonlive{display:none}
               <span id="tMute">No sound</span>
             </div>
             <div class="blank">
-              <span class="t">No camera yet</span>
-              <span class="s">Scan the offer QR with the phone, then scan the phone’s answer QR here.</span>
+              <canvas id="vOfferQrLarge" class="offerqr-large" width="320" height="320" aria-label="Large animated offer QR"></canvas>
+              <span class="t">Scan this animated offer QR with the phone</span>
+              <span class="s">Keep the QR inside the phone’s full-screen guide until the fountain blocks complete.</span>
             </div>
           </div>
         </div>
@@ -476,6 +487,8 @@ body.live .hideonlive{display:none}
           <div class="viewscan" id="vScanWrap" style="display:none">
             <video id="vScanVideo" playsinline autoplay muted></video>
             <p id="vScanState">Opening this computer's camera…</p>
+            <div class="scanprogress"><span id="vScanBar"></span></div>
+            <p class="scancount" id="vScanCount">Decoded 0 blocks</p>
             <button class="btn sm" id="vScanStop">Cancel scan</button>
           </div>
           <details class="manualpair"><summary>Manual fallback: paste the answer</summary>
@@ -567,6 +580,8 @@ body.live .hideonlive{display:none}
       <div class="scanbox" id="scanBox">
         <div class="scanframe"></div>
         <p class="scanhint" id="cScanState">Point the phone at the animated offer QR</p>
+        <div class="scanprogress"><span id="cScanBar"></span></div>
+        <p class="scancount" id="cScanCount">Decoded 0 blocks</p>
         <button class="btn sm" id="cScanStop">Cancel</button>
       </div>
     </div>
@@ -592,7 +607,8 @@ body.live .hideonlive{display:none}
         <div class="rowbtns"><button class="btn" id="cStop" disabled>Stop</button></div>
         <div id="cAnswerWrap" style="display:none">
           <p class="pairnote"><b>2.</b> Show this animated answer QR to the viewing screen.</p>
-          <div class="signalqr"><canvas id="cAnswerQr" width="220" height="220"></canvas><p id="cAnswerQrState">Creating answer…</p></div>
+          <div class="signalqr"><canvas id="cAnswerQr" width="320" height="320"></canvas><p id="cAnswerQrState">Creating answer…</p></div>
+          <button class="btn sm" id="cAnswerClose">Show smaller</button>
           <details class="manualpair"><summary>Manual fallback: copy the answer</summary>
             <textarea class="inp mono signalbox" id="cAnswer" rows="3" readonly aria-label="Phone WebRTC answer"></textarea>
             <div class="rowbtns"><button class="btn" id="cCopyAnswer">Copy answer</button></div>
@@ -991,9 +1007,9 @@ function qrMatrix(text, ecl) {
   return best;
 }
 function drawQR(cv, text) {
-  var m = qrMatrix(text, "L") || qrMatrix(text, "M");
+  var m = qrMatrix(text, "M") || qrMatrix(text, "L");
   if (!m) return;
-  var n = m.length, quiet = 2, total = n + quiet * 2;
+  var n = m.length, quiet = 4, total = n + quiet * 2;
   var scale = Math.max(3, Math.floor(320 / total));
   cv.width = cv.height = total * scale;
   var g = cv.getContext("2d");
@@ -1603,8 +1619,8 @@ var QR_CAROUSELS = {};
 var FOUNTAIN_BLOCK = 90;
 function signalDigest(text) {
   var bytes = new TextEncoder().encode(text);
-  if (crypto && crypto.subtle) {
-    return crypto.subtle.digest("SHA-256", bytes).then(function (buf) {
+  if (window.crypto && window.crypto.subtle) {
+    return window.crypto.subtle.digest("SHA-256", bytes).then(function (buf) {
       return bytesToUrl64(new Uint8Array(buf).subarray(0, 12));
     });
   }
@@ -1613,8 +1629,14 @@ function signalDigest(text) {
   return Promise.resolve((h >>> 0).toString(36));
 }
 function fountainPrng(x) {
+  /* Non-linear 32-bit avalanche. A linear xorshift caps repair rank at 32,
+     which makes handshakes with more than 32 blocks impossible to recover. */
   x >>>= 0;
-  x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x7feb352d);
+  x ^= x >>> 15;
+  x = Math.imul(x, 0x846ca68b);
+  x ^= x >>> 16;
   return x >>> 0;
 }
 function fountainMask(k, seed) {
@@ -1648,27 +1670,33 @@ function startQrCarousel(key, canvas, text, kind, stateEl) {
   QR_CAROUSELS[key] = state;
   signalDigest(text).then(function (id) {
     if (QR_CAROUSELS[key] !== state || state.cancelled) return;
-    var at = 0;
+    var at = 0, sourceAt = 0, repairAt = 0;
     function paint() {
       if (state.cancelled) return;
-      var mode, token, data = new Uint8Array(FOUNTAIN_BLOCK), mask;
-      if (at < k) {
-        mode = "S"; token = at.toString(36); data.set(blocks[at]);
+      var mode, token, data = new Uint8Array(FOUNTAIN_BLOCK), mask, label;
+      /* Interleave source and repair frames from the beginning. A receiver
+         never has to wait for a complete source pass before repairs help. */
+      if (sourceAt < k && at % 2 === 0) {
+        mode = "S"; token = sourceAt.toString(36); data.set(blocks[sourceAt]);
+        label = "source block " + (sourceAt + 1) + " of " + k;
+        sourceAt++;
       } else {
-        mode = "R";
-        var seed = (Math.imul((at - k + 1) >>> 0, 2654435761) ^ 0xa5a5a5a5) >>> 0;
+        mode = "R"; repairAt++;
+        var seed = (Math.imul(repairAt >>> 0, 2654435761) ^ 0xa5a5a5a5) >>> 0;
         token = seed.toString(36); mask = fountainMask(k, seed);
         for (var j = 0; j < k; j++) if (mask & (1n << BigInt(j))) fountainXor(data, blocks[j]);
+        label = "repair block " + repairAt;
       }
       var frame = "TF1|" + kind + "|" + id + "|" + k.toString(36) + "|" + bytes.length.toString(36) + "|" + mode + "|" + token + "|" + bytesToUrl64(data);
-      try { drawQR(canvas, frame); } catch (e) {}
-      if (stateEl) stateEl.textContent = at < k
-        ? "Fountain QR — source block " + (at + 1) + " of " + k
-        : "Fountain QR — repair stream " + (at - k + 1) + " · keep scanning";
+      var targets = Array.isArray(canvas) ? canvas : [canvas];
+      targets.forEach(function (target) { try { drawQR(target, frame); } catch (e) {} });
+      if (stateEl) stateEl.textContent = "Fountain QR — " + label + " · keep scanning";
       at++;
     }
     paint();
-    state.timer = setInterval(paint, 450);
+    /* Hold frames long enough for mobile autofocus and the JS decoder while
+       still delivering more than one useful equation per second. */
+    state.timer = setInterval(paint, 750);
   });
 }
 function makeQrCollector(kind, progress, complete) {
@@ -1758,8 +1786,8 @@ function scanQrVideo(video, kind, ownStream, progress, complete) {
       }, function () { state.busy = false; detector = null; next(); });
       return;
     }
-    var W = 480, H = Math.max(1, Math.round(video.videoHeight * W / video.videoWidth));
-    if (video.videoWidth < video.videoHeight) { H = 480; W = Math.max(1, Math.round(video.videoWidth * H / video.videoHeight)); }
+    var W = 640, H = Math.max(1, Math.round(video.videoHeight * W / video.videoWidth));
+    if (video.videoWidth < video.videoHeight) { H = 640; W = Math.max(1, Math.round(video.videoWidth * H / video.videoHeight)); }
     cv.width = W; cv.height = H; g.drawImage(video, 0, 0, W, H);
     try { collect(qrDecodeImage(g.getImageData(0, 0, W, H).data, W, H)); } catch (e) {}
     next();
@@ -1919,7 +1947,7 @@ function vStartLocal() {
   }).then(function (text) {
     if (!text || V.pc !== pc) return;
     $("vOffer").value = text;
-    startQrCarousel("offer", $("vOfferQr"), text, "O", $("vOfferQrState"));
+    startQrCarousel("offer", [$("vOfferQr"), $("vOfferQrLarge")], text, "O", $("vOfferQrState"));
     $("pairNote").innerHTML = "<b>1.</b> Let the phone scan this animated offer QR.";
     vStatus("wait", "Offer QR ready — scan it with the phone");
   }).catch(function (e) {
@@ -2212,12 +2240,16 @@ function startViewerAnswerScan() {
   document.body.classList.add("qrviewscanning");
   $("vScanWrap").style.display = "block";
   $("vScanState").textContent = "Opening this computer's camera…";
+  $("vScanBar").style.width = "0%";
+  $("vScanCount").textContent = "Decoded 0 blocks";
   navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "user" } }, audio: false }).then(function (stream) {
     var video = $("vScanVideo");
     video.srcObject = stream;
     return video.play().catch(function () {}).then(function () {
       scanQrVideo(video, "A", stream, function (n, total) {
-        $("vScanState").textContent = "Reading answer QR — " + n + " of " + total + " blocks";
+        $("vScanState").textContent = "Reading fountain answer QR — hold steady";
+        $("vScanBar").style.width = Math.round(n * 100 / total) + "%";
+        $("vScanCount").textContent = "Decoded " + n + " of " + total + " blocks";
       }, function (text) {
         $("vScanWrap").style.display = "none";
         $("vScanState").textContent = "Answer QR complete";
@@ -2701,6 +2733,7 @@ function wireCameraPc(pc) {
     log("[camera] local ICE " + st);
     if (st === "connected" || st === "completed") {
       C.connected = true; C.lastPong = Date.now();
+      document.body.classList.remove("answerqrfull");
       stopQrCarousel("answer");
       cStatus("live", "Streaming over local Wi-Fi");
       cWarn("");
@@ -2731,6 +2764,7 @@ function camConnect(offerText) {
   C.want = true; C.ending = false; C.answerReady = false;
   clearTimeout(C.endT);
   stopQrCarousel("answer");
+  document.body.classList.remove("answerqrfull");
   $("cAnswerWrap").style.display = "none";
   $("cAnswer").value = "";
   $("cStop").disabled = false;
@@ -2763,6 +2797,7 @@ function camConnect(offerText) {
       C.answerReady = true;
       $("cAnswer").value = text;
       $("cAnswerWrap").style.display = "block";
+      document.body.classList.add("answerqrfull");
       startQrCarousel("answer", $("cAnswerQr"), text, "A", $("cAnswerQrState"));
       cStatus("wait", "Answer QR ready — show it to the viewing screen");
       toast("Local answer QR ready");
@@ -3116,6 +3151,7 @@ function cameraSessionEnded(message) {
   C.want = false;
   C.answerReady = false;
   stopQrCarousel("answer");
+  document.body.classList.remove("answerqrfull");
   stopPhoneOfferScan();
   clearTimeout(C.endT);
   camCloseConn();
@@ -3139,6 +3175,7 @@ function camStop() {
   C.want = false;
   C.answerReady = false;
   stopQrCarousel("answer");
+  document.body.classList.remove("answerqrfull");
   stopPhoneOfferScan();
   C.ending = true;
   clearTimeout(C.endT);
@@ -3191,9 +3228,13 @@ function startPhoneOfferScan() {
     document.body.classList.add("qrscanning");
     $("scanBox").classList.add("on");
     $("cScanState").textContent = "Fill the large square with the animated offer QR";
+    $("cScanBar").style.width = "0%";
+    $("cScanCount").textContent = "Decoded 0 blocks";
     cStatus("wait", "Scanning the offer QR…");
     scanQrVideo($("local"), "O", null, function (n, total) {
-      $("cScanState").textContent = "Reading offer QR — " + n + " of " + total + " blocks";
+      $("cScanState").textContent = "Reading fountain offer QR — hold steady";
+      $("cScanBar").style.width = Math.round(n * 100 / total) + "%";
+      $("cScanCount").textContent = "Decoded " + n + " of " + total + " blocks";
     }, function (text) {
       document.body.classList.remove("qrscanning");
       $("scanBox").classList.remove("on");
@@ -3212,6 +3253,7 @@ function startPhoneOfferScan() {
 on($("cScanOffer"), "click", startPhoneOfferScan);
 on($("cScanStop"), "click", stopPhoneOfferScan);
 on($("cConnect"), "click", function () { camConnect($("cOffer").value); });
+on($("cAnswerClose"), "click", function () { document.body.classList.remove("answerqrfull"); });
 on($("cCopyAnswer"), "click", function () {
   if (!$("cAnswer").value) { toast("Create the phone answer first"); return; }
   copyText($("cAnswer").value);
@@ -3379,21 +3421,6 @@ if (window.top !== window.self) {
     '<a href="' + location.href + '" target="_blank" rel="noopener">Open it in its own tab</a>.</div>');
 }
 
-(function readiness() {
-  var el = $("ready");
-  if (!el) return;
-  var bits = [], bad = false;
-  if (window.top !== window.self) { bits.push("<b>inside a frame</b> — open in its own tab"); bad = true; }
-  if (!window.isSecureContext && location.hostname !== "localhost") { bits.push("<b>not https</b> — the camera will be blocked"); bad = true; }
-  if (!window.RTCPeerConnection) { bits.push("<b>no WebRTC</b> in this browser"); bad = true; }
-  if (bad) {
-    el.innerHTML = bits.join("<br>");
-    el.classList.add("bad");
-    return;
-  }
-  el.innerHTML = "Ready for offline local pairing. <b>No cloud, STUN, TURN, MQTT or PeerJS.</b>";
-})();
-
 show("start");
 
 drawStrip();
@@ -3401,5 +3428,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e974428a2dd06a',t:'MTc4NzMxMzM4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e98f067baaa580',t:'MTc4NzMxNDQ3OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
