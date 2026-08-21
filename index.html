@@ -21,7 +21,6 @@
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
 }
-
 html[data-tone="dim"]{
   --page:#b7c0c7; --bar:#a9b3bb; --panel:#c8d0d6; --panel-2:#bec7ce; --field:#d4dbe0;
   --line:#94a0a9; --line-2:#b3bdc4; --ink:#101619; --ink-2:#334047; --dim:#4c5960;
@@ -207,11 +206,6 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .relayline{font-size:13px;color:var(--dim);margin-top:9px}
 .relayline b{font-weight:600;color:var(--ink-2)}
 .relayline.bad{color:var(--hot)}
-.lanrow{
-  margin-top:12px;padding:12px;background:var(--warn);border:1px solid var(--warn-line);
-  border-radius:var(--r);color:var(--warn-ink);font-size:13.5px;line-height:1.5;
-}
-.lanrow .btn{margin-top:10px}
 .rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ctlgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .ctlgrid .full{grid-column:1/-1}
@@ -687,8 +681,8 @@ body.live #pairSect .pairnote{margin-top:5px}
 
       <h3>Controlling the phone from the desktop</h3>
       <p>LED, autofocus, zoom, camera choice, frame rate, resolution and the microphone are all driven
-        from the rail on the right. LED, focus and zoom stay available because some phones support them
-        even when their browser does not advertise the capability; the app tries the control and reports the result.</p>
+        from the rail on the right. A control that the phone's camera cannot honour is switched off
+        rather than left to fail silently.</p>
 
       <h3>Working with a VPN</h3>
       <p>Two devices on one Wi-Fi pair through their local addresses. Most VPN apps have a switch called
@@ -698,7 +692,6 @@ body.live #pairSect .pairnote{margin-top:5px}
       <p>If the status line says <b>paired, but no route</b>, the code did its job and only the video path is
         blocked. Switch local network access on in the VPN app, or turn off <b>keep the video on this Wi-Fi</b>
         in Settings so it can go the long way round.</p>
-
       <h3>Keyboard</h3>
       <p class="keys">
         <b>F</b> fullscreen &nbsp; <b>S</b> save photo &nbsp; <b>R</b> record &nbsp; <b>L</b> LED &nbsp;
@@ -1842,7 +1835,6 @@ function sampler(getPc, inbound, paint) {
 /* surface tone                                                        */
 /* ------------------------------------------------------------------ */
 var TONES = ["soft", "dim"];
-var TONE_NAME = { soft: "Soft", dim: "Dim" };
 function applyTone(t) {
   if (TONES.indexOf(t) < 0) t = "soft";
   document.documentElement.setAttribute("data-tone", t);
@@ -1854,7 +1846,6 @@ function applyTone(t) {
   if (mt) mt.setAttribute("content", getComputedStyle(document.documentElement).getPropertyValue("--page").trim());
   drawStrip();
 }
-
 /* ------------------------------------------------------------------ */
 /* screens and dialogs                                                 */
 /* ------------------------------------------------------------------ */
@@ -1978,7 +1969,7 @@ function vAnswer(src, payload, link) {
       if (st === "connected" || st === "completed") { vWarn(""); if (V.gotVideo) vStatus("live", "Live"); }
       else if (st === "failed") {
         vStatus("bad", "No network path to the phone");
-        vWarn("No route between the two devices. Put both on one network or add a TURN relay in Settings.");
+        vWarn("No route between the two devices. Put both on one network, allow local-network access in any VPN, or add a TURN relay in Settings.");
         vDropped();
       } else if (st === "disconnected") vStatus("wait", "Link interrupted, waiting for it to come back");
     };
@@ -2094,18 +2085,15 @@ setInterval(function () {
   else if (now - V.badSince > 2500) { V.badSince = 0; vDropped(); }
 }, 1500);
 
-function vDropped() {
-  if (!V.gotVideo) return;
-  railEnabled(false);
-  V.gotVideo = false;
-  document.body.classList.remove("live");
-  $("frame").classList.remove("hasvideo", "frozen");
-  $("remote").srcObject = null;
-  V.stream = null;
-  clearInterval(V.statT); clearInterval(V.upT);
+function vDropped(force) {
+  if (!V.gotVideo && !force) return;
+  var hadVideo = V.gotVideo;
+  /* Dispose the dead peer connection but keep the pairing bus and code alive,
+     so the phone can create a fresh session without either page reloading. */
+  vClose();
   $("pairNote").textContent = "The camera dropped out. It reconnects on its own.";
   vStatus("wait", V.code ? "Camera gone — still listening on " + V.code : "Camera gone");
-  tick("down");
+  if (hadVideo) tick("down");
 }
 
 function vClose() {
@@ -2133,14 +2121,7 @@ function vWireDC(ch) {
     V.lastBeat = Date.now();
     var m; try { m = JSON.parse(e.data); } catch (err) { return; }
     if (m.t === "ping") { try { ch.send('{"t":"pong"}'); } catch (err) {} return; }
-    if (m.t === "bye") {
-      var wasLive = V.gotVideo;
-      vClose();
-      $("pairNote").textContent = "The camera stopped. This code is still ready for a new connection.";
-      vStatus("wait", "Camera stopped — listening on " + V.code);
-      if (wasLive) tick("down");
-      return;
-    }
+    if (m.t === "bye") { vDropped(true); vStatus("wait", "Camera stopped — listening on " + V.code); return; }
     if (m.t === "ack") { clearTimeout(V.acks[m.id]); delete V.acks[m.id]; if (m.msg) toast(m.msg); return; }
     if (m.t === "state") vApplyState(m);
     else if (m.t === "batt") $("roBatt").innerHTML = "<b>" + Math.round(m.level * 100) + "%</b>" + (m.charging ? "&nbsp;charging" : "&nbsp;battery");
@@ -2180,19 +2161,18 @@ function vApplyState(s) {
   $("tPause").classList.toggle("show", !!s.paused);
   $("tMute").classList.toggle("show", !s.mic);
   freeze(!!s.paused);
-  able($("rLed"), true, "");
-  $("rLed").title = s.capTorch === false ? "LED was not advertised — press to try anyway" : "Toggle the phone camera LED";
-  able($("rZin"), true, "");
-  able($("rZout"), true, "");
-  $("rZin").title = s.capZoom === false ? "Zoom was not advertised — press to try anyway" : "Zoom in";
-  $("rZout").title = s.capZoom === false ? "Zoom was not advertised — press to try anyway" : "Zoom out";
-  able($("rFocus"), true, "");
-  $("rFocus").title = s.capFocus === false ? "Focus control was not advertised — press to refocus anyway" : "Autofocus";
+  /* Camera capability reports are incomplete on several Android browsers.
+     Keep LED, focus and zoom actionable and let the phone perform the real
+     operation instead of greying a control from a missing capability flag. */
+  able($("rLed"), true, s.capTorch === false ? "LED may not be available — press to try" : "");
+  able($("rZin"), true, s.capZoom === false ? "Zoom support was not advertised — press to try" : "");
+  able($("rZout"), true, s.capZoom === false ? "Zoom support was not advertised — press to try" : "");
+  able($("rFocus"), true, s.capFocus === false ? "Focus support was not advertised — press to try" : "");
   able($("rPrev"), (s.cams || 1) > 1, "Only one camera on that device");
   able($("rNext"), (s.cams || 1) > 1, "Only one camera on that device");
   if (s.res) $("rRes").value = s.res;
   if (s.bitrate != null) $("rBr").value = String(s.bitrate);
-  if (s.zoom && s.capZoom) $("rZin").title = "Zoom in — now " + Number(s.zoom).toFixed(1) + "×";
+  if (s.zoom) $("rZin").title = "Zoom in — now " + Number(s.zoom).toFixed(1) + "×";
   if (s.mic && $("remote").muted && !V.audioHint) {
     V.audioHint = true;
     toast("The phone microphone is live — press the speaker to listen");
@@ -2540,8 +2520,10 @@ function detectTorch(t) {
 }
 function paintTorch() {
   var st = C.caps.torch;
-  $("cLed").disabled = !vtrack();
-  $("cLed").title = st === false ? "LED was not advertised — tap to try anyway" : st == null ? "Tap to detect and toggle the LED" : "Toggle LED";
+  /* Do not disable this from capability metadata alone: many phones expose
+     the torch only after the first constraint request. */
+  $("cLed").disabled = false;
+  $("cLed").title = st === false ? "LED was not advertised — tap to try anyway" : st == null ? "Tap to test the LED" : "";
   $("cLed").classList.toggle("on", !!C.torch);
 }
 var capT = [];
@@ -2566,25 +2548,21 @@ function watchCaps() {
 function readCaps(quiet) {
   var t = vtrack();
   if (!quiet) C.caps = {};
-  if (!t) return;
+  if (!t || !t.getCapabilities) { $("cZoomWrap").style.display = "none"; $("cEvWrap").style.display = "none"; return; }
   var c = {}, st = {};
-  try { c = t.getCapabilities ? (t.getCapabilities() || {}) : {}; } catch (e) {}
-  try { st = t.getSettings ? (t.getSettings() || {}) : {}; } catch (e) {}
-  C.caps.zoom = c.zoom || (st.zoom != null ? { min: 1, max: Math.max(4, st.zoom), step: .1 } : null);
-  C.caps.focus = ("focusMode" in c) ? c.focusMode : null;
+  try { c = t.getCapabilities() || {}; } catch (e) { return; }
+  try { st = t.getSettings() || {}; } catch (e) {}
+  C.caps.zoom = c.zoom || null;
+  C.caps.rawFocus = c.focusMode ? Array.prototype.slice.call(c.focusMode) : [];
+  C.caps.focus = ("focusMode" in c) ? !!c.focusMode : null;
   if (!quiet) C.caps.torch = ("torch" in c) ? !!c.torch : null;
-
-  /* Some mobile browsers accept zoom but omit it from getCapabilities().
-     Keep the control available and let applyConstraints be the authority. */
-  var zr = C.caps.zoom || { min: 1, max: 4, step: .1 };
-  $("cZoomWrap").style.display = "block";
-  $("cZoom").min = zr.min == null ? 1 : zr.min;
-  $("cZoom").max = zr.max == null ? 4 : zr.max;
-  $("cZoom").step = zr.step || .1;
-  C.zoom = st.zoom != null ? st.zoom : clamp(C.zoom || 1, +$("cZoom").min, +$("cZoom").max);
-  $("cZoom").value = C.zoom;
-  $("cZoomV").textContent = Number(C.zoom).toFixed(1) + "×";
-
+  $("cZoomWrap").style.display = c.zoom ? "block" : "none";
+  if (c.zoom) {
+    $("cZoom").min = c.zoom.min; $("cZoom").max = c.zoom.max; $("cZoom").step = c.zoom.step || .1;
+    C.zoom = st.zoom || c.zoom.min || 1;
+    $("cZoom").value = C.zoom;
+    $("cZoomV").textContent = Number(C.zoom).toFixed(1) + "×";
+  }
   $("cEvWrap").style.display = c.exposureCompensation ? "block" : "none";
   if (c.exposureCompensation) {
     $("cEv").min = c.exposureCompensation.min;
@@ -2596,44 +2574,50 @@ function readCaps(quiet) {
     }
   }
   paintTorch();
-  $("cFocus").disabled = false;
   $("cSwap").disabled = C.cams < 2;
   $("cSwap").title = C.cams < 2 ? "Only one camera on this device" : "";
 }
 
 function applyAdv(obj) {
   var t = vtrack();
-  if (!t) return Promise.resolve(false);
-  return t.applyConstraints({ advanced: [obj] }).then(function () { return true; },
-    function () { log("[camera] refused " + JSON.stringify(obj)); return false; });
-}
-function applyBitrate() {
-  var kbps = +$("cBr").value;
-  store.set("bitrate", kbps);
-  if (!C.pc) { pushState(); return Promise.resolve(false); }
-  var jobs = C.pc.getSenders().filter(function (s) {
-    return s.track && s.track.kind === "video" && s.getParameters && s.setParameters;
-  }).map(function (sender) {
-    function update(withPreference) {
-      var p = sender.getParameters() || {};
-      if (!p.encodings || !p.encodings.length) p.encodings = [{}];
-      p.encodings.forEach(function (e) {
-        if (kbps) e.maxBitrate = kbps * 1000;
-        else delete e.maxBitrate;
-      });
-      if (withPreference) p.degradationPreference = "maintain-framerate";
-      else delete p.degradationPreference;
-      return sender.setParameters(p);
-    }
-    return update(true).catch(function () { return update(false); }).then(function () {
-      log("[camera] bitrate ceiling " + (kbps ? kbps + " kbit/s" : "automatic"));
-      return true;
-    }, function (e) {
-      log("[camera] bitrate change refused: " + (e && e.message));
+  if (!t || !t.applyConstraints) return Promise.resolve(false);
+  /* Chromium variants disagree about whether camera controls belong in the
+     advanced list or at the top level. Try both forms. */
+  return t.applyConstraints({ advanced: [obj] }).then(function () { return true; }, function () {
+    return t.applyConstraints(obj).then(function () { return true; }, function (e) {
+      log("[camera] refused " + JSON.stringify(obj) + " (" + (e && e.name) + ")");
       return false;
     });
   });
-  return Promise.all(jobs).then(function (r) { pushState(); return r.some(Boolean); });
+}
+function applyBitrate(attempt) {
+  if (!C.pc) return Promise.resolve(false);
+  var kbps = +$("cBr").value;
+  var jobs = C.pc.getSenders().filter(function (s) {
+    return s.track && s.track.kind === "video" && s.getParameters && s.setParameters;
+  }).map(function (sender) {
+    var p = sender.getParameters() || {};
+    if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+    p.encodings.forEach(function (enc) {
+      if (kbps) enc.maxBitrate = kbps * 1000;
+      else delete enc.maxBitrate;
+    });
+    p.degradationPreference = "maintain-framerate";
+    return sender.setParameters(p).then(function () { return true; }, function (e) {
+      log("[camera] bitrate refused (" + (e && e.name) + ")");
+      return false;
+    });
+  });
+  if (!jobs.length) return Promise.resolve(false);
+  return Promise.all(jobs).then(function (r) {
+    var ok = r.some(Boolean);
+    /* A sender can reject parameters while negotiation is settling. Retry
+       once after it reaches a usable state instead of silently doing nothing. */
+    if (!ok && !attempt && C.pc) return new Promise(function (resolve) {
+      setTimeout(function () { resolve(applyBitrate(1)); }, 350);
+    });
+    return ok;
+  });
 }
 function pushState() {
   if (!C.dc || C.dc.readyState !== "open") return;
@@ -2642,9 +2626,9 @@ function pushState() {
       t: "state", torch: C.torch, paused: C.paused, zoom: C.zoom,
       mic: !!(atrack() && atrack().enabled),
       fps: +$("cFps").value, res: $("cRes").value, bitrate: +$("cBr").value,
-      capTorch: C.caps.torch == null ? null : C.caps.torch,
-      capFocus: C.caps.focus == null ? null : C.caps.focus !== false,
-      capZoom: C.caps.zoom == null ? null : true, cams: C.cams
+      capTorch: C.caps.torch === undefined ? null : C.caps.torch,
+      capFocus: C.caps.focus === undefined ? null : C.caps.focus,
+      capZoom: C.caps.zoom === undefined ? null : !!C.caps.zoom, cams: C.cams
     }));
   } catch (e) {}
 }
@@ -2749,8 +2733,7 @@ function camOffer() {
       cStatus("live", "Streaming to " + C.code);
       cWarn("");
       $("camPanel").classList.remove("show");
-      applyBitrate();
-      pushState();
+      applyBitrate().then(function () { pushState(); });
     } else if (st === "failed") {
       C.connected = false;
       if (climb()) restartIce(true);
@@ -2765,6 +2748,15 @@ function camOffer() {
       later(5000);
     }
   };
+  pc.onconnectionstatechange = function () {
+    if (C.pc !== pc || !C.want) return;
+    var st = pc.connectionState;
+    if (st === "failed" || st === "closed") {
+      C.connected = false;
+      cStatus("wait", "Session ended — reconnecting…");
+      later(700);
+    }
+  };
   pc.onnegotiationneeded = function () {
     if (C.pc !== pc) return;
     clearTimeout(C.negoT);
@@ -2776,9 +2768,8 @@ function camOffer() {
       setTimeout(function () { renegotiate(pc); }, 150);
     }
   };
-  applyBitrate().then(function () {
-    if (C.pc === pc) sendOffer(pc, "new");
-  });
+  applyBitrate();
+  sendOffer(pc, "new");
   cStatus("wait", "Calling " + C.code + "…");
 }
 
@@ -2915,7 +2906,14 @@ function camWireDC(ch) {
       if (C.connected && Date.now() - C.lastPong > 9000) { C.lastPong = Date.now(); restartIce(false); }
     }, 2000);
   };
-  ch.onclose = function () { clearInterval(C.beat); C.beat = 0; };
+  ch.onclose = function () {
+    clearInterval(C.beat); C.beat = 0;
+    if (C.want) {
+      C.connected = false;
+      cStatus("wait", "Session ended — reconnecting…");
+      later(700);
+    }
+  };
   ch.onmessage = function (e) {
     var m; try { m = JSON.parse(e.data); } catch (err) { return; }
     if (m.t === "pong") { C.lastPong = Date.now(); return; }
@@ -2938,7 +2936,8 @@ function handleCmd(k, v, id) {
   else if (k === "bitrate") {
     $("cBr").value = String(v);
     job = applyBitrate().then(function (ok) {
-      return ok ? (v ? "Ceiling " + (v / 1000) + " Mbit/s" : "Automatic bitrate") : "This browser refused a live bitrate change";
+      return ok ? (v ? "Ceiling " + (v / 1000) + " Mbit/s" : "Automatic bitrate")
+        : "Bitrate will apply when the video sender is ready";
     });
   }
   else job = Promise.resolve("");
@@ -2947,31 +2946,29 @@ function handleCmd(k, v, id) {
       try { C.dc.send(JSON.stringify({ t: "ack", id: id, msg: msg || "" })); } catch (e) {}
     }
     pushState();
+  }).catch(function (e) {
+    log("[camera] command " + k + " failed: " + (e && e.message));
+    if (id && C.dc && C.dc.readyState === "open") {
+      try { C.dc.send(JSON.stringify({ t: "ack", id: id, msg: "Camera could not apply that change" })); } catch (err) {}
+    }
   });
 }
 
 function setTorch(want) {
   var t = vtrack();
   if (!t) return Promise.resolve("No camera is running");
-  /* Capability flags are unreliable on several Android builds. Try both
-     constraint shapes even when getCapabilities() did not advertise torch. */
-  var tries = [
-    { advanced: [{ torch: want }] },
-    { torch: want },
-    { advanced: [{ torch: { exact: want } }] }
-  ];
-  function attempt(i) {
-    if (i >= tries.length) return Promise.resolve(false);
-    return t.applyConstraints(tries[i]).then(function () { return true; }, function () { return attempt(i + 1); });
-  }
-  return attempt(0).then(function (ok) {
-    if (!ok) {
+  /* Always test the live track. A false capability result is often stale. */
+  return applyAdv({ torch: want }).then(function (ok) {
+    if (ok) return true;
+    return t.applyConstraints({ torch: want }).then(function () { return true; }, function () { return false; });
+  }).then(function (ok) {
+    if (!ok && want) {
       C.caps.torch = false; C.torch = false;
       paintTorch(); pushState();
-      return "This camera or browser does not provide LED control";
+      return "This camera refused the LED";
     }
-    C.caps.torch = true;
-    C.torch = !!want;
+    if (ok) C.caps.torch = true;
+    C.torch = want && ok;
     paintTorch(); pushState();
     return C.torch ? "LED on" : "LED off";
   });
@@ -2985,62 +2982,43 @@ function restoreTorch() {
 function doFocus(x, y) {
   var t = vtrack();
   if (!t) return Promise.resolve("No camera is running");
-  var point = x != null && y != null ? [{ x: x, y: y }] : null;
-  var modes = ["single-shot", "continuous", "auto"];
-  try {
-    var advertised = C.caps.focus;
-    if (advertised && advertised.length) {
-      modes = advertised.concat(modes.filter(function (m) { return advertised.indexOf(m) < 0; }));
-    }
-  } catch (e) {}
-  var tries = [];
-  modes.forEach(function (mode) {
-    var v = { focusMode: mode };
-    if (point) v.pointsOfInterest = point;
-    tries.push({ advanced: [v] });
-  });
-  if (point) tries.push({ advanced: [{ pointsOfInterest: point }] });
-  function attempt(i) {
-    if (i >= tries.length) return Promise.resolve(false);
-    return t.applyConstraints(tries[i]).then(function () { return true; }, function () { return attempt(i + 1); });
-  }
-  return attempt(0).then(function (ok) {
-    C.caps.focus = ok ? (C.caps.focus || ["auto"]) : false;
-    pushState();
-    return ok ? (point ? "Focusing there" : "Autofocus requested") : "This camera uses fixed or automatic focus";
+  var modes = C.caps.rawFocus || ["single-shot", "continuous", "manual"];
+  var mode = modes.indexOf("single-shot") >= 0 ? "single-shot"
+    : modes.indexOf("continuous") >= 0 ? "continuous" : "single-shot";
+  var first = { focusMode: mode };
+  if (x != null && y != null) first.pointsOfInterest = [{ x: x, y: y }];
+  return applyAdv(first).then(function (ok) {
+    if (ok) return x != null ? "Focusing there" : "Autofocus";
+    /* Some cameras accept a focus mode but reject points of interest. */
+    return applyAdv({ focusMode: mode }).then(function (ok2) {
+      if (ok2) return "Autofocus";
+      return applyAdv({ focusMode: "continuous" }).then(function (ok3) {
+        return ok3 ? "Continuous autofocus" : "This camera did not expose focus control";
+      });
+    });
   });
 }
 function setZoom(v) {
-  var t = vtrack();
-  if (!t) return Promise.resolve("No camera is running");
-  var c = C.caps.zoom || { min: 1, max: 4, step: .1 };
-  v = clamp(+v, c.min == null ? 1 : c.min, c.max == null ? 4 : c.max);
-  var tries = [
-    { advanced: [{ zoom: v }] },
-    { zoom: v },
-    { advanced: [{ zoom: { exact: v } }] }
-  ];
-  function attempt(i) {
-    if (i >= tries.length) return Promise.resolve(false);
-    return t.applyConstraints(tries[i]).then(function () { return true; }, function () { return attempt(i + 1); });
+  var c = C.caps.zoom;
+  if (!c) {
+    /* Re-read after the track is live; zoom commonly appears late. */
+    readCaps(true);
+    c = C.caps.zoom;
   }
-  return attempt(0).then(function (ok) {
-    if (!ok) { pushState(); return "This camera or browser does not provide zoom control"; }
-    C.caps.zoom = c;
-    try {
-      var st = t.getSettings ? t.getSettings() : {};
-      C.zoom = st.zoom != null ? st.zoom : v;
-    } catch (e) { C.zoom = v; }
-    $("cZoom").value = C.zoom;
-    $("cZoomV").textContent = Number(C.zoom).toFixed(1) + "×";
-    pushState();
-    return "Zoom " + Number(C.zoom).toFixed(1) + "×";
+  if (!c) return Promise.resolve("This camera did not expose zoom control");
+  v = clamp(v, c.min, c.max);
+  return applyAdv({ zoom: v }).then(function (ok) {
+    if (!ok) return "The camera refused that zoom";
+    C.zoom = v;
+    $("cZoom").value = v;
+    $("cZoomV").textContent = Number(v).toFixed(1) + "×";
+    return "Zoom " + Number(v).toFixed(1) + "×";
   });
 }
 function stepZoom(dir) {
-  var c = C.caps.zoom || { min: 1, max: 4, step: .1 };
-  var step = c.step || ((c.max - c.min) / 10) || .1;
-  return setZoom((C.zoom || c.min || 1) + dir * step);
+  var c = C.caps.zoom;
+  if (!c) return Promise.resolve("This camera cannot zoom");
+  return setZoom(C.zoom + dir * ((c.max - c.min) / 10 || .1));
 }
 function stepCamera(dir) {
   var sel = $("cPick");
@@ -3109,36 +3087,22 @@ function camStop() {
 function camBye() {
   try { if (C.dc && C.dc.readyState === "open") C.dc.send(JSON.stringify({ t: "bye" })); } catch (e) {}
   try { if (C.pc) C.pc.close(); } catch (e) {}
+  C.connected = false;
 }
-var resumeT = 0;
-function resumeCameraSession() {
-  if (role !== "cam" || !C.want) return;
-  clearTimeout(resumeT);
-  resumeT = setTimeout(function () {
-    var t = vtrack();
-    var ready = t && t.readyState === "live";
-    var go = ready ? Promise.resolve() : openCamera();
-    go.then(function () {
-      if (!C.want || C.connected || !C.stream) return;
-      if (!C.bus) { camConnect(C.code); return; }
-      if (C.bus.ready().length) camOffer();
-      else cStatus("wait", "Restoring the session…");
-    });
-  }, 250);
+function camRecover() {
+  if (role !== "cam" || !C.want || !C.code || C.connected) return;
+  clearTimeout(C.retry);
+  var liveTrack = vtrack();
+  var ready = liveTrack && liveTrack.readyState === "live" ? Promise.resolve() : openCamera();
+  ready.then(function () {
+    if (!C.want || C.connected) return;
+    if (C.bus && C.bus.ready().length) camOffer();
+    else if (!C.bus) camConnect(C.code);
+    else cStatus("wait", "Restoring the session…");
+  });
 }
-window.addEventListener("pagehide", function () {
-  if (role === "cam" && C.want) {
-    C.suspended = true;
-    camBye();
-    camCloseConn();
-  } else camBye();
-});
-window.addEventListener("pageshow", function () {
-  if (C.suspended || (role === "cam" && C.want && !C.connected)) {
-    C.suspended = false;
-    resumeCameraSession();
-  }
-});
+window.addEventListener("pagehide", camBye);
+window.addEventListener("pageshow", function () { setTimeout(camRecover, 150); });
 
 setInterval(function () {
   if (role !== "cam" || !C.pc || document.hidden) return;
@@ -3178,37 +3142,40 @@ on($("cWake"), "click", function () {
   }).catch(function () { toast("The screen lock was refused"); });
 });
 document.addEventListener("visibilitychange", function () {
-  if (document.visibilityState !== "visible") return;
-  if ($("cWake").classList.contains("on") && !C.wake && navigator.wakeLock) {
-    navigator.wakeLock.request("screen").then(function (w) { C.wake = w; }).catch(function () {});
-  }
-  if (role === "cam" && C.want) {
-    var state = C.pc && (C.pc.connectionState || C.pc.iceConnectionState);
-    if (!C.connected || state === "failed" || state === "closed" || state === "disconnected") {
-      camCloseConn();
-      resumeCameraSession();
+  if (document.visibilityState === "visible") {
+    if ($("cWake").classList.contains("on") && !C.wake && navigator.wakeLock) {
+      navigator.wakeLock.request("screen").then(function (w) { C.wake = w; }).catch(function () {});
     }
+    setTimeout(camRecover, 200);
   }
 });
 on($("cPick"), "change", function () { if (C.stream) openCamera(); });
 on($("cRes"), "change", function () { if (C.stream) setRes($("cRes").value); });
 on($("cFps"), "change", function () { if (C.stream) setFps($("cFps").value); });
-on($("cBr"), "change", function () { applyBitrate().then(function (ok) { if (C.pc) toast(ok ? "Bitrate ceiling applied" : "Live bitrate change was refused by this browser"); }); });
-var zoomInputT = 0;
-on($("cZoom"), "input", function () {
-  clearTimeout(zoomInputT);
-  var z = +$("cZoom").value;
-  $("cZoomV").textContent = Number(z).toFixed(1) + "×";
-  zoomInputT = setTimeout(function () { setZoom(z).then(function (m) { if (/does not|refused/.test(m)) toast(m); }); }, 80);
+on($("cBr"), "change", function () {
+  applyBitrate().then(function (ok) {
+    pushState();
+    toast(ok || !C.connected ? "Bitrate setting saved" : "Bitrate will apply when connected");
+  });
 });
+on($("cZoom"), "input", function () { setZoom(+$("cZoom").value); });
 on($("cEv"), "input", function () {
   $("cEvV").textContent = Number($("cEv").value).toFixed(1);
   applyAdv({ exposureCompensation: +$("cEv").value });
 });
 on($("camStage"), "click", function (e) {
-  if (!C.stream) return;
+  if (!C.stream || !$("local").videoWidth) return;
   var r = $("camStage").getBoundingClientRect();
-  var x = clamp((e.clientX - r.left) / r.width, 0, 1), y = clamp((e.clientY - r.top) / r.height, 0, 1);
+  /* Account for object-fit:contain bars so tap-to-focus coordinates match
+     the camera image rather than the whole stage. */
+  var vw = $("local").videoWidth, vh = $("local").videoHeight;
+  var scale = Math.min(r.width / vw, r.height / vh);
+  var dw = vw * scale, dh = vh * scale;
+  var ox = (r.width - dw) / 2, oy = (r.height - dh) / 2;
+  var px = clamp(e.clientX - r.left, ox, ox + dw);
+  var py = clamp(e.clientY - r.top, oy, oy + dh);
+  var x = clamp((px - ox) / dw, 0, 1), y = clamp((py - oy) / dh, 0, 1);
+  if ($("camStage").classList.contains("mirror")) x = 1 - x;
   var ring = $("focusRing");
   ring.style.left = (e.clientX - r.left) + "px";
   ring.style.top = (e.clientY - r.top) + "px";
@@ -3405,6 +3372,7 @@ on($("turnPreset"), "click", function () {
   $("optTurnP").value = "openrelayproject";
   toast("Filled in — press Save, then run the connection check");
 });
+
 on($("optReset"), "click", function () {
   Object.keys(DEF).forEach(function (k) { cfg[k] = DEF[k]; store.set(k, DEF[k]); });
   formFromCfg();
@@ -3438,8 +3406,6 @@ setInterval(function () {
 }, 2000);
 
 formFromCfg();
-var savedBitrate = store.get("bitrate", 1500);
-if ([0, 600, 1500, 3000, 6000].indexOf(+savedBitrate) >= 0) $("cBr").value = String(savedBitrate);
 on($("pickViewer"), "click", function () { vNewCode(); });
 on($("pickCamera"), "click", function () {
   show("cam");
