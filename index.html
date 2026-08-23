@@ -191,10 +191,12 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .sect + .sect{border-top:1px solid var(--line-2)}
 .sect > h2{font:600 13px/1 var(--sans);color:var(--dim);margin:0 0 11px;display:flex;align-items:center;gap:10px}
 .sect > h2 .grow{display:none}
-.pairgrid{display:flex;gap:14px;align-items:flex-start}
+.pairgrid{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.pairgrid > div{min-width:0}
 .qrbox{flex:none;border:1px solid var(--line);border-radius:var(--r);padding:7px;background:#fff;line-height:0}
-.qrbox canvas{display:block;width:190px;height:190px;image-rendering:pixelated}
-@media (max-width:1100px){ .qrbox canvas{width:150px;height:150px} }
+.qrbox canvas{display:block;width:min(190px,100%);height:auto;aspect-ratio:1/1;image-rendering:pixelated}
+.qrbox{max-width:100%}
+.sect{min-width:0}
 .codebig{font:700 36px/1 var(--sans);letter-spacing:.08em;color:var(--ink)}
 .pairnote{font-size:14px;color:var(--ink-2);margin-top:9px}
 .urlline{font:400 12.5px/1.45 var(--mono);color:var(--dim);word-break:break-all;margin-top:10px}
@@ -682,7 +684,7 @@ body.live #pairSect .pairnote{margin-top:5px}
       <h3>Pairing</h3>
       <ol>
         <li>On the desktop choose <b>Watch here</b> — a four-digit code and a QR appear.</li>
-        <li>On the phone scan the QR, or open the same page and type the code.</li>
+        <li>Point the phone's camera at the square: it opens this page there with the code already in it.</li>
         <li>Tap <b>Connect</b> and allow the camera.</li>
       </ol>
       <p>The relay only swaps the two handshake messages. The picture always travels straight
@@ -1892,6 +1894,13 @@ function cycleTone() {}
 /* screens and dialogs                                                 */
 /* ------------------------------------------------------------------ */
 var role = "start";
+/* ?c=1234 — arrived by scanning the square with any camera app */
+function codeFromUrl() {
+  try {
+    var m = /[?&]c=(\d{4})/.exec(location.search) || /^#(\d{4})$/.exec(location.hash);
+    return m ? m[1] : null;
+  } catch (e) { return null; }
+}
 function show(which) {
   role = which;
   ["scStart", "scView", "scCam"].forEach(function (id) { $(id).classList.remove("show"); });
@@ -1928,7 +1937,14 @@ function vWarn(t) {
   if (!t) { w.classList.remove("show"); w.textContent = ""; return; }
   w.textContent = t; w.classList.add("show");
 }
-function pairText(code) { return "TETHER-PAIR-V1:" + code; }
+/* the square carries a real address: the phone's own camera app can open it,
+   and Tether's scanner still recognises the old plain form too */
+function pairText(code) {
+  try {
+    var u = location.origin + location.pathname;
+    return u + (u.indexOf("?") >= 0 ? "&" : "?") + "c=" + code;
+  } catch (e) { return "TETHER-PAIR-V1:" + code; }
+}
 
 function vNewCode() { vStart(String(1000 + Math.floor(Math.random() * 9000))); }
 
@@ -1944,7 +1960,8 @@ function lanCheck(prompt) {
     $("lanRow").style.display = ok ? "none" : "block";
     $("lanState").textContent = ok
       ? "This screen publishes its local address."
-      : "This screen has not published its local address, so a phone on the same Wi-Fi may not find it.";
+      : "This screen has not published its local address. A phone using Chrome hides its own address too, " +
+        "so the two may never find each other on the Wi-Fi — publish it, or the picture will take the long way round.";
     return ok;
   });
 }
@@ -1956,7 +1973,8 @@ function vStart(code) {
   $("vCodeTxt").textContent = code;
   $("pairCode").textContent = code;
   try { drawQR($("qr"), pairText(code)); } catch (e) { log("qr: " + e.message); }
-  $("pairNote").innerHTML = "Open this page on the phone, tap <b>Scan the square</b>, and point it here.";
+  $("pairNote").innerHTML = "Point the phone's camera at the square — it opens Tether ready to connect. " +
+    "Or open this page on the phone and type the four digits.";
   vStatus("wait", "Opening the code…");
   railEnabled(false);
   lanCheck(cfg.askLan && !V.asked);
@@ -2074,12 +2092,27 @@ function vAnswer(src, payload, link) {
 
 /* the handshake and the media path fail for different reasons, and the fix
    is different too, so they are reported separately */
-function vRouteWatch() {
+function vRouteWatch(second) {
   clearTimeout(V.routeT);
   V.routeT = setTimeout(function () {
     if (V.gotVideo || !V.pc) return;
     var st = V.pc.iceConnectionState;
     if (st === "connected" || st === "completed") return;
+    if (lanActive() && !second) {
+      /* no route inside the Wi-Fi. The usual cause is an anonymous .local
+         name on one side — Chrome on Android always uses one — so stop
+         insisting on the local-only path and ask the phone to offer again
+         with the wider one. This used to be announced and never done. */
+      relaxLan = true;
+      vStatus("wait", sawLocalCand
+        ? "One device is only publishing an anonymous name — widening the route"
+        : "No route inside the Wi-Fi — widening the route");
+      vWarn("");
+      if (!ipOpen) lanCheck(true);
+      try { if (V.link) V.link.send("REOFFER", { type: "media", connectionId: V.connId }, V.peer); } catch (e) {}
+      vRouteWatch(true);
+      return;
+    }
     vStatus("bad", "Paired, but no video route between the devices");
     if (lanActive()) {
       vWarn("The phone reached this screen, so pairing works — but no route inside the Wi-Fi. Either the two " +
@@ -2092,7 +2125,7 @@ function vRouteWatch() {
       "This is what a VPN that blocks local network access does. Allow local network access in the VPN app " +
       (ipOpen ? "" : "and press “Publish local address” on the right, ") +
       "then press the refresh button above.");
-  }, 11000);
+  }, second ? 9000 : 6000);
 }
 
 function vLive() {
@@ -2972,7 +3005,7 @@ function routeWatch(second) {
         "address. " : "") +
       "Otherwise: allow local network access in the VPN app, put both devices on one Wi-Fi, add a TURN relay " +
       "under Settings, or use offline pairing.");
-  }, second ? 4000 : 5000);
+  }, second ? 3500 : 4000);
 }
 
 function restartIce(hard) {
@@ -3064,6 +3097,22 @@ function camSignal(m, link) {
     var c = m.payload && m.payload.candidate;
     if (lanActive() && c && c.candidate && !isHostCand(c)) return;
     if (c && C.pc) C.pc.addIceCandidate(c).catch(function () {});
+    return;
+  }
+  if (m.type === "REOFFER") {
+    /* the screen wants the handshake redone: either it has just published its
+       real address, or the local-only path is a dead end and it has widened.
+       Follow it out of local-only mode, or the two sides keep filtering each
+       other's candidates away and nothing ever connects. */
+    log("[camera] the screen asked for a new offer");
+    C.lastAnswer = "";
+    if (lanActive()) {
+      relaxLan = true;
+      C.stage = Math.max(C.stage || 0, 1);
+      cStatus("wait", "No local route — widening");
+      camOffer(true);
+    } else if (C.pc && C.pc.signalingState !== "closed") restartIce(false);
+    else camOffer(true);
     return;
   }
   if (m.type === "EXPIRE") {
@@ -3675,6 +3724,20 @@ on($("pickCamera"), "click", function () {
 });
 on($("startHelp"), "click", function () { openDlg("dlgHelp"); });
 
+/* scanned the square with the phone's own camera app: the address carries the
+   code, so land on the camera screen with it filled in and go */
+(function fromSquare() {
+  var c = codeFromUrl();
+  if (!c) return;
+  show("cam");
+  $("cCode").value = c;
+  cStatus("wait", "Code " + c + " from the square — starting the camera");
+  openCamera().then(function () {
+    if (C.stream) camConnect(c);
+    else cWarn("Allow the camera, then press Connect.");
+  });
+})();
+
 if (!window.RTCPeerConnection) {
   document.body.insertAdjacentHTML("afterbegin",
     '<div class="warn show">This browser cannot do WebRTC. Use a recent Chrome, Edge, Firefox or Safari.</div>');
@@ -3737,5 +3800,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f980a7dfaec9d0',t:'MTc4NzQ4MTY2Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2fa8fde1e60e4ac',t:'MTc4NzQ5Mjc3MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
