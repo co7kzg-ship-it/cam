@@ -443,7 +443,6 @@ body.live #pairSect .pairnote{margin-top:5px}
           <div class="frame" id="frame">
             <video id="remote" playsinline autoplay muted></video>
             <canvas class="freeze" id="freeze"></canvas>
-            <div class="osd" id="osd"></div>
             <div class="tally">
               <span class="rec" id="tRec">Rec</span>
               <span id="tPause">Held</span>
@@ -574,7 +573,6 @@ body.live #pairSect .pairnote{margin-top:5px}
       <video id="local" playsinline autoplay muted></video>
       <div class="gridlines" id="camGrid"></div>
       <div class="focusring" id="focusRing"></div>
-      <div class="osd" id="camOsd"></div>
       <div class="scanbox" id="scanBox">
         <div class="scanframe"></div>
         <p class="scanhint">Point at the square on the computer screen</p>
@@ -702,7 +700,7 @@ body.live #pairSect .pairnote{margin-top:5px}
 
 
       <h3>Picture</h3>
-      <label class="checkline"><input type="checkbox" id="optStamp" checked><span>Show the timestamp strip, and burn it into saved photos</span></label>
+      <label class="checkline"><input type="checkbox" id="optStamp" checked><span>Burn the date and time into saved photos</span></label>
       <label class="checkline"><input type="checkbox" id="optBeep"><span>Sound a short tick when the camera joins or drops</span></label>
 
       <h3>Connection</h3>
@@ -2245,17 +2243,7 @@ function fitVideo() {
 }
 window.addEventListener("resize", function () { if (role === "view") fitVideo(); });
 
-/* --- timestamp strip --- */
-setInterval(function () {
-  if (document.hidden) return;
-  var t = "Tether" + (V.code ? " " + V.code : "") + " · " + tstamp();
-  $("osd").textContent = t;
-  $("osd").classList.toggle("off", !cfg.stamp);
-  if ($("camOsd")) {
-    $("camOsd").textContent = "Tether camera · " + tstamp();
-    $("camOsd").classList.toggle("off", !cfg.stamp);
-  }
-}, 1000);
+/* nothing is drawn over the live picture on either side */
 
 /* --- stills and recording --- */
 function grabStill(v, name) {
@@ -3053,34 +3041,65 @@ function handleCmd(k, v, id) {
   });
 }
 
+/* asking ImageCapture for the photo capabilities wakes the torch up on a
+   number of Android builds — it is the step most working examples share */
+function wakeImageCapture(t) {
+  if (!window.ImageCapture) return Promise.resolve();
+  try {
+    return new ImageCapture(t).getPhotoCapabilities().then(function () {}, function () {});
+  } catch (e) { return Promise.resolve(); }
+}
+function frontCamera() {
+  var t = vtrack();
+  var f = (t && settingOf(t, "facingMode")) || C.facing;
+  return f === "user";
+}
 function setTorch(want) {
   return camJob(function () {
     var t = vtrack();
     if (!t) return "No camera is running";
     if (!uaKnows("torch")) {
       C.caps.torch = false; C.torch = false; paintTorch(); pushState();
-      return "This browser has no LED control (Safari and Firefox do not implement it)";
+      log("[camera] getSupportedConstraints() has no torch — this browser cannot drive the lamp");
+      return "This browser cannot switch the LED. Chrome or Edge on Android can.";
     }
-    return applyVerified("torch", want, [
-      { advanced: [{ torch: want }] },
-      { torch: want },
-      { advanced: [{ torch: want, fillLightMode: want ? "torch" : "off" }] }
-    ]).then(function (res) {
-      if (res === false) return reopenWithTorch(want);
-      return res;
-    }).then(function (res) {
-      if (res === false) {
-        /* not proven impossible — a camera that was busy can light up on the
-           next press, so the button stays live unless the browser itself
-           says the key does not exist */
+    var lastErr = "";
+    return wakeImageCapture(t).then(function () {
+      return t.applyConstraints({ advanced: [{ torch: want }] }).then(function () { return true; },
+        function (e) { lastErr = (e && e.name) || "refused"; return false; });
+    }).then(function (ok) {
+      if (ok) return true;
+      /* a camera that has only just started refuses the lamp; one retry a
+         moment later is what makes the first press work */
+      return new Promise(function (r) { setTimeout(r, 400); }).then(function () {
+        return t.applyConstraints({ advanced: [{ torch: want }] }).then(function () { return true; },
+          function (e) { lastErr = (e && e.name) || "refused"; return false; });
+      });
+    }).then(function (ok) {
+      if (ok) return true;
+      return t.applyConstraints({ torch: want }).then(function () {
+        return settingOf(t, "torch") === want;
+      }, function (e) { lastErr = (e && e.name) || "refused"; return false; });
+    }).then(function (ok) {
+      if (ok) return true;
+      return reopenWithTorch(want);          /* ask for it at camera-open time */
+    }).then(function (ok) {
+      if (ok === false) {
         C.torch = false; paintTorch(); pushState();
-        return want ? "The camera would not switch the LED on" : "LED off";
+        if (!want) return "LED off";
+        var why = frontCamera() ? "The front camera has no LED — switch to the back camera"
+          : capList("torch") === false ? "This camera has no LED"
+          : "The camera refused the LED (" + (lastErr || "no reason given") + ")";
+        log("[camera] LED refused: " + lastErr + " · facing " + (C.facing || "?") +
+            " · capabilities " + JSON.stringify(Object.keys((vtrack() && vtrack().getCapabilities && vtrack().getCapabilities()) || {})));
+        return why;
       }
       C.torch = want;
-      if (res === true) C.caps.torch = true;
+      C.caps.torch = true;
       paintTorch(); pushState();
-      if (res === null) return want ? "LED asked for — this camera does not report its LED" : "LED off";
-      return C.torch ? "LED on" : "LED off";
+      var seen = settingOf(t, "torch");
+      if (want && seen === false) return "The camera says the LED is still off";
+      return want ? "LED on" : "LED off";
     });
   });
 }
@@ -3143,7 +3162,15 @@ function doFocus(x, y) {
     if (!t) return "No camera is running";
     if (!uaKnows("focusMode")) return "This browser has no focus control (Safari and Firefox do not implement it)";
     var modes = capList("focusMode") || [];
-    if (!modes.length) return "This camera does not publish a focus mode";
+    if (!modes.length) {
+      /* no published list: try the usual pair anyway rather than refusing */
+      return applyVerified("focusMode", "single-shot", [{ advanced: [{ focusMode: "single-shot" }] }])
+        .then(function (r1) {
+          if (r1 !== false) return "Focusing";
+          return applyVerified("focusMode", "continuous", [{ advanced: [{ focusMode: "continuous" }] }])
+            .then(function (r2) { return r2 === false ? "This camera does not expose focus control" : "Continuous autofocus"; });
+        });
+    }
     var here = (x != null && y != null && uaKnows("pointsOfInterest"));
     var poi = here ? [{ x: x, y: y }] : null;
 
@@ -3616,5 +3643,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8e4ad387de413',t:'MTc4NzQ3NTI3Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f918d88807e42d',t:'MTc4NzQ3NzQxMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
