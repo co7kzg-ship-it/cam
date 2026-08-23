@@ -357,7 +357,7 @@ body.live #pairSect .pairnote{margin-top:5px}
 <g id="i-sound"><path d="M2.8 6.1h2.4L8.6 3.1v9.8L5.2 9.9H2.8z" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/><path d="M11 5.9a3.1 3.1 0 0 1 0 4.2" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></g>
 <g id="i-rec"><circle cx="8" cy="8" r="3.6" fill="currentColor"/><circle cx="8" cy="8" r="6.1" fill="none" stroke="currentColor" stroke-width="1.1"/></g>
 <g id="i-rotate"><path d="M4.2 4.4h6a2.9 2.9 0 0 1 0 5.8H6.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="m8.2 12.4-2.4-2.2 2.4-2.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
-<g id="i-mirror"><path d="M8 1.7v12.6" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 2"/><path d="M6.5 4.3 2.6 8l3.9 3.7zM9.5 4.3 13.4 8l-3.9 3.7z" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></g>
+<g id="i-mirror"><path d="M8 1.2v13.6" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2.2 2"/><path d="M6.5 3.6 1.7 8l4.8 4.4z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="M9.5 3.6 14.3 8l-4.8 4.4z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></g>
 <g id="i-stretch"><path d="M1.8 8h12.4M4.4 5.4 1.8 8l2.6 2.6M11.6 5.4 14.2 8l-2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></g>
 <g id="i-mic"><rect x="6.1" y="1.7" width="3.8" height="7.6" rx="1.9" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3.7 8a4.3 4.3 0 0 0 8.6 0M8 12.3v2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></g>
 <g id="i-pause"><path d="M5.7 3.6v8.8M10.3 3.6v8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></g>
@@ -467,7 +467,7 @@ body.live #pairSect .pairnote{margin-top:5px}
           <option value="25">25%</option>
         </select>
         <button class="btn sq" id="vRotate" title="Rotate 90° (Shift+R)"><svg><use href="#i-rotate"/></svg></button>
-        <button class="btn sq" id="vMirror" title="Mirror"><svg><use href="#i-mirror"/></svg></button>
+        <button class="btn sq" id="vMirror" title="Mirror the picture left to right"><svg><use href="#i-mirror"/></svg></button>
         <span class="vrule"></span>
         <button class="btn pri" id="vSnap" title="Save a frame on this computer (S)"><svg><use href="#i-save"/></svg>Save photo here</button>
         <button class="btn" id="vRec" title="Record to a .webm file (R)"><svg><use href="#i-rec"/></svg><span id="vRecT">Record</span></button>
@@ -502,8 +502,6 @@ body.live #pairSect .pairnote{margin-top:5px}
           <button class="btn stack" id="rFocus"><svg><use href="#i-focus"/></svg>Autofocus</button>
           <button class="btn stack" id="rZout"><svg><use href="#i-zout"/></svg>Zoom out</button>
           <button class="btn stack" id="rZin"><svg><use href="#i-zin"/></svg>Zoom in</button>
-          <button class="btn stack" id="rPrev"><svg><use href="#i-prev"/></svg>Previous</button>
-          <button class="btn stack" id="rNext"><svg><use href="#i-next"/></svg>Next camera</button>
           <button class="btn stack" id="rSd"><svg><use href="#i-card"/></svg>Photo on phone</button>
           <button class="btn stack" id="rMic"><svg><use href="#i-mic"/></svg>Microphone</button>
         </div>
@@ -671,29 +669,23 @@ body.live #pairSect .pairnote{margin-top:5px}
     <div class="body">
       <h3>Pairing</h3>
       <ol>
-        <li>On the desktop choose <b>Watch here</b>. A four-digit code and a QR appear.</li>
-        <li>Scan the QR with the phone, or open the same page there and type the code.</li>
-        <li>Tap <b>Connect</b> on the phone and allow the camera.</li>
+        <li>On the desktop choose <b>Watch here</b> — a four-digit code and a QR appear.</li>
+        <li>On the phone scan the QR, or open the same page and type the code.</li>
+        <li>Tap <b>Connect</b> and allow the camera.</li>
       </ol>
-      <p>The relay used to swap the two handshake messages never carries the picture. Once the
-        handshake is done the two devices talk to each other directly.</p>
+      <p>The relay only swaps the two handshake messages. The picture always travels straight
+        from the phone to this browser.</p>
 
-      <h3>Controlling the phone from the desktop</h3>
-      <p>LED, autofocus, zoom, camera choice, frame rate, resolution and the microphone are all driven
-        from the rail on the right. A control that the phone's camera cannot honour is switched off
-        rather than left to fail silently.</p>
+      <h3>Controls</h3>
+      <p>The rail on the right drives the phone: LED, focus, zoom, resolution, bitrate and the
+        microphone. Every press is answered by the phone, so a camera that cannot do something
+        says so.</p>
 
-      <h3>Working with a VPN</h3>
-      <p>Two devices on one Wi-Fi pair through their local addresses. Most VPN apps have a switch called
-        <b>allow local network access</b>, <b>LAN bypass</b> or <b>split tunnelling</b> — with that on, pairing
-        behaves as if the VPN were not there. With it off the tunnel swallows local traffic and no direct
-        route exists. Then either:</p>
-      <p>If the status line says <b>paired, but no route</b>, the code did its job and only the video path is
-        blocked. Switch local network access on in the VPN app, or turn off <b>keep the video on this Wi-Fi</b>
-        in Settings so it can go the long way round.</p>
-      <p>Chrome also hides the local address behind an mDNS name until the page holds a media
-        permission. The desktop asks for the microphone once for that reason and stops the track
-        immediately; it is never recorded or sent.</p>
+      <h3>If pairing fails</h3>
+      <p>A VPN is the usual reason: turn on <b>allow local network access</b> (also called LAN bypass
+        or split tunnelling), or switch off <b>keep the video on this Wi-Fi</b> in Settings to let it go
+        the long way round. Chrome also hides this machine's local address until the page holds a
+        media permission, which is why the microphone is asked for once and released immediately.</p>
 
       <h3>Keyboard</h3>
       <p class="keys">
@@ -2178,13 +2170,15 @@ function vCmd(k, v) {
   V.acks[id] = setTimeout(function () { delete V.acks[id]; toast("The camera did not answer"); }, 5000);
   return true;
 }
+/* a tooltip, never a disabled button: the phone reports back on press */
+function hint(el, text) { if (el) { el.disabled = false; el.title = text || ""; } }
 function able(el, ok, why) {
   if (!el) return;
   if (el.dataset.tip == null) el.dataset.tip = el.title || "";
   el.disabled = !ok;
   el.title = ok ? el.dataset.tip : why;
 }
-var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rPrev", "rNext", "rSd", "rMic", "rRes", "rBr"];
+var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rSd", "rMic", "rRes", "rBr"];
 function railEnabled(on2) {
   RAIL.forEach(function (id) {
     var el = $(id);
@@ -2201,15 +2195,14 @@ function vApplyState(s) {
   $("tPause").classList.toggle("show", !!s.paused);
   $("tMute").classList.toggle("show", !s.mic);
   freeze(!!s.paused);
-  able($("rLed"), s.uaTorch !== false, "The phone browser has no LED control");
-  if (s.capTorch !== true) $("rLed").title = "LED support unknown — press to try";
-  able($("rZin"), !!s.capZoom, "This camera cannot zoom");
-  able($("rZout"), !!s.capZoom, "This camera cannot zoom");
-  able($("rFocus"), s.uaFocus !== false, "The phone browser has no focus control");
-  able($("rPrev"), (s.cams || 1) > 1, "Only one camera on that device");
-  able($("rNext"), (s.cams || 1) > 1, "Only one camera on that device");
+  hint($("rLed"), s.uaTorch === false ? "The phone browser has no LED control"
+    : s.capTorch === true ? "Switch the phone LED" : "LED — press to try");
+  hint($("rFocus"), s.uaFocus === false ? "The phone browser has no focus control" : "Refocus the phone camera");
+  hint($("rZin"), s.capZoom ? "Zoom in" : "Zoom in — this camera may not zoom");
+  hint($("rZout"), s.capZoom ? "Zoom out" : "Zoom out — this camera may not zoom");
   if (s.res) $("rRes").value = s.res;
   if (s.zoom && s.capZoom) $("rZin").title = "Zoom in — now " + Number(s.zoom).toFixed(1) + "×";
+  if (s.uaTorch === false && !V.ledNote) { V.ledNote = true; log("[screen] the phone browser exposes no LED control"); }
   if (s.mic && $("remote").muted && !V.audioHint) {
     V.audioHint = true;
     toast("The phone microphone is live — press the speaker to listen");
@@ -2369,8 +2362,6 @@ on($("rLed"), "click", function () { vCmd("torch", !V.cam.torch); });
 on($("rFocus"), "click", function () { vCmd("af"); });
 on($("rZin"), "click", function () { vCmd("zoomStep", 1); });
 on($("rZout"), "click", function () { vCmd("zoomStep", -1); });
-on($("rPrev"), "click", function () { vCmd("camStep", -1); });
-on($("rNext"), "click", function () { vCmd("camStep", 1); });
 on($("rSd"), "click", function () { vCmd("snap"); });
 on($("rMic"), "click", function () { vCmd("mic", !V.cam.mic); });
 on($("rRes"), "change", function () { vCmd("res", $("rRes").value); });
@@ -2553,7 +2544,7 @@ function detectTorch(t) {
 }
 function paintTorch() {
   var st = C.caps.torch, known = uaKnows("torch");
-  $("cLed").disabled = !known;
+  $("cLed").disabled = false;                 /* always pressable; it answers */
   $("cLed").title = !known ? "This browser has no LED control"
     : st === false ? "This camera did not take the LED — tap to try again"
     : st === null ? "LED support unknown — tap to try" : "";
@@ -3625,5 +3616,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8c6cade5ae465',t:'MTc4NzQ3NDA0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8e4ad387de413',t:'MTc4NzQ3NTI3Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
