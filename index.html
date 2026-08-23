@@ -193,7 +193,8 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 .sect > h2 .grow{display:none}
 .pairgrid{display:flex;gap:14px;align-items:flex-start}
 .qrbox{flex:none;border:1px solid var(--line);border-radius:var(--r);padding:7px;background:#fff;line-height:0}
-.qrbox canvas{display:block;width:112px;height:112px;image-rendering:pixelated}
+.qrbox canvas{display:block;width:190px;height:190px;image-rendering:pixelated}
+@media (max-width:1100px){ .qrbox canvas{width:150px;height:150px} }
 .codebig{font:700 36px/1 var(--sans);letter-spacing:.08em;color:var(--ink)}
 .pairnote{font-size:14px;color:var(--ink-2);margin-top:9px}
 .urlline{font:400 12.5px/1.45 var(--mono);color:var(--dim);word-break:break-all;margin-top:10px}
@@ -255,9 +256,22 @@ input[type=checkbox]{accent-color:var(--acc);width:17px;height:17px}
 }
 .scanbox.on{display:flex}
 .scanframe{
-  width:min(62vw,240px);height:min(62vw,240px);border:3px solid #fff;border-radius:10px;
-  box-shadow:0 0 0 2000px rgba(16,24,28,.25);
+  width:min(88vw,88vh,560px);height:min(88vw,88vh,560px);border:3px solid #fff;border-radius:16px;
+  box-shadow:0 0 0 2000px rgba(16,24,28,.28);
 }
+/* full-screen scanning: the picture fills the phone, everything else steps
+   out of the way, and the preview crops instead of letterboxing so the
+   square is as large as the sensor allows */
+body.scanning .camstage{
+  position:fixed;inset:0;z-index:60;min-height:0;background:#000;border-radius:0;
+}
+body.scanning .camstage #local{object-fit:cover}
+body.scanning .camdock,body.scanning .campanel,body.scanning .topbar,
+body.scanning .statusbar,body.scanning .camstage .gridlines{display:none}
+body.scanning .scanbox{background:transparent}
+body.scanning .scanhint{position:absolute;left:0;right:0;bottom:104px;margin:0}
+body.scanning #cScanStop{position:absolute;left:50%;transform:translateX(-50%);bottom:40px;
+  padding:11px 26px;font-size:15px}
 .scanhint{color:#fff;font-size:15px;text-align:center;padding:0 24px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .orline{font-size:13.5px;color:var(--dim);align-self:center}
 .camdock{
@@ -481,7 +495,7 @@ body.live #pairSect .pairnote{margin-top:5px}
       <div class="sect" id="pairSect">
         <h2>Pairing<span class="grow"></span></h2>
         <div class="pairgrid">
-          <div class="qrbox"><canvas id="qr" width="104" height="104"></canvas></div>
+          <div class="qrbox"><canvas id="qr" width="180" height="180"></canvas></div>
           <div style="min-width:0">
             <div class="codebig" id="pairCode">----</div>
             <div class="pairnote" id="pairNote">Open this page on the phone, tap <b>Scan the square</b>, and point it here.</div>
@@ -1604,6 +1618,26 @@ function trimSdp(sdp) {
    permission for a moment (the track is stopped at once) puts the real
    192.168.x.x into the handshake, which is what makes LAN pairing work. */
 var ipOpen = false;
+var sawLocalCand = false, mdnsFix = 0;
+function isMdns(c) {
+  var line = (c && (c.candidate || c)) || "";
+  return / typ host/.test(line) && /\.local[\s]/.test(line + " ");
+}
+/* our own candidates are anonymous names: the other device may well not be
+   able to resolve them, so publish the real address and hand it over again */
+function mdnsRescue(role) {
+  if (mdnsFix > 1 || ipOpen) return;
+  mdnsFix++;
+  log("[" + role + "] only .local candidates so far — publishing the real address");
+  unlockIp(true).then(function (ok) {
+    if (!ok) return;
+    if (role === "screen") {
+      /* the screen only answers, so it asks the phone for a fresh offer
+         now that its real address exists */
+      try { if (V.link) V.link.send("REOFFER", { type: "media", connectionId: V.connId }, V.peer); } catch (e) {}
+    } else if (C.pc) restartIce(false);
+  });
+}
 function unlockIp(force) {
   if (ipOpen) return Promise.resolve(true);
   var pre = Promise.resolve(true);
@@ -1975,6 +2009,7 @@ function vAnswer(src, payload, link) {
     V.pc = pc;
     pc.onicecandidate = function (e) {
       if (!e.candidate || !V.link) return;
+      if (isMdns(e.candidate)) sawLocalCand = true;
       if (lanActive() && !isHostCand(e.candidate)) return;
       V.link.send("CANDIDATE", candMsg(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, V.connId), src);
     };
@@ -2005,16 +2040,36 @@ function vAnswer(src, payload, link) {
     };
   }
 
-  pc.setRemoteDescription(payload.sdp).then(function () {
+  var sdpText = (payload.sdp && payload.sdp.sdp) || "";
+  if (V.lastOffer === sdpText && pc.signalingState === "stable") {
+    /* the same offer again from a second relay — answer it again from the
+       description we already have, but do not touch the peer connection */
+    if (V.link && pc.localDescription) V.link.send("ANSWER", descMsg(pc.localDescription, V.connId), src);
+    return;
+  }
+  V.lastOffer = sdpText;
+  V.sigQ = (V.sigQ || Promise.resolve()).then(function () {
+    if (V.pc !== pc) return;
+    if (pc.signalingState !== "stable" && pc.signalingState !== "have-remote-offer") {
+      /* mid-negotiation: roll our own offer back rather than throw */
+      return pc.setLocalDescription({ type: "rollback" }).catch(function () {});
+    }
+  }).then(function () {
+    if (V.pc !== pc) return;
+    return pc.setRemoteDescription(payload.sdp);
+  }).then(function () {
+    if (V.pc !== pc) return;
     var f = V.pend.slice(); V.pend = [];
     f.forEach(function (c) { pc.addIceCandidate(c).catch(function () {}); });
-    return pc.createAnswer();
-  }).then(function (a) { return pc.setLocalDescription(a); })
-    .then(function () {
+    if (pc.signalingState !== "have-remote-offer") return;   /* already answered */
+    return pc.createAnswer().then(function (a) { return pc.setLocalDescription(a); }).then(function () {
       if (V.link) V.link.send("ANSWER", descMsg(pc.localDescription, V.connId), src);
       if (!V.gotVideo) { vStatus("wait", same ? "Updating…" : "Camera found — finding a route"); vRouteWatch(); }
-    })
-    .catch(function (e) { vStatus("bad", "Could not answer: " + e.message); });
+    });
+  }).catch(function (e) {
+    log("[screen] answer: " + (e && e.message));
+    if (!V.gotVideo) vStatus("wait", "Handshake retried");
+  });
 }
 
 /* the handshake and the media path fail for different reasons, and the fix
@@ -2814,9 +2869,24 @@ function eachLink(fn) {
   return up.length;
 }
 
-function camOffer() {
+function camOffer(force) {
   if (!C.want || !C.stream) return;
   if (!eachLink(function () {})) { cStatus("wait", "Waiting for a relay…"); return; }
+  /* a relay that arrives late must not demolish a call that is already up or
+     still gathering — re-send the offer it has not seen instead */
+  if (!force && C.pc && C.pc.signalingState !== "closed") {
+    var st = C.pc.connectionState, ist = C.pc.iceConnectionState;
+    var alive = C.connected || st === "connected" || st === "connecting" ||
+      ist === "checking" || ist === "connected" || ist === "completed";
+    if (alive) {
+      if (C.pc.localDescription) {
+        var body = descMsg(C.pc.localDescription, C.connId, C.stage);
+        eachLink(function (l) { l.send("OFFER", body, "tether-" + C.code); });
+        log("[camera] another relay came up — offer re-sent, call kept");
+      }
+      return;
+    }
+  }
   C.link = null;
   camCloseConn();
   C.connId = "tc_" + rid(8);
@@ -2828,22 +2898,21 @@ function camOffer() {
 
   pc.onicecandidate = function (e) {
     if (!e.candidate) return;
+    if (isMdns(e.candidate)) sawLocalCand = true;
     if (lanActive() && !isHostCand(e.candidate)) return;
     var body = candMsg(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, C.connId);
     var dst = "tether-" + C.code;
     if (C.link) C.link.send("CANDIDATE", body, dst);
     else eachLink(function (l) { l.send("CANDIDATE", body, dst); });
   };
+  pc.onconnectionstatechange = function () {
+    if (pc.connectionState === "connected") camLive();
+  };
   pc.oniceconnectionstatechange = function () {
     var st = pc.iceConnectionState;
     log("[camera] ice " + st);
     if (st === "connected" || st === "completed") {
-      clearTimeout(C.routeT);
-      C.connected = true; C.restarts = 0; C.lastPong = Date.now();
-      cStatus("live", "Streaming to " + C.code);
-      cWarn("");
-      $("camPanel").classList.remove("show");
-      pushState();
+      camLive();
     } else if (st === "failed") {
       C.connected = false;
       if (climb()) restartIce(true);
@@ -2891,15 +2960,19 @@ function routeWatch(second) {
       cStatus("wait", "No route inside the Wi-Fi — trying the long way round");
       cWarn("No direct route on this Wi-Fi, so the video is being routed through the internet instead. " +
         "To keep it local, switch local network access on in the VPN app, or put both devices on the same router.");
-      camOffer();
+      camOffer(true);
       routeWatch();
       return;
     }
     if (climb()) { restartIce(false); routeWatch(); return; }
     cStatus("bad", "Paired, but no video route to that screen");
-    cWarn("The code worked, the video path did not. Allow local network access in the VPN app, put both " +
-      "devices on one Wi-Fi, add a TURN relay under Settings, or use offline pairing.");
-  }, second ? 6000 : 9000);
+    cWarn("The code worked, the video path did not. " +
+      (sawLocalCand ? "One of the two devices is only publishing an anonymous .local name, which this browser " +
+        "cannot look up — open the camera or microphone once on the other screen so it can publish its real " +
+        "address. " : "") +
+      "Otherwise: allow local network access in the VPN app, put both devices on one Wi-Fi, add a TURN relay " +
+      "under Settings, or use offline pairing.");
+  }, second ? 4000 : 5000);
 }
 
 function restartIce(hard) {
@@ -2921,6 +2994,7 @@ function renegotiate(pc) {
 }
 
 function sendOffer(pc, mode) {
+  C.lastAnswer = "";
   var prep = mode === "restart" ? Promise.resolve()
     : pc.createOffer().then(function (o) { return pc.setLocalDescription(o); });
   prep.then(function () {
@@ -2973,7 +3047,11 @@ function later(ms) {
 
 function camSignal(m, link) {
   if (m.type === "ANSWER") {
-    if (!C.pc || C.pc.signalingState !== "have-local-offer") return;
+    if (!C.pc) return;
+    var aText = (m.payload && m.payload.sdp && m.payload.sdp.sdp) || "";
+    if (C.lastAnswer === aText) return;            /* the same answer from another relay */
+    if (C.pc.signalingState !== "have-local-offer") return;
+    C.lastAnswer = aText;
     if (link) C.link = link;
     clearInterval(C.shout); C.shout = 0;
     clearInterval(C.renego); C.renego = 0;
@@ -2994,10 +3072,22 @@ function camSignal(m, link) {
   }
 }
 
+function camLive() {
+  if (!C.pc) return;
+  clearTimeout(C.routeT);
+  var first = !C.connected;
+  C.connected = true; C.restarts = 0; C.lastPong = Date.now();
+  cStatus("live", "Streaming to " + C.code);
+  cWarn("");
+  $("camPanel").classList.remove("show");
+  if (first) log("[camera] connected");
+  pushState();
+}
 function camWireDC(ch) {
   C.dc = ch;
   ch.onopen = function () {
     log("[camera] control channel open");
+    camLive();
     pushState(); pushBattery();
     C.lastPong = Date.now();
     clearInterval(C.beat);
@@ -3097,8 +3187,10 @@ function setTorch(want) {
       C.torch = want;
       C.caps.torch = true;
       paintTorch(); pushState();
-      var seen = settingOf(t, "torch");
+      var live = vtrack();                       /* a reopen swaps the track */
+      var seen = live ? settingOf(live, "torch") : undefined;
       if (want && seen === false) return "The camera says the LED is still off";
+      if (want && seen === undefined) return "LED asked for — this camera does not report its LED";
       return want ? "LED on" : "LED off";
     });
   });
@@ -3365,6 +3457,7 @@ function startScan() {
     return;
   }
   SCAN.on = true; SCAN.tries = 0;
+  document.body.classList.add("scanning");
   $("scanBox").classList.add("on");
   $("cScan").classList.add("on");
   cStatus("wait", "Looking for the square…");
@@ -3378,6 +3471,7 @@ function startScan() {
 function stopScan() {
   SCAN.on = false;
   clearInterval(SCAN.timer); SCAN.timer = 0;
+  document.body.classList.remove("scanning");
   $("scanBox").classList.remove("on");
   $("cScan").classList.remove("on");
 }
@@ -3643,5 +3737,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f918d88807e42d',t:'MTc4NzQ3NzQxMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f980a7dfaec9d0',t:'MTc4NzQ4MTY2Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
