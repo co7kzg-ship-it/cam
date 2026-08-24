@@ -1675,9 +1675,12 @@ function relaySpecs() {
     { kind: "mqtt", key: "mosquitto", url: "wss://test.mosquitto.org:8081/mqtt", label: "Mosquitto" }
   ];
   if (cfg.route !== "auto") return all.filter(function (s) { return s.key === cfg.route; });
-  /* the public Mosquitto test broker drops websocket clients often, so it is
-     kept as a hand-picked fallback rather than part of the default fan-out */
-  return all.filter(function (s) { return s.key !== "mosquitto"; });
+  /* 0.peerjs.com stopped answering (measured: websocket opens, no OPEN frame
+     ever arrives), so it is out of the default fan-out — it only added a
+     dead first relay and delay. The three public MQTT brokers carry the
+     pairing; Mosquitto is in the set too, because three independent brokers
+     beat two. "peerjs" stays pickable by hand in case it comes back. */
+  return all.filter(function (s) { return s.key !== "peerjs"; });
 }
 
 function PeerLink(spec, id, cb) {
@@ -1941,6 +1944,11 @@ function vWarn(t) {
    and Tether's scanner still recognises the old plain form too */
 function pairText(code) {
   try {
+    /* a QR the phone cannot use is worse than none: plain http, file:// and
+       localhost origins all end in a page whose camera is blocked (or that
+       points at the phone itself). Encode the plain code instead — every
+       camera app shows it as text and the in-app scanner reads it. */
+    if (location.protocol !== "https:") return "TETHER-PAIR-V1:" + code;
     var u = location.origin + location.pathname;
     return u + (u.indexOf("?") >= 0 ? "&" : "?") + "c=" + code;
   } catch (e) { return "TETHER-PAIR-V1:" + code; }
@@ -1975,6 +1983,15 @@ function vStart(code) {
   try { drawQR($("qr"), pairText(code)); } catch (e) { log("qr: " + e.message); }
   $("pairNote").innerHTML = "Point the phone's camera at the square — it opens Tether ready to connect. " +
     "Or open this page on the phone and type the four digits.";
+  if (location.protocol !== "https:") {
+    /* say it before the scan, not after: no phone can join from this address */
+    vWarn("This page is opened from " + (location.origin || "a local file") +
+      ", so the square carries only the code. A phone that opens this address would land on an insecure page, where the camera is blocked — pairing can never finish. " +
+      "Host this file on any https address (GitHub Pages, Cloudflare Pages, Netlify), open it there, and scan again.");
+    $("pairNote").innerHTML = "<b>The square cannot open the phone from this address.</b> Type the four digits " +
+      "on a copy of this page the phone opens over <b>https</b>, or host this file (GitHub Pages works) and open the https address here first.";
+    log("viewer: not served over https — the QR carries the bare code, joining by URL is impossible");
+  }
   vStatus("wait", "Opening the code…");
   railEnabled(false);
   lanCheck(cfg.askLan && !V.asked);
@@ -3800,5 +3817,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2fa8fde1e60e4ac',t:'MTc4NzQ5Mjc3MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3043d517e6add72',t:'MTc4NzU5NDI0Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
