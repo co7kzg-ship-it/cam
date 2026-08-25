@@ -1675,12 +1675,9 @@ function relaySpecs() {
     { kind: "mqtt", key: "mosquitto", url: "wss://test.mosquitto.org:8081/mqtt", label: "Mosquitto" }
   ];
   if (cfg.route !== "auto") return all.filter(function (s) { return s.key === cfg.route; });
-  /* 0.peerjs.com stopped answering (measured: websocket opens, no OPEN frame
-     ever arrives), so it is out of the default fan-out — it only added a
-     dead first relay and delay. The three public MQTT brokers carry the
-     pairing; Mosquitto is in the set too, because three independent brokers
-     beat two. "peerjs" stays pickable by hand in case it comes back. */
-  return all.filter(function (s) { return s.key !== "peerjs"; });
+  /* the public Mosquitto test broker drops websocket clients often, so it is
+     kept as a hand-picked fallback rather than part of the default fan-out */
+  return all.filter(function (s) { return s.key !== "mosquitto"; });
 }
 
 function PeerLink(spec, id, cb) {
@@ -1944,11 +1941,6 @@ function vWarn(t) {
    and Tether's scanner still recognises the old plain form too */
 function pairText(code) {
   try {
-    /* a QR the phone cannot use is worse than none: plain http, file:// and
-       localhost origins all end in a page whose camera is blocked (or that
-       points at the phone itself). Encode the plain code instead — every
-       camera app shows it as text and the in-app scanner reads it. */
-    if (location.protocol !== "https:") return "TETHER-PAIR-V1:" + code;
     var u = location.origin + location.pathname;
     return u + (u.indexOf("?") >= 0 ? "&" : "?") + "c=" + code;
   } catch (e) { return "TETHER-PAIR-V1:" + code; }
@@ -1983,15 +1975,6 @@ function vStart(code) {
   try { drawQR($("qr"), pairText(code)); } catch (e) { log("qr: " + e.message); }
   $("pairNote").innerHTML = "Point the phone's camera at the square — it opens Tether ready to connect. " +
     "Or open this page on the phone and type the four digits.";
-  if (location.protocol !== "https:") {
-    /* say it before the scan, not after: no phone can join from this address */
-    vWarn("This page is opened from " + (location.origin || "a local file") +
-      ", so the square carries only the code. A phone that opens this address would land on an insecure page, where the camera is blocked — pairing can never finish. " +
-      "Host this file on any https address (GitHub Pages, Cloudflare Pages, Netlify), open it there, and scan again.");
-    $("pairNote").innerHTML = "<b>The square cannot open the phone from this address.</b> Type the four digits " +
-      "on a copy of this page the phone opens over <b>https</b>, or host this file (GitHub Pages works) and open the https address here first.";
-    log("viewer: not served over https — the QR carries the bare code, joining by URL is impossible");
-  }
   vStatus("wait", "Opening the code…");
   railEnabled(false);
   lanCheck(cfg.askLan && !V.asked);
@@ -2018,6 +2001,10 @@ function vSignal(m, link) {
   if (m.type === "CANDIDATE") {
     var c = m.payload && m.payload.candidate;
     if (!c) return;
+    /* Chrome on Android only ever publishes an anonymous .local name. The
+       phone may not be able to look our own .local name up either, so the
+       moment we see one, publish the real address and ask for a fresh offer. */
+    if (isMdns(c)) { sawLocalCand = true; mdnsRescue("screen"); }
     if (lanActive() && c.candidate && !isHostCand(c)) return;
     if (V.pc && V.pc.remoteDescription) V.pc.addIceCandidate(c).catch(function () {});
     else V.pend.push(c);
@@ -2044,7 +2031,7 @@ function vAnswer(src, payload, link) {
     V.pc = pc;
     pc.onicecandidate = function (e) {
       if (!e.candidate || !V.link) return;
-      if (isMdns(e.candidate)) sawLocalCand = true;
+      if (isMdns(e.candidate)) { sawLocalCand = true; mdnsRescue("screen"); }
       if (lanActive() && !isHostCand(e.candidate)) return;
       V.link.send("CANDIDATE", candMsg(e.candidate.toJSON ? e.candidate.toJSON() : e.candidate, V.connId), src);
     };
@@ -2283,10 +2270,12 @@ function able(el, ok, why) {
 }
 var RAIL = ["rLed", "rFocus", "rZout", "rZin", "rSd", "rMic", "rRes", "rBr"];
 function railEnabled(on2) {
+  /* Never hard-disable these: a disabled button swallows the click and the
+     app looks broken ("nothing happens"). vCmd already says why when the
+     camera is not there, so keep every press answerable. */
   RAIL.forEach(function (id) {
     var el = $(id);
     if (!el) return;
-    el.disabled = !on2;
     if (!on2) el.classList.remove("on");
   });
 }
@@ -2771,7 +2760,7 @@ function uaKnows(key) {
 function brKbps() { return +$("cBr").value || 0; }
 function applyBitrate(quiet) {
   if (!C.pc) return Promise.resolve(null);
-  var kbps = brKbps(), applied = null, tried = false;
+  var kbps = brKbps(), applied = null, tried = false, jobs = [];
   C.pc.getSenders().forEach(function (sn) {
     if (!sn.track || sn.track.kind !== "video" || !sn.getParameters) return;
     tried = true;
@@ -2780,14 +2769,15 @@ function applyBitrate(quiet) {
     if (kbps) p.encodings[0].maxBitrate = kbps * 1000; else delete p.encodings[0].maxBitrate;
     p.encodings[0].scaleResolutionDownBy = 1;
     p.degradationPreference = "maintain-framerate";
-    sn.setParameters(p).then(function () {
+    jobs.push(sn.setParameters(p).then(function () {
       var q = sn.getParameters();
-      applied = (q.encodings && q.encodings[0] && q.encodings[0].maxBitrate) || 0;
-      if (!quiet && kbps && !applied) log("[camera] this browser ignored maxBitrate — using the sdp ceiling only");
-    }).catch(function (e) { log("[camera] bitrate: " + (e && e.message)); });
+      var got = (q.encodings && q.encodings[0] && q.encodings[0].maxBitrate) || 0;
+      applied = got;
+      if (!quiet && kbps && !got) log("[camera] this browser ignored maxBitrate — using the sdp ceiling only");
+    }).catch(function (e) { log("[camera] bitrate: " + (e && e.message)); }));
   });
   if (!tried) return Promise.resolve(null);
-  return Promise.resolve(applied);
+  return Promise.all(jobs).then(function () { return applied; });
 }
 /* rewrite the bandwidth lines of the video section */
 function mungeBitrate(sdp) {
@@ -3507,7 +3497,7 @@ on($("camStage"), "click", function (e) {
 /* ==================================================================== */
 /* SCANNING THE PAIRING SQUARE                                          */
 /* ==================================================================== */
-var SCAN = { on: false, timer: 0, det: null, busy: false, cv: null, g: null, tries: 0 };
+var SCAN = { on: false, timer: 0, det: null, busy: false, cv: null, g: null, tries: 0, empty: 0 };
 
 function scanParse(txt) {
   txt = String(txt || "");
@@ -3522,7 +3512,7 @@ function startScan() {
     openCamera().then(function () { if (C.stream) startScan(); });
     return;
   }
-  SCAN.on = true; SCAN.tries = 0;
+  SCAN.on = true; SCAN.tries = 0; SCAN.empty = 0;
   document.body.classList.add("scanning");
   $("scanBox").classList.add("on");
   $("cScan").classList.add("on");
@@ -3550,7 +3540,15 @@ function scanTick() {
     SCAN.busy = true;
     SCAN.det.detect(v).then(function (r) {
       SCAN.busy = false;
-      for (var i = 0; r && i < r.length; i++) { var c = scanParse(r[i].rawValue); if (c) return scanHit(c); }
+      if (r && r.length) {
+        SCAN.empty = 0;
+        for (var i = 0; i < r.length; i++) { var c = scanParse(r[i].rawValue); if (c) return scanHit(c); }
+      } else if (++SCAN.empty > 6) {
+        /* some Android builds return an empty list forever; fall back to the
+           built-in reader instead of spinning on BarcodeDetector */
+        SCAN.det = null;
+        log("[camera] BarcodeDetector keeps returning nothing — using the built-in reader");
+      }
     }, function () { SCAN.busy = false; SCAN.det = null; });
     return;
   }
@@ -3817,5 +3815,5 @@ log("Tether ready · " + location.href);
 
 })();
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3043d517e6add72',t:'MTc4NzU5NDI0Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2e692f70bf3d9d0',t:'MTc4NzI4MzE4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2fa8fde1e60e4ac',t:'MTc4NzQ5Mjc3MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a309148b59fce5da',t:'MTc4NzY0NTAwNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
